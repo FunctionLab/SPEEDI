@@ -76,7 +76,9 @@ FindMappingAnchors <- function(sc_obj, reference) {
 MajorityVote <- function(sc_obj, current_resolution = 1.5) {
   associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
   message("Begin majority voting...")
-  Seurat::DefaultAssay(sc_obj) <- "integrated"
+  if(length(unique(sc_obj$batch)) != 1) {
+    Seurat::DefaultAssay(sc_obj) <- "integrated"
+  }
   sc_obj <- Seurat::FindNeighbors(sc_obj, reduction = "pca", dims = 1:30)
   # TODO: Add code to find the best resolution (e.g., by using Clustree?)
   sc_obj <- Seurat::FindClusters(sc_obj, resolution = current_resolution)
