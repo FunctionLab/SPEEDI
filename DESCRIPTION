@@ -24,7 +24,8 @@ Imports:
     Seurat,
     SeuratData,
     SeuratDisk,
-    glmGamPoi
+    glmGamPoi,
+    Matrix
 Remotes: 
     github::mojaveazure/seurat-disk,
     github::satijalab/seurat-data,

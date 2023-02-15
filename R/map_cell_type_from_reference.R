@@ -10,8 +10,8 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
     reference_path <- paste0(reference_path, "/")
   }
   message("Loading reference")
+  message(paste0("Installing data for ", tissue, " reference if necessary"))
   if (human) {
-    message(paste0("Installing data for ", tissue, " reference"))
     if (tissue == "Adipose") {
       SeuratData::InstallData("adiposeref")
     } else if (tissue == "Bone Marrow") {
@@ -30,11 +30,13 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
       SeuratData::InstallData("pancreasref")
     } else if (tissue == "PBMC") {
       reference_url <- "https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat"
-      GET(
-        url = reference_url,
-        write_disk(paste0(reference_path, basename(reference_url))),
-        verbose()
-      ) -> res
+      if(!file.exists(paste0(reference_path, basename(reference_url)))) {
+        httr::GET(
+          url = reference_url,
+          httr::write_disk(paste0(reference_path, basename(reference_url))),
+          httr::verbose()
+        ) -> res
+      }
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_path, basename(reference_url)))
       return(reference)
     } else if (tissue == "Tonsil") {
@@ -54,7 +56,9 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
 #' @return Mapping anchors between reference and query
 #' @export
 FindMappingAnchors <- function(sc_obj, reference) {
-  Seurat::DefaultAssay(sc_obj) <- "integrated"
+  if(length(unique(sc_obj$batch)) != 1) {
+    Seurat::DefaultAssay(sc_obj) <- "integrated"
+  }
   anchors <- Seurat::FindTransferAnchors(reference = reference,
                                  query = sc_obj,
                                  normalization.method = "SCT",

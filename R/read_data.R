@@ -26,6 +26,7 @@ Read_h5 <- function(data_path, sample_id_list) {
     .combine = 'cbind',
     .packages = c("Seurat", "base")
   ) %dopar% {
+    # TODO: Ensure that data_path is in correct format (ends in /)
     print(paste0(data_path, sample_id_list[[i]], "/outs/filtered_feature_bc_matrix.h5"))
     sc_matrix <- Seurat::Read10X_h5(paste0(data_path, sample_id_list[[i]], "/outs/filtered_feature_bc_matrix.h5"))
     if (inherits(x = sc_matrix, what = 'list')) {
