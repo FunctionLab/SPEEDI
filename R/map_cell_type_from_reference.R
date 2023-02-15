@@ -4,53 +4,46 @@
 #' @param human flag to indicate whether sample is human or mouse
 #' @return A reference object
 #' @export
-LoadReference <- function(tissue, human) {
+LoadReference <- function(tissue, human, reference_path = getwd()) {
+  last_char_of_reference_path <- substr(reference_path, nchar(reference_path), nchar(reference_path))
+  if(last_char_of_reference_path != "/") {
+    reference_path <- paste0(reference_path, "/")
+  }
+  message("Loading reference")
   if (human) {
+    message(paste0("Installing data for ", tissue, " reference"))
     if (tissue == "Adipose") {
       SeuratData::InstallData("adiposeref")
-      return(utils::data("adiposeref")) }
-
-    if (tissue == "Bone Marrow") {
+    } else if (tissue == "Bone Marrow") {
       SeuratData::InstallData("bonemarrowref")
-      return(utils::data("bonemarrowref")) }
-
-    if (tissue == "Fetus") {
+    } else if (tissue == "Fetus") {
       SeuratData::InstallData("fetusref")
-      return(utils::data("fetusref")) }
-
-    if (tissue == "Heart") {
+    } else if (tissue == "Heart") {
       SeuratData::InstallData("heartref")
-      return(utils::data("heartref")) }
-
-    if (tissue == "Cortex") {
+    } else if (tissue == "Cortex") {
       SeuratData::InstallData("humancortexref")
-      return(utils::data("humancortexref")) }
-
-    if (tissue == "Kidney") {
+    } else if (tissue == "Kidney") {
       SeuratData::InstallData("kidneyref")
-      return(utils::data("kidneyref")) }
-
-    if (tissue == "Lung") {
+    } else if (tissue == "Lung") {
       SeuratData::InstallData("lungref")
-      return(utils::data("lungref")) }
-
-    if (tissue == "Pancreas") {
+    } else if (tissue == "Pancreas") {
       SeuratData::InstallData("pancreasref")
-      return(utils::data("pancreasref")) }
-
-    if (tissue == "PBMC") {
+    } else if (tissue == "PBMC") {
       reference_url <- "https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat"
-      reference <- SeuratDisk::LoadH5Seurat(RCurl::getURL(reference_url))
-      return(reference) }
-
-    if (tissue == "Tonsil") {
+      GET(
+        url = reference_url,
+        write_disk(paste0(reference_path, basename(reference_url))),
+        verbose()
+      ) -> res
+      reference <- SeuratDisk::LoadH5Seurat(paste0(reference_path, basename(reference_url)))
+      return(reference)
+    } else if (tissue == "Tonsil") {
       SeuratData::InstallData("tonsilref")
-      return(utils::data("tonsilref")) }
-  }
-  if (!human) {
+    }
+  } else {
     if (tissue == "Cortex") {
       SeuratData::InstallData("mousecortexref")
-      return(utils::data("mousecortexref")) }
+    }
   }
 }
 

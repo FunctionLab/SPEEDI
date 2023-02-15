@@ -117,8 +117,10 @@ InferBatches <- function(sc_obj) {
 IntegrateByBatch <- function(sc_obj) {
   message("Step 5: Integrate samples based on inferred groups...")
   sc_obj_list <- Seurat::SplitObject(sc_obj, split.by = "batch")
-
-
+  if(length(sc_obj_list) == 1) {
+    print("Only one batch was found, so we don't need to integrate batches. Exiting IntegrateByBatch!")
+    return(sc_obj)
+  }
   if (Sys.getenv("SLURM_NTASKS_PER_NODE") == "") {
     n.cores <- as.numeric(parallel::detectCores())
   } else {
@@ -183,6 +185,11 @@ IntegrateByBatch <- function(sc_obj) {
 }
 
 
+#' Visualize integration and prepare SCT for finding markers
+#'
+#' @param sc_obj Seurat object
+#' @return A Seurat object with SCT markers and visualizations
+#' @export
 VisualizeIntegration <- function(sc_obj) {
   sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
