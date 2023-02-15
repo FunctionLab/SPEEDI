@@ -1,8 +1,8 @@
-# Check if the input matrix is dgCMatrix
-#
-# @param mat sparse matrix
-# @return A dgCMatrix
-#
+#' Check if the input matrix is dgCMatrix
+#'
+#' @param mat sparse matrix
+#' @return A dgCMatrix
+#'
 RowSparseCheck <- function(mat) {
   if (!inherits(x = mat, what = "sparseMatrix")) {
     stop("Input should be sparse matrix")
@@ -13,11 +13,11 @@ RowSparseCheck <- function(mat) {
   return(mat)
 }
 
-# Calculate row variance of a sparse matrix
-#
-# @param mat sparse matrix
-# @return A vector of row variance
-#
+#' Calculate row variance of a sparse matrix
+#'
+#' @param mat sparse matrix
+#' @return A vector of row variance
+#'
 RowVarSparse <- function(mat) {
   mat <- RowSparseCheck(mat = mat)
   output <- matrixStats::rowVars(mat)
@@ -26,11 +26,11 @@ RowVarSparse <- function(mat) {
 }
 
 
-# Calculate row variance of a dense matrix
-#
-# @param mat dense matrix
-# @return A vector of row variance
-#
+#' Calculate row variance of a dense matrix
+#'
+#' @param mat dense matrix
+#' @return A vector of row variance
+#'
 RowVar <- function(mat) {
   if (!inherits(x = mat, what = "matrix")) {
     stop("Input should be dense matrix")
@@ -41,11 +41,11 @@ RowVar <- function(mat) {
   }
 }
 
-# Scale a vector to range(0,1)
-#
-# @param x numeric vector
-# @return A scaled vector ranging from 0 to 1
-#
+#' Scale a vector to range(0,1)
+#'
+#' @param x numeric vector
+#' @return A scaled vector ranging from 0 to 1
+#'
 scale_zero_one <- function(x) {(x - min(x))/(max(x) - min(x))}
 
 
@@ -101,6 +101,11 @@ PrepDR <- function(object, features = NULL, slot = 'scale.data', verbose = TRUE)
   return(data.use)
 }
 
+#' Perform fast PCA
+#'
+#' @param sc_obj a Seurat object
+#' @return Seurat object with PCA saved in prcomp
+#'
 PCA <- function(sc_obj) {
   # Fast PCA
   # sc_obj <- all.integrated.obj

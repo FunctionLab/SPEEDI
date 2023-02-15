@@ -1,3 +1,9 @@
+#' Load appropriate reference
+#'
+#' @param tissue tissue associated with samples
+#' @param human flag to indicate whether sample is human or mouse
+#' @return A reference object
+#' @export
 LoadReference <- function(tissue, human) {
   if (human) {
     if (tissue == "Adipose") {
@@ -48,6 +54,12 @@ LoadReference <- function(tissue, human) {
   }
 }
 
+#' Find mapping anchors between reference and query
+#'
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param reference A Seurat reference object
+#' @return Mapping anchors between reference and query
+#' @export
 FindMappingAnchors <- function(sc_obj, reference) {
   Seurat::DefaultAssay(sc_obj) <- "integrated"
   anchors <- Seurat::FindTransferAnchors(reference = reference,
@@ -58,6 +70,12 @@ FindMappingAnchors <- function(sc_obj, reference) {
   return(anchors)
 }
 
+#' In each cluster, vote for majority cell type
+#'
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param current_resolution parameter that indicates current resolution for clustering
+#' @return A Seurat object which contains majority vote labels
+#' @export
 MajorityVote <- function(sc_obj, current_resolution = 1.5) {
   associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
   message("Begin majority voting...")
@@ -100,6 +118,12 @@ MajorityVote <- function(sc_obj, current_resolution = 1.5) {
   return(sc_obj)
 }
 
+#' Map cell types for input data
+#'
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param reference Seurat reference object
+#' @return A Seurat object which contains majority vote labels
+#' @export
 MapCellTypes <- function(sc_obj, reference) {
   message("Step 6: Reference-based cell type mapping...")
   anchors <- FindMappingAnchors(sc_obj, reference)

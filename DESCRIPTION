@@ -9,6 +9,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+biocViews:
 Imports: 
     doParallel,
     foreach,
@@ -22,4 +23,10 @@ Imports:
     RCurl,
     Seurat,
     SeuratData,
-    SeuratDisk
+    SeuratDisk,
+    glmGamPoi
+Remotes: 
+    github::mojaveazure/seurat-disk,
+    github::satijalab/seurat-data,
+    github::immunogenomics/lisi,
+    github::etam4260/kneedle

@@ -3,6 +3,7 @@
 #' @param data_path path to where data is located
 #' @param sample_id_list list of sample names
 #' @return A set of single cell expression matrices
+#' @export
 #' @importFrom foreach %dopar%
 Read_h5 <- function(data_path, sample_id_list) {
   message("Step 1: Reading all samples...")

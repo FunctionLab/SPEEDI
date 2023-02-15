@@ -1,3 +1,8 @@
+#' Infer batches using LISI metric
+#'
+#' @param sc_obj Seurat object containing cells for all samples
+#' @return A Seurat object which contains labeled batches
+#' @export
 InferBatches <- function(sc_obj) {
   message("Step 4: Infer heterogeneous groups for integration...")
 
@@ -107,6 +112,7 @@ InferBatches <- function(sc_obj) {
 #'
 #' @param sc_obj Seurat object
 #' @return A Seurat object which contains integrated data
+#' @export
 #' @importFrom foreach %dopar%
 IntegrateByBatch <- function(sc_obj) {
   message("Step 5: Integrate samples based on inferred groups...")

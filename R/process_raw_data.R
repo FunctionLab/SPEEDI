@@ -3,6 +3,7 @@
 #' @param all_sc_exp_matrices list of single cell expression matrices
 #' @param human flag to indicate whether we're processing human or mouse data
 #' @return A Seurat object which contains filtered data from all input data
+#' @export
 #' @importFrom foreach %dopar%
 FilterRawData <- function(all_sc_exp_matrices, human) {
   message("Step 2: Filtering out bad samples...")
@@ -105,6 +106,12 @@ FilterRawData <- function(all_sc_exp_matrices, human) {
   return(sc_obj)
 }
 
+#' Process filtered data
+#'
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param human flag to indicate whether we're processing human or mouse data
+#' @return A Seurat object which contains processed data
+#' @export
 InitialProcessing <- function(sc_obj, human) {
   message("Step 3: Processing raw data...")
   s.genes <- Seurat::cc.genes.updated.2019$s.genes
