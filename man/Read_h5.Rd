@@ -2,18 +2,18 @@
 % Please edit documentation in R/read_data.R
 \name{Read_h5}
 \alias{Read_h5}
-\title{Read in data}
+\title{Read in h5 data for processing}
 \usage{
-Read_h5(data_path, sample_id_list)
+Read_h5(data_path = getwd(), sample_id_list = NULL)
 }
 \arguments{
 \item{data_path}{path to where data is located}
 
-\item{sample_id_list}{list of sample names}
+\item{sample_id_list}{list of sample names (optional - if not provided, will select all samples found recursively in data_path)}
 }
 \value{
 A set of single cell expression matrices
 }
 \description{
-Read in data
+Read in h5 data for processing
 }

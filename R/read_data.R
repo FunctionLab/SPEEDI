@@ -1,34 +1,53 @@
-#' Read in data
+#' Read in h5 data for processing
 #'
 #' @param data_path path to where data is located
-#' @param sample_id_list list of sample names
+#' @param sample_id_list list of sample names (optional - if not provided, will select all samples found recursively in data_path)
 #' @return A set of single cell expression matrices
 #' @export
 #' @importFrom foreach %dopar%
-Read_h5 <- function(data_path, sample_id_list) {
+Read_h5 <- function(data_path = getwd(), sample_id_list = NULL) {
   message("Step 1: Reading all samples...")
-  # Make reading data parallel
+  # First, remove "/" from end of data_path if it's provided (for use of list.files)
+  last_char_of_data_path <- substr(data_path, nchar(data_path), nchar(data_path))
+  if(last_char_of_data_path == "/") {
+    data_path <- substr(data_path, 1, nchar(data_path) - 1)
+  }
+  # Second, look for all filtered_feature_bc_matrix .h5 files in data_path
+  data_files <- list.files(path = data_path, pattern = "filtered_feature_bc_matrix\\.h5$", recursive = TRUE, full.names = TRUE)
+  # Finally, if the user did provide a sample_id_list, pick the subset of .h5 files that have that sample ID in the path
+  if(!is.null(sample_id_list)) {
+    data_files <- data_files[grepl(sample_id_list, data_files)]
+  } else {
+    # Else, we have all our data files, but we still need to guess what the sample names are because of CellRanger's
+    # structure for file output.
+    # Our current approach assumes that sample names are the directories right after data_path.
+    # Is there a better way of doing this?
+    sample_id_list <- strsplit(data_files, paste0(data_path, "/"))
+    sample_id_list <- sapply(sample_id_list , "[[", 2)
+    sample_id_list <- strsplit(sample_id_list, "/")
+    sample_id_list <- sapply(sample_id_list , "[[", 1)
+  }
+  # Set up reading of data so it's parallel (max cores == number of samples)
   if (Sys.getenv("SLURM_NTASKS_PER_NODE") == "") {
     n.cores <- as.numeric(parallel::detectCores())
   } else {
     n.cores <- as.numeric(Sys.getenv("SLURM_NTASKS_PER_NODE"))
   }
-
-  if (n.cores > length(sample_id_list)) {
-    n.cores <- length(sample_id_list)
+  if (n.cores > length(data_files)) {
+    n.cores <- length(data_files)
   }
   message(paste0("Number of cores: ", n.cores))
   doParallel::registerDoParallel(n.cores)
   message("Begin parallelizing")
+  # Dummy declaration to avoid check() complaining
   i <- 0
   all_sc_exp_matrices <- foreach::foreach(
-    i = 1:length(sample_id_list),
+    i = 1:length(data_files),
     .combine = 'cbind',
     .packages = c("Seurat", "base")
   ) %dopar% {
-    # TODO: Ensure that data_path is in correct format (ends in /)
-    print(paste0(data_path, sample_id_list[[i]], "/outs/filtered_feature_bc_matrix.h5"))
-    sc_matrix <- Seurat::Read10X_h5(paste0(data_path, sample_id_list[[i]], "/outs/filtered_feature_bc_matrix.h5"))
+    print(data_files[[i]])
+    sc_matrix <- Seurat::Read10X_h5(data_files[[i]])
     if (inherits(x = sc_matrix, what = 'list')) {
       sc_exp_matrix <- sc_matrix$`Gene Expression`
     } else {
