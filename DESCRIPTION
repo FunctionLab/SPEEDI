@@ -13,22 +13,23 @@ biocViews:
 Imports: 
     doParallel,
     foreach,
+    glmGamPoi,
     hdf5r,
+    httr,
     irlba,
     kneedle,
     lisi,
+    Matrix,
     matrixStats,
     outliers,
     parallel,
     RCurl,
     Seurat,
     SeuratData,
-    SeuratDisk,
-    glmGamPoi,
-    Matrix,
-    httr
+    SeuratDisk
+
 Remotes: 
-    github::mojaveazure/seurat-disk,
-    github::satijalab/seurat-data,
+    github::etam4260/kneedle,
     github::immunogenomics/lisi,
-    github::etam4260/kneedle
+    github::mojaveazure/seurat-disk,
+    github::satijalab/seurat-data
