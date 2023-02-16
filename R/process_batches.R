@@ -5,7 +5,7 @@
 #' @export
 InferBatches <- function(sc_obj) {
   message("Step 4: Infer heterogeneous groups for integration...")
-
+  # Find clusters in data (prior to batch correction)
   sc_obj <- Seurat::FindNeighbors(object = sc_obj, dims = 1:30)
   sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.1, algorithm = 2)
   # Use LISI metric to guess batch labels
@@ -34,8 +34,6 @@ InferBatches <- function(sc_obj) {
   used.sample.dump <- c()
   batch.assign <- list()
   for ( i in clusters.interest) {
-    #print(i)
-    #lisi.res.sub <- lisi.res[lisi.res$score <= quantile(lisi.res$score, 1),]
     lisi.res.sub <- lisi.res[lisi.res$cluster == i,]
     if (max(lisi.res.sub$score) <= 1.1) {
       samples.of.batch <- lisi.res.sub$batch[1]
@@ -117,10 +115,12 @@ InferBatches <- function(sc_obj) {
 IntegrateByBatch <- function(sc_obj) {
   message("Step 5: Integrate samples based on inferred groups...")
   sc_obj_list <- Seurat::SplitObject(sc_obj, split.by = "batch")
+  # If we only have one batch, we don't need to integrate by batch, so we exit the function
   if(length(sc_obj_list) == 1) {
     print("Only one batch was found, so we don't need to integrate batches. Exiting IntegrateByBatch!")
     return(sc_obj)
   }
+  # Set up reading of data so it's parallel (max cores == number of samples)
   if (Sys.getenv("SLURM_NTASKS_PER_NODE") == "") {
     n.cores <- as.numeric(parallel::detectCores())
   } else {
@@ -135,12 +135,14 @@ IntegrateByBatch <- function(sc_obj) {
 
   doParallel::registerDoParallel(n.cores)
   message("Begin parallelizing...")
+  # Dummy declaration to avoid check() complaining
   i <- 0
   r <- foreach::foreach(
     i = 1:length(sc_obj_list),
     .combine = 'c',
     .packages = c("Seurat", "base")
   ) %dopar% {
+    # Normalize counts within batch
     tmp <- Seurat::SCTransform(object = sc_obj_list[[i]],
                        vst.flavor = "v2",
                        vars.to.regress = c("percent.mt",

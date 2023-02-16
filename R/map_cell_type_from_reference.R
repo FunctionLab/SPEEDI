@@ -6,6 +6,7 @@
 #' @return A reference object
 #' @export
 LoadReference <- function(tissue, human, reference_path = getwd()) {
+  # Add "/" to end of reference path if not already present
   last_char_of_reference_path <- substr(reference_path, nchar(reference_path), nchar(reference_path))
   if(last_char_of_reference_path != "/") {
     reference_path <- paste0(reference_path, "/")
@@ -31,6 +32,7 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
       SeuratData::InstallData("pancreasref")
     } else if (tissue == "PBMC") {
       reference_url <- "https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat"
+      # Download PBMC reference if the user doesn't have it
       if(!file.exists(paste0(reference_path, basename(reference_url)))) {
         httr::GET(
           url = reference_url,
@@ -38,6 +40,7 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
           httr::verbose()
         ) -> res
       }
+      # Load and return PBMC reference
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_path, basename(reference_url)))
       return(reference)
     } else if (tissue == "Tonsil") {

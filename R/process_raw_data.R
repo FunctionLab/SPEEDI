@@ -12,9 +12,9 @@ FilterRawData <- function(all_sc_exp_matrices, human) {
                                min.cells = 3,
                                min.features = 3,
                                project = "unbias")
-
+  # Label each cell with its sample name in the sample metadata column
   sc_obj$sample <- as.vector(sapply(strsplit(colnames(sc_obj), "#"), "[", 1))
-
+  # Grab QC-related metrics (regular expression is different for human vs. mouse)
   if (human) {
     sc_obj <- Seurat::PercentageFeatureSet(object = sc_obj,
                                    pattern = "^MT-",
@@ -53,7 +53,7 @@ FilterRawData <- function(all_sc_exp_matrices, human) {
 
   objects <- Seurat::SplitObject(sc_obj, split.by = "sample")
 
-
+  # Set up reading of data so it's parallel (max cores == number of samples)
   if (Sys.getenv("SLURM_NTASKS_PER_NODE") == "") {
     n.cores <- as.numeric(parallel::detectCores())
   } else {
@@ -67,6 +67,7 @@ FilterRawData <- function(all_sc_exp_matrices, human) {
   message(paste0("Number of cores: ", n.cores))
   doParallel::registerDoParallel(n.cores)
   message("Begin parallelizing...")
+  # Dummy declarations to avoid check() complaining
   i <- 0
   nFeature_RNA <- percent.mt <- percent.rps <- percent.rpl <- percent.hb <- NULL
   sc_obj <- foreach::foreach(
@@ -74,11 +75,11 @@ FilterRawData <- function(all_sc_exp_matrices, human) {
     .combine = 'merge',
     .packages = c("Seurat", "base")
   ) %dopar% {
-    current_sample_name <- unique(objects[[i]]$sample)
+    # Automatically detect lower bound for nFeature using kneedle
     lower_nF <- kneedle::kneedle(graphics::hist(objects[[i]]$nFeature_RNA, breaks=100, plot=F)$breaks[-1],
                                  graphics::hist(objects[[i]]$nFeature_RNA, breaks=100, plot=F)$counts)[1]
     if (lower_nF > 1000) { lower_nF <- 1000 }
-
+    # Automatically detect upper bound for percent.mt using kneedle
     if (max(objects[[i]]$percent.mt) > 0) {
       if (max(objects[[i]]$percent.mt) < 5) {
         max_mt <- stats::quantile(objects[[i]]$percent.mt, .99)
@@ -88,7 +89,7 @@ FilterRawData <- function(all_sc_exp_matrices, human) {
         max_mt <- max(max_mt, stats::quantile(objects[[i]]$percent.mt, .75))
       }
     } else { max_mt <- 0}
-
+    # Subset current sample based on filtering criteria
     max_hb <- stats::quantile(objects[[i]]$percent.hb, .99)
     if (max_hb > 10) { max_hb <- 10 }
 
@@ -114,6 +115,7 @@ FilterRawData <- function(all_sc_exp_matrices, human) {
 #' @export
 InitialProcessing <- function(sc_obj, human) {
   message("Step 3: Processing raw data...")
+  # Load cell cycle genes and perform cell cycle scoring
   s.genes <- Seurat::cc.genes.updated.2019$s.genes
   g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
   # TODO: Add this file to data dir?
@@ -126,6 +128,7 @@ InitialProcessing <- function(sc_obj, human) {
     sc_obj <- Seurat::CellCycleScoring(object = sc_obj, s.features = m.s.genes, g2m.features = m.g2m.genes, set.ident = TRUE)
   }
   sc_obj$CC.Difference <- sc_obj$S.Score - sc_obj$G2M.Score
+  # Normalize count data using SCTransform
   system.time(sc_obj <- Seurat::SCTransform(object = sc_obj,
                                     vst.flavor = "v2",
                                     vars.to.regress = c("percent.mt",
@@ -137,6 +140,8 @@ InitialProcessing <- function(sc_obj, human) {
                                     do.center = TRUE,
                                     return.only.var.genes = TRUE,
                                     verbose = TRUE))
+  # Run PCA and UMAP to visualize data (prior to batch correction)
+  # TODO: Print plot?
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30)
   return(sc_obj)
