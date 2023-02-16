@@ -10,6 +10,8 @@ LoadReference(tissue, human, reference_path = getwd())
 \item{tissue}{tissue associated with samples}
 
 \item{human}{flag to indicate whether sample is human or mouse}
+
+\item{reference_path}{path to base directory for reference (or maybe full path to reference?)}
 }
 \value{
 A reference object

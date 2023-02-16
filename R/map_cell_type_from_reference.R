@@ -2,6 +2,7 @@
 #'
 #' @param tissue tissue associated with samples
 #' @param human flag to indicate whether sample is human or mouse
+#' @param reference_path path to base directory for reference (or maybe full path to reference?)
 #' @return A reference object
 #' @export
 LoadReference <- function(tissue, human, reference_path = getwd()) {
