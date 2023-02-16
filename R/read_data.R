@@ -46,13 +46,16 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL) {
     .combine = 'cbind',
     .packages = c("Seurat", "base")
   ) %dopar% {
+    # Read in data for current sample
     print(data_files[[i]])
     sc_matrix <- Seurat::Read10X_h5(data_files[[i]])
+    # If our resulting data structure is a list, then we have some multiome data (we just want the gene expression)
     if (inherits(x = sc_matrix, what = 'list')) {
       sc_exp_matrix <- sc_matrix$`Gene Expression`
     } else {
       sc_exp_matrix <- sc_matrix
     }
+    # Add sample names as prefix to cell names
     if (grepl("_|\\.", i)) {
       prefix <- paste0(strsplit(sample_id_list[[i]], "_")[[1]][1], "#")
     } else {
