@@ -1,10 +1,10 @@
 Package: SPEEDI
-Title: What the Package Does (One Line, Title Case)
+Title: Single-cell Pipeline for End to End Data Integration (SPEEDI)
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Authors@R: c(
+    person("Yuan", "Wang", email = "yuanwang@princeton.edu", role = c("aut", "cre")),
+    person("William", "Thistlethwaite", email = "wat2@princeton.edu", role = "aut"))
+Description: TODO: ADD CONTENT ABOUT WHAT SPEEDI DOES
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
