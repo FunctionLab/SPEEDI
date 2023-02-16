@@ -4,7 +4,7 @@
 \alias{LoadReference}
 \title{Load appropriate reference}
 \usage{
-LoadReference(tissue, human)
+LoadReference(tissue, human, reference_path = getwd())
 }
 \arguments{
 \item{tissue}{tissue associated with samples}
