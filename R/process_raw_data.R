@@ -17,13 +17,15 @@ FilterRawData <- function(all_sc_exp_matrices, human, remove_doublets = FALSE) {
   sc_obj$sample <- as.vector(sapply(strsplit(colnames(sc_obj), "#"), "[", 1))
   # Dummy declarations to avoid check() complaining
   scDblFinder.class <- NULL
+  # If requested, remove doublets from samples
   if(remove_doublets) {
+    message("Removing doublets...")
     sc_obj <- Seurat::as.Seurat(scDblFinder::scDblFinder(Seurat::as.SingleCellExperiment(sc_obj), samples = "sample"))
     # See distribution of doublets in each sample
     doublet_sc_obj <- subset(x = sc_obj, subset = scDblFinder.class %in% "doublet")
+    message("Number of doublets removed in each sample:")
     print(table(doublet_sc_obj$sample))
     rm(doublet_sc_obj)
-    # Remove doublets
     sc_obj <- subset(x = sc_obj, subset = scDblFinder.class %in% "singlet")
   }
   # Grab QC-related metrics (regular expression is different for human vs. mouse)
