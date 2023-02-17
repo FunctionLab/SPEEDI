@@ -1,6 +1,6 @@
-# We use the imports below, but not with direct calls in our functions.
-# Thus, to avoid check() complaining about us not using imports, we add
-# some (never used) direct calls
+# We use the packages below, but not with direct calls in our functions.
+# Thus, to avoid check() complaining about us not using these packages in
+# its import check, we add some direct calls in the (never used) function below
 ignore_unused_imports <- function() {
   hdf5r::as_hex
   Matrix::Arith

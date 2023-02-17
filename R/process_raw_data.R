@@ -18,7 +18,7 @@ FilterRawData <- function(all_sc_exp_matrices, human, remove_doublets = FALSE) {
   sc_obj$sample <- as.vector(sapply(strsplit(colnames(sc_obj), "#"), "[", 1))
   cell_names <- rownames(sc_obj@meta.data)
   sc_obj <- Seurat::AddMetaData(sc_obj, metadata = cell_names, col.name = "cell_name")
-  # Dummy declarations to avoid check() complaining
+  # Dummy declaration to avoid check() complaining
   scDblFinder.class <- NULL
   # If requested, remove doublets from samples
   if(remove_doublets) {
