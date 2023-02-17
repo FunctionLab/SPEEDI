@@ -14,7 +14,10 @@ FilterRawData <- function(all_sc_exp_matrices, human, remove_doublets = FALSE) {
                                min.features = 3,
                                project = "unbias")
   # Label each cell with its sample name in the sample metadata column
+  # Also, label each cell with its cell name in the cell_names metadata column
   sc_obj$sample <- as.vector(sapply(strsplit(colnames(sc_obj), "#"), "[", 1))
+  cell_names <- rownames(sc_obj@meta.data)
+  sc_obj <- Seurat::AddMetaData(sc_obj, metadata = cell_names, col.name = "cell_name")
   # Dummy declarations to avoid check() complaining
   scDblFinder.class <- NULL
   # If requested, remove doublets from samples
