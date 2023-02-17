@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R: c(
     person("Yuan", "Wang", email = "yuanwang@princeton.edu", role = c("aut", "cre")),
     person("William", "Thistlethwaite", email = "wat2@princeton.edu", role = "aut"))
-Description: TODO: ADD CONTENT ABOUT WHAT SPEEDI DOES
+Description: TODO: ADD CONTENT ABOUT WHAT SPEEDI DOES.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -24,10 +24,10 @@ Imports:
     outliers,
     parallel,
     RCurl,
+    scDblFinder,
     Seurat,
     SeuratData,
     SeuratDisk
-
 Remotes: 
     github::etam4260/kneedle,
     github::immunogenomics/lisi,

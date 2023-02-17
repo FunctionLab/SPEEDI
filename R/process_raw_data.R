@@ -2,10 +2,11 @@
 #'
 #' @param all_sc_exp_matrices list of single cell expression matrices
 #' @param human flag to indicate whether we're processing human or mouse data
+#' @param remove_doublets flag to indicate whether we're removing doublets from the data (using scDblFinder)
 #' @return A Seurat object which contains filtered data from all input data
 #' @export
 #' @importFrom foreach %dopar%
-FilterRawData <- function(all_sc_exp_matrices, human) {
+FilterRawData <- function(all_sc_exp_matrices, human, remove_doublets = FALSE) {
   message("Step 2: Filtering out bad samples...")
   sc_obj <- Seurat::CreateSeuratObject(counts = all_sc_exp_matrices,
                                assay = "RNA",
@@ -14,6 +15,17 @@ FilterRawData <- function(all_sc_exp_matrices, human) {
                                project = "unbias")
   # Label each cell with its sample name in the sample metadata column
   sc_obj$sample <- as.vector(sapply(strsplit(colnames(sc_obj), "#"), "[", 1))
+  # Dummy declarations to avoid check() complaining
+  scDblFinder.class <- NULL
+  if(remove_doublets) {
+    sc_obj <- Seurat::as.Seurat(scDblFinder::scDblFinder(Seurat::as.SingleCellExperiment(sc_obj), samples = "sample"))
+    # See distribution of doublets in each sample
+    doublet_sc_obj <- subset(x = sc_obj, subset = scDblFinder.class %in% "doublet")
+    print(table(doublet_sc_obj$sample))
+    rm(doublet_sc_obj)
+    # Remove doublets
+    sc_obj <- subset(x = sc_obj, subset = scDblFinder.class %in% "singlet")
+  }
   # Grab QC-related metrics (regular expression is different for human vs. mouse)
   if (human) {
     sc_obj <- Seurat::PercentageFeatureSet(object = sc_obj,

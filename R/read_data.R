@@ -18,7 +18,7 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL) {
   if(!is.null(sample_id_list)) {
     data_files <- data_files[grepl(sample_id_list, data_files)]
   } else {
-    # Else, we have all our data files, but we still need to guess what the sample names are because of CellRanger's
+    # Else, we are using all data files found above, but we still need to guess what the sample names are because of Cell Ranger's
     # structure for file output.
     # Our current approach assumes that sample names are the directories right after data_path.
     # Is there a better way of doing this?

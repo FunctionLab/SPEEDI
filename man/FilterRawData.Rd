@@ -4,12 +4,14 @@
 \alias{FilterRawData}
 \title{Filter raw data}
 \usage{
-FilterRawData(all_sc_exp_matrices, human)
+FilterRawData(all_sc_exp_matrices, human, remove_doublets = FALSE)
 }
 \arguments{
 \item{all_sc_exp_matrices}{list of single cell expression matrices}
 
 \item{human}{flag to indicate whether we're processing human or mouse data}
+
+\item{remove_doublets}{flag to indicate whether we're removing doublets from the data (using scDblFinder)}
 }
 \value{
 A Seurat object which contains filtered data from all input data
