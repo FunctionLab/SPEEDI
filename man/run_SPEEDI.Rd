@@ -5,19 +5,19 @@
 \title{Wrapper function for running the SPEEDI pipeline}
 \usage{
 run_SPEEDI(
-  data_path,
-  sample_id_list,
   tissue,
+  data_path = getwd(),
+  sample_id_list = NULL,
   human = TRUE,
   remove_doublets = FALSE
 )
 }
 \arguments{
+\item{tissue}{tissue of data (used to map cell types via reference)}
+
 \item{data_path}{path to where data is located}
 
 \item{sample_id_list}{list of sample names (optional - if not provided, will select all samples found recursively in data_path)}
-
-\item{tissue}{Tissue of data (used to map cell types via reference)}
 
 \item{human}{flag to indicate whether we're processing human or mouse data}
 

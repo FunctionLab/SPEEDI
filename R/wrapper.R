@@ -1,6 +1,6 @@
 #' Wrapper function for running the SPEEDI pipeline
 #'
-#' @param tissue Tissue of data (used to map cell types via reference)
+#' @param tissue tissue of data (used to map cell types via reference)
 #' @param data_path path to where data is located
 #' @param sample_id_list list of sample names (optional - if not provided, will select all samples found recursively in data_path)
 #' @param human flag to indicate whether we're processing human or mouse data

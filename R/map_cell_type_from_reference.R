@@ -31,7 +31,7 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
     } else if (tissue == "Pancreas") {
       SeuratData::InstallData("pancreasref")
     } else if (tissue == "PBMC") {
-      reference_url <- "https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat"
+      reference_url <- get_pbmc_reference_url()
       # Download PBMC reference if the user doesn't have it
       if(!file.exists(paste0(reference_path, basename(reference_url)))) {
         httr::GET(
