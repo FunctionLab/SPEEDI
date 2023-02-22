@@ -82,26 +82,31 @@ MajorityVote <- function(sc_obj, current_resolution = 1.5) {
   message("Begin majority voting...")
   if(length(unique(sc_obj$batch)) != 1) {
     Seurat::DefaultAssay(sc_obj) <- "integrated"
+  } else {
+    Seurat::DefaultAssay(sc_obj) <- "SCT"
   }
   sc_obj <- Seurat::FindNeighbors(sc_obj, reduction = "pca", dims = 1:30)
   # TODO: Add code to find the best resolution (e.g., by using Clustree?)
   sc_obj <- Seurat::FindClusters(sc_obj, resolution = current_resolution)
   sc_obj$predicted.id <- as.character(sc_obj$predicted.id)
-  #integrated_snn_res_values <- sc_obj[[associated_res_attribute]]$
 
-  cluster.dump <- as.numeric(levels(sc_obj$integrated_snn_res.1.5))
+  integrated_snn_res_df <- sc_obj[[associated_res_attribute]]
+  integrated_snn_res_cell_names <- rownames(integrated_snn_res_df)
+  integrated_snn_res_values <- integrated_snn_res_df[,1]
+
+  cluster.dump <- as.numeric(levels(integrated_snn_res_values))
   sc_obj$predicted_celltype_majority_vote <- sc_obj$seurat_clusters
   levels(sc_obj$predicted_celltype_majority_vote) <- as.character(levels(sc_obj$predicted_celltype_majority_vote))
   for (i in unique(sc_obj$predicted.id)) {
     print(i)
     cells <- names(sc_obj$predicted.id[sc_obj$predicted.id == i])
-    freq.table <- as.data.frame(table(sc_obj$integrated_snn_res.1.5[cells]))
+    freq.table <- as.data.frame(table(integrated_snn_res_df[cells,]))
     freq.table <- freq.table[order(freq.table$Freq, decreasing = TRUE),]
     freq.table$diff <- abs(c(diff(freq.table$Freq), 0))
     if(nrow(freq.table) > 30) {
       freq.table <- freq.table[1:30,]
     }
-    p.values <- outliers::dixon.test(freq.table$diff)$p.value[[1]]
+    p.values <- dixon.test(freq.table$diff)$p.value[[1]]
     max.index <- which.max(freq.table$diff)
     clusters <- as.numeric(as.character(freq.table$Var1[1:max.index]))
     levels(sc_obj$predicted_celltype_majority_vote)[levels(sc_obj$predicted_celltype_majority_vote) %in% as.character(clusters)] <- i
@@ -110,7 +115,7 @@ MajorityVote <- function(sc_obj, current_resolution = 1.5) {
 
   if (length(cluster.dump) > 0) {
     for (i in cluster.dump) {
-      cells <- names(sc_obj$integrated_snn_res.1.5[sc_obj$integrated_snn_res.1.5 == i])
+      cells <- rownames(subset(integrated_snn_res_df, integrated_snn_res_df[,1] == i,))
       freq.table <- as.data.frame(table(sc_obj$predicted.id[cells]))
       levels(sc_obj$predicted_celltype_majority_vote)[levels(sc_obj$predicted_celltype_majority_vote) %in% as.character(i)] <- as.vector(freq.table$Var1)[which.max(freq.table$Freq)]
     }

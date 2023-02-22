@@ -1,7 +1,7 @@
 the <- new.env(parent = emptyenv())
 
-# URL for PBMC reference - update this variable (either by the setter below or by directly editing this file)
-# if the link becomes defunct and we haven't updated it yet!
+# URL for PBMC reference - if the link becomes defunct and we haven't updated it yet,
+# update the variable below (either by the setter below or by directly editing this file)
 the$pbmc_reference_url <- "https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat"
 
 #' Get PBMC reference URL
