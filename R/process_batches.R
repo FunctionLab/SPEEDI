@@ -171,7 +171,7 @@ IntegrateByBatch <- function(sc_obj) {
                                     normalization.method = "SCT",
                                     anchor.features = features,
                                     reduction = "rpca",
-                                    k.anchor = 5)
+                                    k.anchor = 10)
 
   message("Begin integration...")
   integrated_obj <- Seurat::IntegrateData(anchorset = anchors,
