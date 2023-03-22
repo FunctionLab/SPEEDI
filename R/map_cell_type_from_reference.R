@@ -86,7 +86,6 @@ MajorityVote <- function(sc_obj, current_resolution = 0.5) {
     Seurat::DefaultAssay(sc_obj) <- "SCT"
   }
   sc_obj <- Seurat::FindNeighbors(sc_obj, reduction = "pca", dims = 1:30)
-  # TODO: Add code to find the best resolution (e.g., by using Clustree?)
   sc_obj <- Seurat::FindClusters(sc_obj, resolution = current_resolution)
   sc_obj$predicted.id <- as.character(sc_obj$predicted.id)
 
