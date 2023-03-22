@@ -77,7 +77,7 @@ FindMappingAnchors <- function(sc_obj, reference) {
 #' @param current_resolution parameter that indicates current resolution for clustering
 #' @return A Seurat object which contains majority vote labels
 #' @export
-MajorityVote <- function(sc_obj, current_resolution = 1.5) {
+MajorityVote <- function(sc_obj, current_resolution = 0.5) {
   associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
   message("Begin majority voting...")
   if(length(unique(sc_obj$batch)) != 1) {
