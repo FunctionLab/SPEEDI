@@ -113,7 +113,7 @@ MajorityVote <- function(sc_obj, current_resolution = 1) {
     if(nrow(freq.table) > 30) {
       freq.table <- freq.table[1:30,]
     }
-    p.values <- dixon.test(freq.table$diff)$p.value[[1]]
+    p.values <- outliers::dixon.test(freq.table$diff)$p.value[[1]]
     max.index <- which.max(freq.table$diff)
     clusters <- as.numeric(as.character(freq.table$Var1[1:max.index]))
     levels(sc_obj$predicted_celltype_majority_vote)[levels(sc_obj$predicted_celltype_majority_vote) %in% as.character(clusters)] <- i
