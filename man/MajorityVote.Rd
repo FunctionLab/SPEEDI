@@ -4,7 +4,7 @@
 \alias{MajorityVote}
 \title{In each cluster, vote for majority cell type}
 \usage{
-MajorityVote(sc_obj, current_resolution = 1.5)
+MajorityVote(sc_obj, current_resolution = 1)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
