@@ -57,16 +57,23 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference A Seurat reference object
+#' @param data_type string to indicate whether we're analyzing scRNA or snRNA data
 #' @return Mapping anchors between reference and query
 #' @export
-FindMappingAnchors <- function(sc_obj, reference) {
+FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA") {
   if(length(unique(sc_obj$batch)) != 1) {
     Seurat::DefaultAssay(sc_obj) <- "integrated"
+  }
+  # We don't want to recompute residuals if our reference is too different from our data type (e.g., scRNA versus snRNA)
+  if(data_type == "scRNA") {
+    recompute.residuals.value <- "T"
+  } else {
+    recompute.residuals.value <- "F"
   }
   anchors <- Seurat::FindTransferAnchors(reference = reference,
                                  query = sc_obj,
                                  normalization.method = "SCT",
-                                 recompute.residuals = T,
+                                 recompute.residuals = recompute.residuals.value,
                                  reference.reduction = "spca")
   return(anchors)
 }
@@ -77,16 +84,16 @@ FindMappingAnchors <- function(sc_obj, reference) {
 #' @param current_resolution parameter that indicates current resolution for clustering
 #' @return A Seurat object which contains majority vote labels
 #' @export
-MajorityVote <- function(sc_obj, current_resolution = 1.5) {
-  associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
+MajorityVote <- function(sc_obj, current_resolution = 1) {
   message("Begin majority voting...")
   if(length(unique(sc_obj$batch)) != 1) {
     Seurat::DefaultAssay(sc_obj) <- "integrated"
+    associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
   } else {
     Seurat::DefaultAssay(sc_obj) <- "SCT"
+    associated_res_attribute <- paste0("SCT_snn_res.", current_resolution)
   }
   sc_obj <- Seurat::FindNeighbors(sc_obj, reduction = "pca", dims = 1:30)
-  # TODO: Add code to find the best resolution (e.g., by using Clustree?)
   sc_obj <- Seurat::FindClusters(sc_obj, resolution = current_resolution)
   sc_obj$predicted.id <- as.character(sc_obj$predicted.id)
 
@@ -130,11 +137,12 @@ MajorityVote <- function(sc_obj, current_resolution = 1.5) {
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference Seurat reference object
+#' @param data_type string to indicate whether we're analyzing scRNA or snRNA data
 #' @return A Seurat object which contains majority vote labels
 #' @export
-MapCellTypes <- function(sc_obj, reference) {
+MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
   message("Step 6: Reference-based cell type mapping...")
-  anchors <- FindMappingAnchors(sc_obj, reference)
+  anchors <- FindMappingAnchors(sc_obj, reference, data_type)
   sc_obj <- Seurat::MapQuery(anchorset = anchors,
                      query = sc_obj,
                      reference = reference,
