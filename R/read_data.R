@@ -7,6 +7,8 @@
 #' @importFrom foreach %dopar%
 Read_h5 <- function(data_path = getwd(), sample_id_list = NULL) {
   message("Step 1: Reading all samples...")
+  # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
+  data_path <- path.expand(data_path)
   # First, remove "/" from end of data_path if it's provided (for use of list.files)
   last_char_of_data_path <- substr(data_path, nchar(data_path), nchar(data_path))
   if(last_char_of_data_path == "/") {
@@ -22,7 +24,6 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL) {
     # structure for file output.
     # Our current approach assumes that sample names are the directories right after data_path.
     # Is there a better way of doing this?
-    # TODO: Fix handling of ~ for home dir reference
     sample_id_list <- strsplit(data_files, paste0(data_path, "/"))
     sample_id_list <- sapply(sample_id_list , "[[", 2)
     sample_id_list <- strsplit(sample_id_list, "/")
