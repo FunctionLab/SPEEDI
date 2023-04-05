@@ -16,12 +16,13 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL) {
   data_files <- list.files(path = data_path, pattern = "filtered_feature_bc_matrix\\.h5$", recursive = TRUE, full.names = TRUE)
   # Finally, if the user did provide a sample_id_list, pick the subset of .h5 files that have that sample ID in the path
   if(!is.null(sample_id_list)) {
-    data_files <- data_files[grepl(sample_id_list, data_files)]
+    data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
   } else {
     # Else, we are using all data files found above, but we still need to guess what the sample names are because of Cell Ranger's
     # structure for file output.
     # Our current approach assumes that sample names are the directories right after data_path.
     # Is there a better way of doing this?
+    # TODO: Fix handling of ~ for home dir reference
     sample_id_list <- strsplit(data_files, paste0(data_path, "/"))
     sample_id_list <- sapply(sample_id_list , "[[", 2)
     sample_id_list <- strsplit(sample_id_list, "/")
