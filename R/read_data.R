@@ -1,6 +1,6 @@
 #' Read in h5 data for processing
 #'
-#' @param data_path path to where data is located
+#' @param data_path path to where data is located (optional - if not provided, will assume the data path is the current working directory)
 #' @param sample_id_list list of sample names (optional - if not provided, will select all samples found recursively in data_path)
 #' @return A set of single cell expression matrices
 #' @export
