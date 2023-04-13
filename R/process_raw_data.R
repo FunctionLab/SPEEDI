@@ -134,10 +134,8 @@ InitialProcessing <- function(sc_obj, human) {
   # Load cell cycle genes and perform cell cycle scoring
   s.genes <- Seurat::cc.genes.updated.2019$s.genes
   g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
-  # TODO: Add this file to data dir?
-  #cc.gene.updated.mouse <- readRDS(paste0(home_dir, "/cc.gene.updated.mouse.rds"))
-  #m.s.genes <-  Seurat::cc.gene.updated.mouse$m.s.genes
-  #m.g2m.genes <-  Seurat::cc.gene.updated.mouse$m.g2m.genes
+  m.s.genes <-  SPEEDI::cc.gene.updated.mouse$m.s.genes
+  m.g2m.genes <-  SPEEDI::cc.gene.updated.mouse$m.g2m.genes
   if (human) {
     sc_obj <- Seurat::CellCycleScoring(object = sc_obj, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
   } else {
