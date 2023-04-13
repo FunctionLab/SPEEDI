@@ -9,7 +9,7 @@ run_SPEEDI(
   data_path = getwd(),
   sample_id_list = NULL,
   human = TRUE,
-  remove_doublets = FALSE
+  record_doublets = FALSE
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ run_SPEEDI(
 
 \item{human}{flag to indicate whether we're processing human or mouse data}
 
-\item{remove_doublets}{flag to indicate whether we're removing doublets from the data (using scDblFinder)}
+\item{record_doublets}{flag to indicate whether we're recording doublets in the data (using scDblFinder)}
 }
 \value{
 A Seurat object that has been processed through the SPEEDI pipeline

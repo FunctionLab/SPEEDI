@@ -7,7 +7,7 @@
 Read_h5(data_path = getwd(), sample_id_list = NULL)
 }
 \arguments{
-\item{data_path}{path to where data is located}
+\item{data_path}{path to where data is located (optional - if not provided, will assume the data path is the current working directory)}
 
 \item{sample_id_list}{list of sample names (optional - if not provided, will select all samples found recursively in data_path)}
 }
