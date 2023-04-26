@@ -1,4 +1,4 @@
-#' Load appropriate reference
+#' Load appropriate reference - need to update function name so it doesn't overlap with Azimuth
 #'
 #' @param tissue tissue associated with samples
 #' @param human flag to indicate whether sample is human or mouse
