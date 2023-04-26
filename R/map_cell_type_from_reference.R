@@ -33,10 +33,10 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
     } else if (tissue == "PBMC") {
       reference_url <- get_pbmc_reference_url()
       # Download PBMC reference if the user doesn't have it
-      if(!file.exists(paste0(reference_path, basename(reference_url)))) {
+      if(!file.exists(paste0(reference_path, sub("\\?.*", "", basename(reference_url))))) {
         httr::GET(
           url = reference_url,
-          httr::write_disk(paste0(reference_path, basename(reference_url))),
+          httr::write_disk(paste0(reference_path, sub("\\?.*", "", basename(reference_url)))),
           httr::verbose()
         ) -> res
       }
