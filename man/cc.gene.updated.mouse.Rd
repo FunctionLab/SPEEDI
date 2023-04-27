@@ -7,7 +7,7 @@
 \format{
 \subsection{\code{cc.gene.updated.mouse}}{
 
-A list containing two character vectors of length 43 (S genes) and 54 (G2M genes), respectively:
+A list containing two character vectors of length 43 (S genes) and 54 (G2M genes), respectively.
 }
 }
 \source{
@@ -18,6 +18,5 @@ cc.gene.updated.mouse
 }
 \description{
 A data object containing mouse cell cycle genes
-Report ...
 }
 \keyword{datasets}

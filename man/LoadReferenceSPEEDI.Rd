@@ -2,20 +2,20 @@
 % Please edit documentation in R/map_cell_type_from_reference.R
 \name{LoadReferenceSPEEDI}
 \alias{LoadReferenceSPEEDI}
-\title{Load appropriate reference - need to update function name so it doesn't overlap with Azimuth}
+\title{Load appropriate reference for SPEEDI}
 \usage{
-LoadReferenceSPEEDI(tissue, human, reference_path = getwd())
+LoadReferenceSPEEDI(tissue, human, reference_dir = getwd())
 }
 \arguments{
 \item{tissue}{tissue associated with samples}
 
 \item{human}{flag to indicate whether sample is human or mouse}
 
-\item{reference_path}{path to base directory for reference (or maybe full path to reference?)}
+\item{reference_dir}{path to base directory for reference}
 }
 \value{
 A reference object
 }
 \description{
-Load appropriate reference - need to update function name so it doesn't overlap with Azimuth
+Load appropriate reference for SPEEDI
 }

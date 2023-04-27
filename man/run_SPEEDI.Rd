@@ -7,6 +7,7 @@
 run_SPEEDI(
   tissue,
   data_path = getwd(),
+  reference_dir = getwd(),
   sample_id_list = NULL,
   human = TRUE,
   record_doublets = FALSE
@@ -16,6 +17,8 @@ run_SPEEDI(
 \item{tissue}{tissue of data (used to map cell types via reference)}
 
 \item{data_path}{path to where data is located}
+
+\item{reference_dir}{path to dir where reference is located}
 
 \item{sample_id_list}{list of sample names (optional - if not provided, will select all samples found recursively in data_path)}
 

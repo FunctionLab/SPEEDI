@@ -2,19 +2,18 @@
 #'
 #' @param tissue tissue associated with samples
 #' @param human flag to indicate whether sample is human or mouse
-#' @param reference_path path to base directory for reference (or maybe full path to reference?)
+#' @param reference_dir path to base directory for reference
 #' @return A reference object
 #' @export
-LoadReferenceSPEEDI <- function(tissue, human, reference_path = getwd()) {
+LoadReferenceSPEEDI <- function(tissue, human, reference_dir = getwd()) {
   # Change tissue to all lowercase to prevent any issues with casing
   tissue <- tolower(tissue)
   # Add "/" to end of reference path if not already present
-  last_char_of_reference_path <- substr(reference_path, nchar(reference_path), nchar(reference_path))
+  last_char_of_reference_path <- substr(reference_dir, nchar(reference_dir), nchar(reference_dir))
   if(last_char_of_reference_path != "/") {
-    reference_path <- paste0(reference_path, "/")
+    reference_dir <- paste0(reference_dir, "/")
   }
-  message("Loading reference")
-  message(paste0("Installing data for ", tissue, " reference if necessary"))
+  message(paste0("Loading ", tissue, " reference (and installing data if necessary)"))
   if (human) {
     if (tissue == "adipose") {
       SeuratData::InstallData("adiposeref")
@@ -43,28 +42,28 @@ LoadReferenceSPEEDI <- function(tissue, human, reference_path = getwd()) {
     } else if (tissue == "pbmc") {
       reference_url <- get_pbmc_reference_url()
       # Download PBMC reference if the user doesn't have it
-      if(!file.exists(paste0(reference_path, sub("\\?.*", "", basename(reference_url))))) {
+      if(!file.exists(paste0(reference_dir, sub("\\?.*", "", basename(reference_url))))) {
         httr::GET(
           url = reference_url,
-          httr::write_disk(paste0(reference_path, sub("\\?.*", "", basename(reference_url)))),
+          httr::write_disk(paste0(reference_dir, sub("\\?.*", "", basename(reference_url)))),
           httr::verbose()
         ) -> res
       }
       # Load and return PBMC reference
-      reference <- SeuratDisk::LoadH5Seurat(paste0(reference_path, basename(reference_url)))
+      reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, basename(reference_url)))
       return(reference)
     } else if (tissue == "tonsil") {
       SeuratData::InstallData("tonsilref")
       return("tonsilref")
     } else {
-      message(paste0("Your tissue ", tissue, " is not valid"))
+      message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
     }
   } else {
     if (tissue == "cortex") {
       SeuratData::InstallData("mousecortexref")
       return("mousecortexref")
     } else {
-      message(paste0("Your tissue ", tissue, " is not valid"))
+      message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
     }
   }
 }
@@ -77,9 +76,6 @@ LoadReferenceSPEEDI <- function(tissue, human, reference_path = getwd()) {
 #' @return Mapping anchors between reference and query
 #' @export
 FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA") {
-  if(length(unique(sc_obj$batch)) != 1) {
-    Seurat::DefaultAssay(sc_obj) <- "integrated"
-  }
   # We don't want to recompute residuals if our reference is too different from our data type (e.g., scRNA versus snRNA)
   if(data_type == "scRNA") {
     recompute.residuals.value <- "T"
@@ -97,12 +93,13 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA") {
 #' In each cluster, vote for majority cell type
 #'
 #' @param sc_obj Seurat object containing cells for all samples
+#' @param used_assay assay used for processing (integrated or SCT)
 #' @param current_resolution parameter that indicates current resolution for clustering
 #' @return A Seurat object which contains majority vote labels
 #' @export
-MajorityVote <- function(sc_obj, current_resolution = 1) {
+MajorityVote <- function(sc_obj, used_assay, current_resolution = 1) {
   message("Begin majority voting...")
-  if(length(unique(sc_obj$batch)) != 1) {
+  if(used_assay == "integrated") {
     Seurat::DefaultAssay(sc_obj) <- "integrated"
     associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
   } else {
@@ -158,7 +155,16 @@ MajorityVote <- function(sc_obj, current_resolution = 1) {
 #' @export
 MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
   message("Step 6: Reference-based cell type mapping...")
+  # Grab all possible SeuratData references (to make sure that user provided a valid one)
   possible_seuratdata_references <- get_seuratdata_references()
+  # Assay will be integrated if multiple batches were found - otherwise, we use SCT assay
+  if(length(unique(sc_obj$batch)) != 1) {
+    Seurat::DefaultAssay(sc_obj) <- "integrated"
+    used_assay <- "integrated"
+  } else {
+    Seurat::DefaultAssay(sc_obj) <- "SCT"
+    used_assay <- "SCT"
+  }
   if(inherits(reference, "Seurat")) {
     anchors <- FindMappingAnchors(sc_obj, reference, data_type)
     sc_obj <- Seurat::MapQuery(anchorset = anchors,
@@ -168,17 +174,10 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
                      reference.reduction = "spca",
                      reduction.model = "wnn.umap",
                      verbose = TRUE)
-    sc_obj <- MajorityVote(sc_obj)
+    sc_obj <- MajorityVote(sc_obj, used_assay)
   } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
-    if(length(unique(sc_obj$batch)) != 1) {
-      Seurat::DefaultAssay(sc_obj) <- "integrated"
-      used_assay <- "integrated"
-    } else {
-      Seurat::DefaultAssay(sc_obj) <- "SCT"
-      used_assay <- "SCT"
-    }
     sc_obj <- Azimuth::RunAzimuth(sc_obj, reference = reference, assay = used_assay)
-    sc_obj <- MajorityVote(sc_obj)
+    sc_obj <- MajorityVote(sc_obj, used_assay)
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
       message(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."))

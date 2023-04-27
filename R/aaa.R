@@ -1,3 +1,4 @@
+# Environment to store global package variables
 the <- new.env(parent = emptyenv())
 
 # URL for PBMC reference - if the link becomes defunct and we haven't updated it yet,
