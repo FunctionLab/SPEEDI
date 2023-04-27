@@ -165,6 +165,7 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
     Seurat::DefaultAssay(sc_obj) <- "SCT"
     used_assay <- "SCT"
   }
+  print(used_assay)
   if(inherits(reference, "Seurat")) {
     anchors <- FindMappingAnchors(sc_obj, reference, data_type)
     sc_obj <- Seurat::MapQuery(anchorset = anchors,
