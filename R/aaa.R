@@ -4,6 +4,9 @@ the <- new.env(parent = emptyenv())
 # update the variable below (either by the setter below or by directly editing this file)
 the$pbmc_reference_url <- "https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat"
 
+# List of possible SeuratData references
+the$seuratdata_references <- c("adiposeref", "bonemarrowref", "fetusref", "heartref", "humancortexref", "kidneyref", "lungref", "pancreasref", "tonsilref", "mousecortexref")
+
 #' Get PBMC reference URL
 #' @export
 get_pbmc_reference_url <- function() {
@@ -17,6 +20,12 @@ set_pbmc_reference_url <- function(new_url = "https://atlas.fredhutch.org/data/n
   old <- the$pbmc_reference_url
   the$pbmc_reference_url <- new_url
   invisible(old)
+}
+
+#' Get possible SeuratData references
+#' @export
+get_seuratdata_references <- function() {
+  the$seuratdata_references
 }
 
 # We use the packages below, but not with direct calls in our functions.

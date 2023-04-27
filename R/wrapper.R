@@ -15,7 +15,8 @@ run_SPEEDI <- function(tissue, data_path = getwd(), sample_id_list = NULL, human
   sc_obj <- InferBatches(sc_obj)
   sc_obj <- IntegrateByBatch(sc_obj)
   sc_obj <- VisualizeIntegration(sc_obj)
-  reference <- LoadReference(tissue, human)
+  reference <- LoadReferenceSPEEDI(tissue, human)
+  # TODO: Automatically figure out data type
   sc_obj <- MapCellTypes(sc_obj, reference)
   return(sc_obj)
 }

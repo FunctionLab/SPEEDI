@@ -5,7 +5,9 @@
 #' @param reference_path path to base directory for reference (or maybe full path to reference?)
 #' @return A reference object
 #' @export
-LoadReference <- function(tissue, human, reference_path = getwd()) {
+LoadReferenceSPEEDI <- function(tissue, human, reference_path = getwd()) {
+  # Change tissue to all lowercase to prevent any issues with casing
+  tissue <- tolower(tissue)
   # Add "/" to end of reference path if not already present
   last_char_of_reference_path <- substr(reference_path, nchar(reference_path), nchar(reference_path))
   if(last_char_of_reference_path != "/") {
@@ -14,23 +16,31 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
   message("Loading reference")
   message(paste0("Installing data for ", tissue, " reference if necessary"))
   if (human) {
-    if (tissue == "Adipose") {
+    if (tissue == "adipose") {
       SeuratData::InstallData("adiposeref")
-    } else if (tissue == "Bone Marrow") {
+      return("adiposeref")
+    } else if (tissue == "bone marrow") {
       SeuratData::InstallData("bonemarrowref")
-    } else if (tissue == "Fetus") {
+      return("bonemarrowref")
+    } else if (tissue == "fetus") {
       SeuratData::InstallData("fetusref")
-    } else if (tissue == "Heart") {
+      return("fetusref")
+    } else if (tissue == "heart") {
       SeuratData::InstallData("heartref")
-    } else if (tissue == "Cortex") {
+      return("heartref")
+    } else if (tissue == "cortex") {
       SeuratData::InstallData("humancortexref")
-    } else if (tissue == "Kidney") {
+      return("humancortexref")
+    } else if (tissue == "kidney") {
       SeuratData::InstallData("kidneyref")
-    } else if (tissue == "Lung") {
+      return("kidneyref")
+    } else if (tissue == "lung") {
       SeuratData::InstallData("lungref")
-    } else if (tissue == "Pancreas") {
+      return("lungref")
+    } else if (tissue == "pancreas") {
       SeuratData::InstallData("pancreasref")
-    } else if (tissue == "PBMC") {
+      return("pancreasref")
+    } else if (tissue == "pbmc") {
       reference_url <- get_pbmc_reference_url()
       # Download PBMC reference if the user doesn't have it
       if(!file.exists(paste0(reference_path, sub("\\?.*", "", basename(reference_url))))) {
@@ -43,12 +53,18 @@ LoadReference <- function(tissue, human, reference_path = getwd()) {
       # Load and return PBMC reference
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_path, basename(reference_url)))
       return(reference)
-    } else if (tissue == "Tonsil") {
+    } else if (tissue == "tonsil") {
       SeuratData::InstallData("tonsilref")
+      return("tonsilref")
+    } else {
+      message(paste0("Your tissue ", tissue, " is not valid"))
     }
   } else {
-    if (tissue == "Cortex") {
+    if (tissue == "cortex") {
       SeuratData::InstallData("mousecortexref")
+      return("mousecortexref")
+    } else {
+      message(paste0("Your tissue ", tissue, " is not valid"))
     }
   }
 }
@@ -142,14 +158,34 @@ MajorityVote <- function(sc_obj, current_resolution = 1) {
 #' @export
 MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
   message("Step 6: Reference-based cell type mapping...")
-  anchors <- FindMappingAnchors(sc_obj, reference, data_type)
-  sc_obj <- Seurat::MapQuery(anchorset = anchors,
+  possible_seuratdata_references <- get_seuratdata_references()
+  if(inherits(reference, "Seurat")) {
+    anchors <- FindMappingAnchors(sc_obj, reference, data_type)
+    sc_obj <- Seurat::MapQuery(anchorset = anchors,
                      query = sc_obj,
                      reference = reference,
                      refdata = "celltype.l2",
                      reference.reduction = "spca",
                      reduction.model = "wnn.umap",
                      verbose = TRUE)
-  sc_obj <- MajorityVote(sc_obj)
+    sc_obj <- MajorityVote(sc_obj)
+  } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
+    if(length(unique(sc_obj$batch)) != 1) {
+      Seurat::DefaultAssay(sc_obj) <- "integrated"
+      used_assay <- "integrated"
+    } else {
+      Seurat::DefaultAssay(sc_obj) <- "SCT"
+      used_assay <- "SCT"
+    }
+    sc_obj <- RunAzimuth(sc_obj, reference = reference, assay = used_assay)
+    sc_obj <- MajorityVote(sc_obj)
+  } else {
+    if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
+      message(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."))
+    } else if(inherits(reference, "character") & !(reference %in% possible_seuratdata_references)) {
+      message(paste0("\nYour reference name (", reference, ") is not valid (it was not found in SeuratData). It should be one of the following: \n"))
+      message(paste0(possible_seuratdata_references, collapse = "\n"))
+    }
+  }
   return(sc_obj)
 }
