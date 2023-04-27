@@ -75,7 +75,7 @@ LoadReferenceSPEEDI <- function(tissue, human, reference_dir = getwd()) {
 #' @param data_type string to indicate whether we're analyzing scRNA or snRNA data
 #' @return Mapping anchors between reference and query
 #' @export
-FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA") {
+FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", azimuth = FALSE) {
   # We don't want to recompute residuals if our reference is too different from our data type (e.g., scRNA versus snRNA)
   if(data_type == "scRNA") {
     recompute.residuals.value <- "T"
@@ -165,7 +165,6 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
     Seurat::DefaultAssay(sc_obj) <- "SCT"
     used_assay <- "SCT"
   }
-  print(used_assay)
   if(inherits(reference, "Seurat")) {
     anchors <- FindMappingAnchors(sc_obj, reference, data_type)
     sc_obj <- Seurat::MapQuery(anchorset = anchors,
@@ -177,7 +176,14 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
                      verbose = TRUE)
     sc_obj <- MajorityVote(sc_obj, used_assay)
   } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
-    sc_obj <- Azimuth::RunAzimuth(sc_obj, reference = reference, assay = used_assay)
+    anchors <- FindMappingAnchorsAzimuth(sc_obj, reference, data_type)
+    sc_obj <- Seurat::MapQuery(anchorset = anchors,
+                               query = sc_obj,
+                               reference = reference,
+                               refdata = "celltype.l2",
+                               reference.reduction = "spca",
+                               reduction.model = "wnn.umap",
+                               verbose = TRUE)
     sc_obj <- MajorityVote(sc_obj, used_assay)
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
