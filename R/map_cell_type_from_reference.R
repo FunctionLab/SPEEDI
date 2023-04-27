@@ -177,7 +177,7 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
       Seurat::DefaultAssay(sc_obj) <- "SCT"
       used_assay <- "SCT"
     }
-    sc_obj <- RunAzimuth(sc_obj, reference = reference, assay = used_assay)
+    sc_obj <- Azimuth::RunAzimuth(sc_obj, reference = reference, assay = used_assay)
     sc_obj <- MajorityVote(sc_obj)
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
