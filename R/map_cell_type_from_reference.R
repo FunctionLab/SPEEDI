@@ -73,6 +73,7 @@ LoadReferenceSPEEDI <- function(tissue, human, reference_dir = getwd()) {
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference A Seurat reference object
 #' @param data_type string to indicate whether we're analyzing scRNA or snRNA data
+#' @param azimuth Are we using an Azimuth reference? If so, we have to map our anchors slightly differently
 #' @return Mapping anchors between reference and query
 #' @export
 FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", azimuth = FALSE) {
