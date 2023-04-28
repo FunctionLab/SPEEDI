@@ -83,11 +83,25 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", azimuth =
   } else {
     recompute.residuals.value <- "F"
   }
-  anchors <- Seurat::FindTransferAnchors(reference = reference,
-                                 query = sc_obj,
-                                 normalization.method = "SCT",
-                                 recompute.residuals = recompute.residuals.value,
-                                 reference.reduction = "spca")
+  if(!azimuth) {
+    anchors <- Seurat::FindTransferAnchors(reference = reference,
+                                           query = sc_obj,
+                                           normalization.method = "SCT",
+                                           recompute.residuals = recompute.residuals.value,
+                                           reference.reduction = "spca")
+  } else {
+    anchors <- Seurat::FindTransferAnchors(reference = reference$map,
+                                           query = sc_obj,
+                                           normalization.method = "SCT",
+                                           reference.reduction = "refDR",
+                                           reference.neighbors = "refdr.annoy.neighbors",
+                                           features = intersect(rownames(reference$map), rownames(sc_obj)),
+                                           reference.assay = "refAssay",
+                                           k.filter = NA,
+                                           dims = 1:50,
+                                           query.assay = "integrated")
+  }
+
   return(anchors)
 }
 
