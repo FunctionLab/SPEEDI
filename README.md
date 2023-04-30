@@ -7,7 +7,7 @@
 - [Running SPEEDI Locally](#running-speedi-locally)
 - [Citing SPEEDI](#citing-speedi)
 
-## What Is SPEEDI?
+## Overview of SPEEDI
 
 ...
 
