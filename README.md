@@ -2,33 +2,21 @@
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+- [Overview of SPEEDI](#overview-of-speedi)
+- [Using the SPEEDI Website](#using-the-speedi-website)
+- [Running SPEEDI Locally](#running-speedi-locally)
+- [Citing SPEEDI](#citing-speedi)
 
-## Introduction
+## What Is SPEEDI?
 
 ...
 
-## Features
+## Using the SPEEDI Website
 
 ...
 
-## Installation
+## Running SPEEDI Locally
 
 ...
 
-## Usage
-
-...
-
-## Contributing
-
-...
-
-## License
-
-...
+## Citing SPEEDI
