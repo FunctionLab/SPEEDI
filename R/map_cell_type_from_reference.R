@@ -40,6 +40,9 @@ LoadReferenceSPEEDI <- function(tissue, human, reference_dir = getwd()) {
       SeuratData::InstallData("pancreasref")
       return("pancreasref")
     } else if (tissue == "pbmc") {
+      SeuratData::InstallData("pbmcref")
+      return("pbmcref")
+    } else if (tissue == "pbmc_full") {
       reference_url <- get_pbmc_reference_url()
       # Download PBMC reference if the user doesn't have it
       if(!file.exists(paste0(reference_dir, sub("\\?.*", "", basename(reference_url))))) {
@@ -108,17 +111,16 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", azimuth =
 #' In each cluster, vote for majority cell type
 #'
 #' @param sc_obj Seurat object containing cells for all samples
-#' @param used_assay assay used for processing (integrated or SCT)
 #' @param current_resolution parameter that indicates current resolution for clustering
 #' @return A Seurat object which contains majority vote labels
 #' @export
-MajorityVote <- function(sc_obj, used_assay, current_resolution = 1) {
+MajorityVote <- function(sc_obj, current_resolution = 1) {
+  # TODO: Set predicted.id to proper value based on reference chosen
+  # Do it in a function
   message("Begin majority voting...")
-  if(used_assay == "integrated") {
-    Seurat::DefaultAssay(sc_obj) <- "integrated"
+  if(Seurat::DefaultAssay(sc_obj) == "integrated") {
     associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
   } else {
-    Seurat::DefaultAssay(sc_obj) <- "SCT"
     associated_res_attribute <- paste0("SCT_snn_res.", current_resolution)
   }
   sc_obj <- Seurat::FindNeighbors(sc_obj, reduction = "pca", dims = 1:30)
@@ -161,6 +163,54 @@ MajorityVote <- function(sc_obj, used_assay, current_resolution = 1) {
   return(sc_obj)
 }
 
+#' Choose assay based on whether there are multiple batches (integrated) or only one batch (SCT)
+#' @param sc_obj Seurat object containing cells for all samples
+#' @return A Seurat object with default assay appropriately set
+SetDefaultAssay <- function(sc_obj) {
+  # Assay will be integrated if multiple batches were found - otherwise, we use SCT assay
+  if(length(unique(sc_obj$batch)) != 1) {
+    Seurat::DefaultAssay(sc_obj) <- "integrated"
+  } else {
+    Seurat::DefaultAssay(sc_obj) <- "SCT"
+  }
+  return(sc_obj)
+}
+
+#' We always want to use the predicted.id column in our Seurat object to determine majority vote.
+#' However, if we use Azimuth::RunAzimuth, there are often predictions made at multiple annotation levels.
+#' Depending on the reference, we use SetPredictedId to select the proper annotation level for predicted.id.
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param reference Reference name
+#' @return A Seurat object with predicted.id appropriately set
+SetPredictedId <- function(sc_obj, reference) {
+  if(reference == "adiposeref") {
+    sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+  } else if(reference == "bonemarrowref") {
+    sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+  } else if (reference == "fetusref") {
+    sc_obj$predicted.id <- sc_obj$predicted.annotation.l2
+  } else if (reference == "heartref") {
+    sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+  } else if (reference == "humancortexref") {
+    sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+  } else if (reference == "kidneyref") {
+    sc_obj$predicted.id <- sc_obj$predicted.annotation.l2
+  } else if (reference == "lungref") {
+    sc_obj$predicted.id <- sc_obj$predicted.ann_level_3
+  } else if (reference == "pancreasref") {
+    sc_obj$predicted.id <- sc_obj$predicted.annotation.l1
+  } else if (reference == "pbmcref") {
+    sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+  } else if (tissue == "tonsilref") {
+    sc_obj$predicted.id <- sc_obj$predicted.celltype.l1
+  } else if(reference == "mousecortexref") {
+    sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+  } else {
+    message("Invalid reference")
+  }
+  return(sc_obj)
+}
+
 #' Map cell types for input data
 #'
 #' @param sc_obj Seurat object containing cells for all samples
@@ -170,16 +220,10 @@ MajorityVote <- function(sc_obj, used_assay, current_resolution = 1) {
 #' @export
 MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
   message("Step 6: Reference-based cell type mapping...")
+  # Set default assay (to integrated or SCT)
+  sc_obj <- SetDefaultAssay(sc_obj)
   # Grab all possible SeuratData references (to make sure that user provided a valid one)
   possible_seuratdata_references <- get_seuratdata_references()
-  # Assay will be integrated if multiple batches were found - otherwise, we use SCT assay
-  if(length(unique(sc_obj$batch)) != 1) {
-    Seurat::DefaultAssay(sc_obj) <- "integrated"
-    used_assay <- "integrated"
-  } else {
-    Seurat::DefaultAssay(sc_obj) <- "SCT"
-    used_assay <- "SCT"
-  }
   if(inherits(reference, "Seurat")) {
     anchors <- FindMappingAnchors(sc_obj, reference, data_type)
     sc_obj <- Seurat::MapQuery(anchorset = anchors,
@@ -189,17 +233,12 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
                      reference.reduction = "spca",
                      reduction.model = "wnn.umap",
                      verbose = TRUE)
-    sc_obj <- MajorityVote(sc_obj, used_assay)
+    sc_obj <- MajorityVote(sc_obj)
   } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
-    anchors <- FindMappingAnchorsAzimuth(sc_obj, reference, data_type)
-    sc_obj <- Seurat::MapQuery(anchorset = anchors,
-                               query = sc_obj,
-                               reference = reference,
-                               refdata = "celltype.l2",
-                               reference.reduction = "spca",
-                               reduction.model = "wnn.umap",
-                               verbose = TRUE)
-    sc_obj <- MajorityVote(sc_obj, used_assay)
+    sc_obj <- RunAzimuth(query = sc_obj, reference = reference)
+    sc_obj <- SetDefaultAssay(sc_obj)
+    sc_obj <- SetPredictedId(sc_obj, reference)
+    sc_obj <- MajorityVote(sc_obj)
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
       message(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."))
@@ -210,3 +249,5 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
   }
   return(sc_obj)
 }
+
+
