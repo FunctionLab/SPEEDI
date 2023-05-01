@@ -1,12 +1,13 @@
 #' Filter raw data
 #'
 #' @param all_sc_exp_matrices list of single cell expression matrices
-#' @param human flag to indicate whether we're processing human or mouse data
+#' @param species flag to indicate whether we're processing human or mouse data
 #' @param record_doublets flag to indicate whether we're recording doublet info in the data (using scDblFinder)
 #' @return A Seurat object which contains filtered data from all input data
 #' @export
 #' @importFrom foreach %dopar%
-FilterRawData <- function(all_sc_exp_matrices, human, record_doublets = FALSE) {
+FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE) {
+  species <- lower(species)
   message("Step 2: Filtering out bad samples...")
   sc_obj <- Seurat::CreateSeuratObject(counts = all_sc_exp_matrices,
                                assay = "RNA",
@@ -31,7 +32,7 @@ FilterRawData <- function(all_sc_exp_matrices, human, record_doublets = FALSE) {
     rm(doublet_sc_obj)
   }
   # Grab QC-related metrics (regular expression is different for human vs. mouse)
-  if (human) {
+  if (species == "human") {
     sc_obj <- Seurat::PercentageFeatureSet(object = sc_obj,
                                    pattern = "^MT-",
                                    col.name = "percent.mt")
@@ -126,17 +127,18 @@ FilterRawData <- function(all_sc_exp_matrices, human, record_doublets = FALSE) {
 #' Process filtered data
 #'
 #' @param sc_obj Seurat object containing cells for all samples
-#' @param human flag to indicate whether we're processing human or mouse data
+#' @param species flag to indicate whether we're processing human or mouse data
 #' @return A Seurat object which contains processed data
 #' @export
-InitialProcessing <- function(sc_obj, human) {
+InitialProcessing <- function(sc_obj, species = "human") {
+  species <- lower(species)
   message("Step 3: Processing raw data...")
   # Load cell cycle genes and perform cell cycle scoring
   s.genes <- Seurat::cc.genes.updated.2019$s.genes
   g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
   m.s.genes <-  SPEEDI::cc.gene.updated.mouse$m.s.genes
   m.g2m.genes <-  SPEEDI::cc.gene.updated.mouse$m.g2m.genes
-  if (human) {
+  if (species == "human") {
     sc_obj <- Seurat::CellCycleScoring(object = sc_obj, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
   } else {
     sc_obj <- Seurat::CellCycleScoring(object = sc_obj, s.features = m.s.genes, g2m.features = m.g2m.genes, set.ident = TRUE)

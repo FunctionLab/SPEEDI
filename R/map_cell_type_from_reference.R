@@ -1,20 +1,22 @@
 #' Load appropriate reference for SPEEDI
 #'
 #' @param tissue tissue associated with samples
-#' @param human flag to indicate whether sample is human or mouse
+#' @param species flag to indicate whether sample is human or mouse
 #' @param reference_dir path to base directory for reference
+#' @param reference_file_name name of reference file, inside of reference_dir, that should be loaded (only used if tissue is set to custom)
 #' @return A reference object
 #' @export
-LoadReferenceSPEEDI <- function(tissue, human, reference_dir = getwd()) {
+LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL) {
   # Change tissue to all lowercase to prevent any issues with casing
   tissue <- tolower(tissue)
+  species <- tolower(species)
   # Add "/" to end of reference path if not already present
   last_char_of_reference_path <- substr(reference_dir, nchar(reference_dir), nchar(reference_dir))
   if(last_char_of_reference_path != "/") {
     reference_dir <- paste0(reference_dir, "/")
   }
   message(paste0("Loading ", tissue, " reference (and installing data if necessary)"))
-  if (human) {
+  if (species == "human") {
     if (tissue == "adipose") {
       SeuratData::InstallData("adiposeref")
       return("adiposeref")
@@ -58,6 +60,10 @@ LoadReferenceSPEEDI <- function(tissue, human, reference_dir = getwd()) {
     } else if (tissue == "tonsil") {
       SeuratData::InstallData("tonsilref")
       return("tonsilref")
+    } else if (tissue == "custom") {
+      # Load and return reference
+      reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
+      return(reference)
     } else {
       message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
     }
