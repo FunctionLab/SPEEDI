@@ -6,12 +6,14 @@
 However, if we use Azimuth::RunAzimuth, there are often predictions made at multiple annotation levels.
 Depending on the reference, we use SetPredictedId to select the proper annotation level for predicted.id.}
 \usage{
-SetPredictedId(sc_obj, reference)
+SetPredictedId(sc_obj, reference, log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{reference}{Reference name}
+
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A Seurat object with predicted.id appropriately set

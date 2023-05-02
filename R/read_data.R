@@ -2,12 +2,12 @@
 #'
 #' @param data_path path to where data is located (optional - if not provided, will assume the data path is the current working directory)
 #' @param sample_id_list list of sample names (optional - if not provided, will select all samples found recursively in data_path)
-#' @param log_file log file where certain output will be written (e.g., parameters)
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A set of single cell expression matrices
 #' @export
 #' @importFrom foreach %dopar%
-Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_file = NULL) {
-  message("Step 1: Reading all samples...")
+Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE) {
+  print_SPEEDI("Step 1: Reading all samples...")
   # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
   data_path <- path.expand(data_path)
   # First, remove "/" from end of data_path if it's provided (for use of list.files)
@@ -39,9 +39,9 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_file = NULL)
   if (n.cores > length(data_files)) {
     n.cores <- length(data_files)
   }
-  message(paste0("Number of cores: ", n.cores))
+  print_SPEEDI(paste0("Number of cores: ", n.cores))
   doParallel::registerDoParallel(n.cores)
-  message("Begin parallelizing")
+  print_SPEEDI("Begin parallelizing")
   # Dummy declaration to avoid check() complaining
   i <- 0
   all_sc_exp_matrices <- foreach::foreach(
@@ -67,8 +67,6 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_file = NULL)
     colnames(sc_exp_matrix) <- paste0(prefix, colnames(sc_exp_matrix))
     return(sc_exp_matrix)
   }
-
-  message(paste0("Raw data has ", dim(all_sc_exp_matrices)[2], " barcodes and ", dim(all_sc_exp_matrices)[1], " transcripts."))
-  log_file.print(paste0("Raw data has ", dim(all_sc_exp_matrices)[2], " barcodes and ", dim(all_sc_exp_matrices)[1], " transcripts."))
+  print_SPEEDI(paste0("Raw data has ", dim(all_sc_exp_matrices)[2], " barcodes and ", dim(all_sc_exp_matrices)[1], " transcripts."), log_flag)
   return(all_sc_exp_matrices)
 }

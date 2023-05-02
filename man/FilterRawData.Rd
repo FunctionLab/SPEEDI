@@ -4,7 +4,12 @@
 \alias{FilterRawData}
 \title{Filter raw data}
 \usage{
-FilterRawData(all_sc_exp_matrices, species = "human", record_doublets = FALSE)
+FilterRawData(
+  all_sc_exp_matrices,
+  species = "human",
+  record_doublets = FALSE,
+  log_flag = FALSE
+)
 }
 \arguments{
 \item{all_sc_exp_matrices}{list of single cell expression matrices}
@@ -12,6 +17,8 @@ FilterRawData(all_sc_exp_matrices, species = "human", record_doublets = FALSE)
 \item{species}{flag to indicate whether we're processing human or mouse data}
 
 \item{record_doublets}{flag to indicate whether we're recording doublet info in the data (using scDblFinder)}
+
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A Seurat object which contains filtered data from all input data

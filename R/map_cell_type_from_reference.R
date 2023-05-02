@@ -4,9 +4,10 @@
 #' @param species flag to indicate whether sample is human or mouse
 #' @param reference_dir path to base directory for reference
 #' @param reference_file_name name of reference file, inside of reference_dir, that should be loaded (only used if tissue is set to custom)
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A reference object
 #' @export
-LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL) {
+LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL, log_flag = FALSE) {
   # Change tissue to all lowercase to prevent any issues with casing
   tissue <- tolower(tissue)
   species <- tolower(species)
@@ -118,9 +119,10 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", azimuth =
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param current_resolution parameter that indicates current resolution for clustering
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object which contains majority vote labels
 #' @export
-MajorityVote <- function(sc_obj, current_resolution = 1) {
+MajorityVote <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
   # TODO: Set predicted.id to proper value based on reference chosen
   # Do it in a function
   message("Begin majority voting...")
@@ -171,8 +173,9 @@ MajorityVote <- function(sc_obj, current_resolution = 1) {
 
 #' Choose assay based on whether there are multiple batches (integrated) or only one batch (SCT)
 #' @param sc_obj Seurat object containing cells for all samples
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object with default assay appropriately set
-SetDefaultAssay <- function(sc_obj) {
+SetDefaultAssay <- function(sc_obj, log_flag = FALSE) {
   # Assay will be integrated if multiple batches were found - otherwise, we use SCT assay
   if(length(unique(sc_obj$batch)) != 1) {
     Seurat::DefaultAssay(sc_obj) <- "integrated"
@@ -187,8 +190,9 @@ SetDefaultAssay <- function(sc_obj) {
 #' Depending on the reference, we use SetPredictedId to select the proper annotation level for predicted.id.
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference Reference name
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object with predicted.id appropriately set
-SetPredictedId <- function(sc_obj, reference) {
+SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
   if(reference == "adiposeref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
   } else if(reference == "bonemarrowref") {
@@ -207,7 +211,7 @@ SetPredictedId <- function(sc_obj, reference) {
     sc_obj$predicted.id <- sc_obj$predicted.annotation.l1
   } else if (reference == "pbmcref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
-  } else if (tissue == "tonsilref") {
+  } else if (reference == "tonsilref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l1
   } else if(reference == "mousecortexref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
@@ -222,9 +226,10 @@ SetPredictedId <- function(sc_obj, reference) {
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference Seurat reference object
 #' @param data_type string to indicate whether we're analyzing scRNA or snRNA data
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object which contains majority vote labels
 #' @export
-MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
+MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
   message("Step 6: Reference-based cell type mapping...")
   # Set default assay (to integrated or SCT)
   sc_obj <- SetDefaultAssay(sc_obj)
@@ -241,7 +246,7 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA") {
                      verbose = TRUE)
     sc_obj <- MajorityVote(sc_obj)
   } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
-    sc_obj <- RunAzimuth(query = sc_obj, reference = reference)
+    sc_obj <- Azimuth::RunAzimuth(query = sc_obj, reference = reference)
     sc_obj <- SetDefaultAssay(sc_obj)
     sc_obj <- SetPredictedId(sc_obj, reference)
     sc_obj <- MajorityVote(sc_obj)

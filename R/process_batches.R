@@ -1,9 +1,10 @@
 #' Infer batches using LISI metric
 #'
 #' @param sc_obj Seurat object containing cells for all samples
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object which contains labeled batches
 #' @export
-InferBatches <- function(sc_obj) {
+InferBatches <- function(sc_obj, log_flag = FALSE) {
   message("Step 4: Infer heterogeneous groups for integration...")
   # Find clusters in data (prior to batch correction)
   sc_obj <- Seurat::FindNeighbors(object = sc_obj, dims = 1:30)
@@ -109,10 +110,11 @@ InferBatches <- function(sc_obj) {
 #' Integrate batches
 #'
 #' @param sc_obj Seurat object
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object which contains integrated data
 #' @export
 #' @importFrom foreach %dopar%
-IntegrateByBatch <- function(sc_obj) {
+IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
   message("Step 5: Integrate samples based on inferred groups...")
   sc_obj_list <- Seurat::SplitObject(sc_obj, split.by = "batch")
   # If we only have one batch, we don't need to integrate by batch, so we exit the function
@@ -190,9 +192,10 @@ IntegrateByBatch <- function(sc_obj) {
 #' Visualize integration and prepare SCT for finding markers
 #'
 #' @param sc_obj Seurat object
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object with SCT markers and visualizations
 #' @export
-VisualizeIntegration <- function(sc_obj) {
+VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
   sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, return.model = T)

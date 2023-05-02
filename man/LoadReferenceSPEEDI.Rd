@@ -8,7 +8,8 @@ LoadReferenceSPEEDI(
   tissue,
   species = "human",
   reference_dir = getwd(),
-  reference_file_name = NULL
+  reference_file_name = NULL,
+  log_flag = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ LoadReferenceSPEEDI(
 \item{reference_dir}{path to base directory for reference}
 
 \item{reference_file_name}{name of reference file, inside of reference_dir, that should be loaded (only used if tissue is set to custom)}
+
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A reference object

@@ -4,12 +4,14 @@
 \alias{InitialProcessing}
 \title{Process filtered data}
 \usage{
-InitialProcessing(sc_obj, species = "human")
+InitialProcessing(sc_obj, species = "human", log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{species}{flag to indicate whether we're processing human or mouse data}
+
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A Seurat object which contains processed data

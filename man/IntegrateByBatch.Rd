@@ -4,10 +4,12 @@
 \alias{IntegrateByBatch}
 \title{Integrate batches}
 \usage{
-IntegrateByBatch(sc_obj)
+IntegrateByBatch(sc_obj, log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object}
+
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A Seurat object which contains integrated data

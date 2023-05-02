@@ -4,14 +4,14 @@
 \alias{Read_h5}
 \title{Read in h5 data for processing}
 \usage{
-Read_h5(data_path = getwd(), sample_id_list = NULL, log_file = NULL)
+Read_h5(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE)
 }
 \arguments{
 \item{data_path}{path to where data is located (optional - if not provided, will assume the data path is the current working directory)}
 
 \item{sample_id_list}{list of sample names (optional - if not provided, will select all samples found recursively in data_path)}
 
-\item{log_file}{log file where certain output will be written (e.g., parameters)}
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A set of single cell expression matrices

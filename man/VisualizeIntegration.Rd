@@ -4,10 +4,12 @@
 \alias{VisualizeIntegration}
 \title{Visualize integration and prepare SCT for finding markers}
 \usage{
-VisualizeIntegration(sc_obj)
+VisualizeIntegration(sc_obj, log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object}
+
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A Seurat object with SCT markers and visualizations

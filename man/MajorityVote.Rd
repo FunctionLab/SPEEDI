@@ -4,12 +4,14 @@
 \alias{MajorityVote}
 \title{In each cluster, vote for majority cell type}
 \usage{
-MajorityVote(sc_obj, current_resolution = 1)
+MajorityVote(sc_obj, current_resolution = 1, log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{current_resolution}{parameter that indicates current resolution for clustering}
+
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A Seurat object which contains majority vote labels

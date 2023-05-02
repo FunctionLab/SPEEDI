@@ -4,10 +4,12 @@
 \alias{SetDefaultAssay}
 \title{Choose assay based on whether there are multiple batches (integrated) or only one batch (SCT)}
 \usage{
-SetDefaultAssay(sc_obj)
+SetDefaultAssay(sc_obj, log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
+
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A Seurat object with default assay appropriately set

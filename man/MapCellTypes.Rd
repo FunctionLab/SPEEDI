@@ -4,7 +4,7 @@
 \alias{MapCellTypes}
 \title{Map cell types for input data}
 \usage{
-MapCellTypes(sc_obj, reference, data_type = "scRNA")
+MapCellTypes(sc_obj, reference, data_type = "scRNA", log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
@@ -12,6 +12,8 @@ MapCellTypes(sc_obj, reference, data_type = "scRNA")
 \item{reference}{Seurat reference object}
 
 \item{data_type}{string to indicate whether we're analyzing scRNA or snRNA data}
+
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 A Seurat object which contains majority vote labels

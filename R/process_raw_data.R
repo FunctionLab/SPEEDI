@@ -3,12 +3,13 @@
 #' @param all_sc_exp_matrices list of single cell expression matrices
 #' @param species flag to indicate whether we're processing human or mouse data
 #' @param record_doublets flag to indicate whether we're recording doublet info in the data (using scDblFinder)
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object which contains filtered data from all input data
 #' @export
 #' @importFrom foreach %dopar%
-FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE) {
-  species <- lower(species)
-  message("Step 2: Filtering out bad samples...")
+FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_flag = FALSE) {
+  species <- tolower(species)
+  print_SPEEDI("Step 2: Filtering out bad samples...")
   sc_obj <- Seurat::CreateSeuratObject(counts = all_sc_exp_matrices,
                                assay = "RNA",
                                min.cells = 3,
@@ -23,12 +24,12 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
   scDblFinder.class <- NULL
   # If requested, record doublet info in samples
   if(record_doublets) {
-    message("Recording doublet info...")
+    print_SPEEDI("Recording doublet info...")
     sc_obj <- Seurat::as.Seurat(scDblFinder::scDblFinder(Seurat::as.SingleCellExperiment(sc_obj), samples = "sample"))
     # See distribution of doublets in each sample
     doublet_sc_obj <- subset(x = sc_obj, subset = scDblFinder.class %in% "doublet")
-    message("Number of doublets in each sample:")
-    print(table(doublet_sc_obj$sample))
+    print_SPEEDI("Number of doublets in each sample:")
+    print_SPEEDI(table(doublet_sc_obj$sample))
     rm(doublet_sc_obj)
   }
   # Grab QC-related metrics (regular expression is different for human vs. mouse)
@@ -81,9 +82,9 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
     n.cores <- length(objects)
   }
 
-  message(paste0("Number of cores: ", n.cores))
+  print_SPEEDI(paste0("Number of cores: ", n.cores))
   doParallel::registerDoParallel(n.cores)
-  message("Begin parallelizing...")
+  print_SPEEDI("Begin parallelizing...")
   # Dummy declarations to avoid check() complaining
   i <- 0
   nFeature_RNA <- percent.mt <- percent.rps <- percent.rpl <- percent.hb <- NULL
@@ -92,6 +93,7 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
     .combine = 'merge',
     .packages = c("Seurat", "base")
   ) %dopar% {
+    current_sample_name <- unique(objects[[i]]$sample)
     # Automatically detect lower bound for nFeature using kneedle
     lower_nF <- kneedle::kneedle(graphics::hist(objects[[i]]$nFeature_RNA, breaks=100, plot=F)$breaks[-1],
                                  graphics::hist(objects[[i]]$nFeature_RNA, breaks=100, plot=F)$counts)[1]
@@ -117,10 +119,17 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
                        percent.rps <= stats::quantile(objects[[i]]$percent.rps, .99) &
                        percent.rpl <= stats::quantile(objects[[i]]$percent.rpl, .99) &
                        percent.hb <= max_hb)
+    print_SPEEDI(paste0("QC Thresholds used for sample: ", current_sample_name))
+    print_SPEEDI(paste0("lower nFeature: ", lower_nF))
+    print_SPEEDI(paste0("upper nFeature: ", stats::quantile(objects[[i]]$nFeature_RNA, .99)))
+    print_SPEEDI(paste0("max mt: ", max_mt))
+    print_SPEEDI(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99)))
+    print_SPEEDI(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99)))
+    print_SPEEDI(paste0("max hb: ", max_hb))
     return(object)
   }
 
-  message(paste0("Filtered data has ", dim(sc_obj)[2], " barcodes and ", dim(sc_obj)[1], " transcripts."))
+  print_SPEEDI(paste0("Filtered data has ", dim(sc_obj)[2], " barcodes and ", dim(sc_obj)[1], " transcripts."))
   return(sc_obj)
 }
 
@@ -128,11 +137,12 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param species flag to indicate whether we're processing human or mouse data
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object which contains processed data
 #' @export
-InitialProcessing <- function(sc_obj, species = "human") {
-  species <- lower(species)
-  message("Step 3: Processing raw data...")
+InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
+  species <- tolower(species)
+  print_SPEEDI("Step 3: Processing raw data...")
   # Load cell cycle genes and perform cell cycle scoring
   s.genes <- Seurat::cc.genes.updated.2019$s.genes
   g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
