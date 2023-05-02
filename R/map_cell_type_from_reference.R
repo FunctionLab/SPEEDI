@@ -242,6 +242,7 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALS
                      reference.reduction = "spca",
                      reduction.model = "wnn.umap",
                      verbose = TRUE)
+    print_SPEEDI("Running majority vote", log_flag)
     sc_obj <- MajorityVote(sc_obj, log_flag)
   } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
     print_SPEEDI("Running Azimuth to map reference onto query cells", log_flag)
