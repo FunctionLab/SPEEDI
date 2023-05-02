@@ -34,6 +34,7 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE
     sample_id_list <- strsplit(sample_id_list, "/")
     sample_id_list <- sapply(sample_id_list , "[[", 1)
   }
+  print_SPEEDI(paste0("Total sample count is: ", length(sample_id_list)), log_flag)
   # Set up reading of data so it's parallel (max cores == number of samples)
   if (Sys.getenv("SLURM_NTASKS_PER_NODE") == "") {
     n.cores <- as.numeric(parallel::detectCores())
@@ -45,7 +46,7 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE
   }
   print_SPEEDI(paste0("Number of cores: ", n.cores))
   doParallel::registerDoParallel(n.cores)
-  print_SPEEDI("Begin parallelizing")
+  print_SPEEDI("Beginning parallel processing of samples", log_flag)
   # Dummy declaration to avoid check() complaining
   i <- 0
   all_sc_exp_matrices <- foreach::foreach(

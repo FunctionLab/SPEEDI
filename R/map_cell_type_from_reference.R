@@ -82,6 +82,7 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
       message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
     }
   }
+  print_SPEEDI(paste0("Selected reference based on your tissue is: ", reference), log_flag)
   print_SPEEDI("Step 7: Complete", log_flag)
   return(reference)
 }
@@ -100,6 +101,7 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag 
   if(data_type == "scRNA") {
     recompute.residuals.value <- "T"
   } else {
+    print_SPEEDI("Not using recompute.residuals for mapping anchors due to non-scRNA query dataset", log_flag)
     recompute.residuals.value <- "F"
   }
   anchors <- Seurat::FindTransferAnchors(reference = reference,
@@ -159,8 +161,7 @@ MajorityVote <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
       levels(sc_obj$predicted_celltype_majority_vote)[levels(sc_obj$predicted_celltype_majority_vote) %in% as.character(i)] <- as.vector(freq.table$Var1)[which.max(freq.table$Freq)]
     }
   }
-
-  print_SPEEDI("End majority voting")
+  print_SPEEDI("Done with majority voting", log_flag)
   return(sc_obj)
 }
 
@@ -212,6 +213,7 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
   } else {
     print_SPEEDI("Invalid reference", log_flag)
   }
+  print_SPEEDI("Done choosing appropriate annotation level from reference", log_flag)
   return(sc_obj)
 }
 
@@ -242,11 +244,12 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALS
                      reference.reduction = "spca",
                      reduction.model = "wnn.umap",
                      verbose = TRUE)
-    print_SPEEDI("Running majority vote", log_flag)
+    print_SPEEDI("Done mapping reference onto query cells", log_flag)
     sc_obj <- MajorityVote(sc_obj, log_flag)
   } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
     print_SPEEDI("Running Azimuth to map reference onto query cells", log_flag)
     sc_obj <- Azimuth::RunAzimuth(query = sc_obj, reference = reference)
+    print_SPEEDI("Done running Azimuth to map reference onto query cells", log_flag)
     sc_obj <- SetDefaultAssay(sc_obj)
     sc_obj <- SetPredictedId(sc_obj, reference, log_flag)
     sc_obj <- MajorityVote(sc_obj, log_flag)

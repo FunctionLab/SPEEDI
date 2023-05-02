@@ -14,6 +14,7 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
   print_SPEEDI("Step 2: Filtering out bad samples", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   print_SPEEDI(paste0("record_doublets is: ", record_doublets), log_flag)
+  print_SPEEDI("Creating Seurat object from matrices", log_flag)
   sc_obj <- Seurat::CreateSeuratObject(counts = all_sc_exp_matrices,
                                assay = "RNA",
                                min.cells = 3,
@@ -37,6 +38,7 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
     rm(doublet_sc_obj)
   }
   # Grab QC-related metrics (regular expression is different for human vs. mouse)
+  print_SPEEDI("Grabbing QC-related metrics", log_flag)
   if (species == "human") {
     sc_obj <- Seurat::PercentageFeatureSet(object = sc_obj,
                                    pattern = "^MT-",
@@ -88,7 +90,7 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
 
   print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
   doParallel::registerDoParallel(n.cores)
-  print_SPEEDI("Begin parallelizing", log_flag)
+  print_SPEEDI("Beginning parallel processing of samples", log_flag)
   # Dummy declarations to avoid check() complaining
   i <- 0
   nFeature_RNA <- percent.mt <- percent.rps <- percent.rpl <- percent.hb <- NULL
@@ -162,6 +164,7 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
     }
     print_SPEEDI("\n", log_flag, silence_time = TRUE)
   }
+  print_SPEEDI("Parallel processing complete", log_flag)
   print_SPEEDI(paste0("Filtered data has ", dim(sc_obj)[2], " barcodes and ", dim(sc_obj)[1], " transcripts."), log_flag)
   print_SPEEDI("Step 2: Complete", log_flag)
   gc()
@@ -181,6 +184,7 @@ InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
   print_SPEEDI("Step 3: Processing raw data", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   # Load cell cycle genes and perform cell cycle scoring
+  print_SPEEDI("Loading cell cycle genes and performing cell cycle scoring", log_flag)
   s.genes <- Seurat::cc.genes.updated.2019$s.genes
   g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
   m.s.genes <-  SPEEDI::cc.gene.updated.mouse$m.s.genes

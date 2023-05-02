@@ -138,7 +138,7 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
 
   doParallel::registerDoParallel(n.cores)
-  print_SPEEDI("Begin parallelizing", log_flag)
+  print_SPEEDI("Beginning parallel processing of samples", log_flag)
   # Dummy declaration to avoid check() complaining
   i <- 0
   r <- foreach::foreach(
@@ -170,7 +170,6 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
   r <- Seurat::PrepSCTIntegration(object.list = r, anchor.features = features)
 
   print_SPEEDI("Finding integration anchors", log_flag)
-
   anchors <- Seurat::FindIntegrationAnchors(object.list = r,
                                     normalization.method = "SCT",
                                     anchor.features = features,
@@ -186,6 +185,7 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
   rm(sc_obj_list)
   rm(features)
   rm(anchors)
+
   print_SPEEDI("Finished integration", log_flag)
   print_SPEEDI("Step 5: Complete", log_flag)
   gc()
@@ -201,14 +201,16 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
 #' @export
 VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 6: Scaling integrated data, creating UMAP of integration and prepping data for FindMarkers", log_flag)
+  print_SPEEDI("Step 6: Final processing of integrated data", log_flag)
+  print_SPEEDI("Scaling integrated data", log_flag)
   sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)
+  print_SPEEDI("Running PCA and UMAP on integrated data", log_flag)
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, return.model = T)
   Seurat::DefaultAssay(sc_obj) <- "SCT"
+  print_SPEEDI("Prepparing integrated data for FindMarkers", log_flag)
   sc_obj <- Seurat::PrepSCTFindMarkers(sc_obj)
   print_SPEEDI("Step 6: Complete", log_flag)
   gc()
   return(sc_obj)
 }
-
