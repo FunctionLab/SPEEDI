@@ -192,6 +192,7 @@ InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
   }
   sc_obj$CC.Difference <- sc_obj$S.Score - sc_obj$G2M.Score
   # Normalize count data using SCTransform
+  print_SPEEDI("Running SCTransform to normalize count data", log_flag)
   system.time(sc_obj <- Seurat::SCTransform(object = sc_obj,
                                     vst.flavor = "v2",
                                     vars.to.regress = c("percent.mt",
@@ -205,6 +206,7 @@ InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
                                     verbose = TRUE))
   # Run PCA and UMAP to visualize data (prior to batch correction)
   # TODO: Print plot?
+  print_SPEEDI("Running PCA and UMAP on normalized data", log_flag)
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30)
   print_SPEEDI("Step 3: Complete", log_flag)
