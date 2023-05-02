@@ -10,6 +10,9 @@
 FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_flag = FALSE) {
   species <- tolower(species)
   print_SPEEDI("Step 2: Filtering out bad samples...")
+  print_SPEEDI(paste0("species is: ", species), log_flag)
+  print_SPEEDI(paste0("record_doublets is: ", record_doublets), log_flag)
+  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   sc_obj <- Seurat::CreateSeuratObject(counts = all_sc_exp_matrices,
                                assay = "RNA",
                                min.cells = 3,
@@ -119,13 +122,13 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
                        percent.rps <= stats::quantile(objects[[i]]$percent.rps, .99) &
                        percent.rpl <= stats::quantile(objects[[i]]$percent.rpl, .99) &
                        percent.hb <= max_hb)
-    print_SPEEDI(paste0("QC Thresholds used for sample: ", current_sample_name))
-    print_SPEEDI(paste0("lower nFeature: ", lower_nF))
-    print_SPEEDI(paste0("upper nFeature: ", stats::quantile(objects[[i]]$nFeature_RNA, .99)))
-    print_SPEEDI(paste0("max mt: ", max_mt))
-    print_SPEEDI(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99)))
-    print_SPEEDI(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99)))
-    print_SPEEDI(paste0("max hb: ", max_hb))
+    print_SPEEDI(paste0("QC Thresholds used for sample: ", current_sample_name), log_flag)
+    print_SPEEDI(paste0("lower nFeature: ", lower_nF), log_flag)
+    print_SPEEDI(paste0("upper nFeature: ", stats::quantile(objects[[i]]$nFeature_RNA, .99)), log_flag)
+    print_SPEEDI(paste0("max mt: ", max_mt), log_flag)
+    print_SPEEDI(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99)), log_flag)
+    print_SPEEDI(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99)), log_flag)
+    print_SPEEDI(paste0("max hb: ", max_hb), log_flag)
     return(object)
   }
 
@@ -143,6 +146,8 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
 InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
   species <- tolower(species)
   print_SPEEDI("Step 3: Processing raw data...")
+  print_SPEEDI(paste0("species is: ", species), log_flag)
+  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   # Load cell cycle genes and perform cell cycle scoring
   s.genes <- Seurat::cc.genes.updated.2019$s.genes
   g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
@@ -170,5 +175,6 @@ InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
   # TODO: Print plot?
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30)
+  print_SPEEDI("Raw data processing complete", log_flag)
   return(sc_obj)
 }

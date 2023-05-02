@@ -16,7 +16,14 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
   if(last_char_of_reference_path != "/") {
     reference_dir <- paste0(reference_dir, "/")
   }
-  message(paste0("Loading ", tissue, " reference (and installing data if necessary)"))
+  print_SPEEDI(paste0("Step 7: loading ", tissue, " reference (and installing data if necessary)"), log_flag)
+  print_SPEEDI(paste0("tissue is: ", tissue), log_flag)
+  print_SPEEDI(paste0("species is: ", species), log_flag)
+  print_SPEEDI(paste0("reference_dir is: ", reference_dir), log_flag)
+  if(!is.null(reference_file_name)) {
+    print_SPEEDI(paste0("reference_file_name is: ", reference_file_name), log_flag)
+  }
+  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   if (species == "human") {
     if (tissue == "adipose") {
       SeuratData::InstallData("adiposeref")
@@ -47,6 +54,7 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
       return("pbmcref")
     } else if (tissue == "pbmc_full") {
       reference_url <- get_pbmc_reference_url()
+      print_SPEEDI(paste0("Downloading PBMC reference from ", reference_url), log_flag)
       # Download PBMC reference if the user doesn't have it
       if(!file.exists(paste0(reference_dir, sub("\\?.*", "", basename(reference_url))))) {
         httr::GET(
@@ -76,6 +84,7 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
       message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
     }
   }
+  print_SPEEDI("Reference successfully set", log_flag)
 }
 
 #' Find mapping anchors between reference and query
@@ -83,35 +92,23 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference A Seurat reference object
 #' @param data_type string to indicate whether we're analyzing scRNA or snRNA data
-#' @param azimuth Are we using an Azimuth reference? If so, we have to map our anchors slightly differently
+#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return Mapping anchors between reference and query
 #' @export
-FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", azimuth = FALSE) {
+FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
+  print_SPEEDI("Finding mapping anchors", log_flag)
   # We don't want to recompute residuals if our reference is too different from our data type (e.g., scRNA versus snRNA)
   if(data_type == "scRNA") {
     recompute.residuals.value <- "T"
   } else {
     recompute.residuals.value <- "F"
   }
-  if(!azimuth) {
-    anchors <- Seurat::FindTransferAnchors(reference = reference,
+  anchors <- Seurat::FindTransferAnchors(reference = reference,
                                            query = sc_obj,
                                            normalization.method = "SCT",
                                            recompute.residuals = recompute.residuals.value,
                                            reference.reduction = "spca")
-  } else {
-    anchors <- Seurat::FindTransferAnchors(reference = reference$map,
-                                           query = sc_obj,
-                                           normalization.method = "SCT",
-                                           reference.reduction = "refDR",
-                                           reference.neighbors = "refdr.annoy.neighbors",
-                                           features = intersect(rownames(reference$map), rownames(sc_obj)),
-                                           reference.assay = "refAssay",
-                                           k.filter = NA,
-                                           dims = 1:50,
-                                           query.assay = "integrated")
-  }
-
+  print_SPEEDI("Done finding mapping anchors", log_flag)
   return(anchors)
 }
 
@@ -123,9 +120,7 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", azimuth =
 #' @return A Seurat object which contains majority vote labels
 #' @export
 MajorityVote <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
-  # TODO: Set predicted.id to proper value based on reference chosen
-  # Do it in a function
-  message("Begin majority voting...")
+  print_SPEEDI("Begin majority voting", log_flag)
   if(Seurat::DefaultAssay(sc_obj) == "integrated") {
     associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
   } else {
@@ -166,8 +161,7 @@ MajorityVote <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
     }
   }
 
-
-  message("...End majority voting")
+  print_SPEEDI("End majority voting")
   return(sc_obj)
 }
 
@@ -193,6 +187,7 @@ SetDefaultAssay <- function(sc_obj, log_flag = FALSE) {
 #' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object with predicted.id appropriately set
 SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
+  print_SPEEDI("Choosing appropriate annotation level from reference", log_flag)
   if(reference == "adiposeref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
   } else if(reference == "bonemarrowref") {
@@ -216,7 +211,7 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
   } else if(reference == "mousecortexref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
   } else {
-    message("Invalid reference")
+    print_SPEEDI("Invalid reference", log_flag)
   }
   return(sc_obj)
 }
@@ -230,13 +225,17 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' @return A Seurat object which contains majority vote labels
 #' @export
 MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
-  message("Step 6: Reference-based cell type mapping...")
+  print_SPEEDI("Step 8: Reference-based cell type mapping")
+  print_SPEEDI(paste0("reference is: ", reference), log_flag)
+  print_SPEEDI(paste0("data_type is: ", data_type), log_flag)
+  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   # Set default assay (to integrated or SCT)
   sc_obj <- SetDefaultAssay(sc_obj)
   # Grab all possible SeuratData references (to make sure that user provided a valid one)
   possible_seuratdata_references <- get_seuratdata_references()
   if(inherits(reference, "Seurat")) {
-    anchors <- FindMappingAnchors(sc_obj, reference, data_type)
+    anchors <- FindMappingAnchors(sc_obj, reference, data_type, log_flag)
+    print_SPEEDI("Mapping reference onto query cells", log_flag)
     sc_obj <- Seurat::MapQuery(anchorset = anchors,
                      query = sc_obj,
                      reference = reference,
@@ -244,18 +243,19 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALS
                      reference.reduction = "spca",
                      reduction.model = "wnn.umap",
                      verbose = TRUE)
-    sc_obj <- MajorityVote(sc_obj)
+    sc_obj <- MajorityVote(sc_obj, log_flag)
   } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
+    print_SPEEDI("Running Azimuth to map reference onto query cells", log_flag)
     sc_obj <- Azimuth::RunAzimuth(query = sc_obj, reference = reference)
     sc_obj <- SetDefaultAssay(sc_obj)
-    sc_obj <- SetPredictedId(sc_obj, reference)
-    sc_obj <- MajorityVote(sc_obj)
+    sc_obj <- SetPredictedId(sc_obj, reference, log_flag)
+    sc_obj <- MajorityVote(sc_obj, log_flag)
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
-      message(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."))
+      print_SPEEDI(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."), log_flag)
     } else if(inherits(reference, "character") & !(reference %in% possible_seuratdata_references)) {
-      message(paste0("\nYour reference name (", reference, ") is not valid (it was not found in SeuratData). It should be one of the following: \n"))
-      message(paste0(possible_seuratdata_references, collapse = "\n"))
+      print_SPEEDI(paste0("\nYour reference name (", reference, ") is not valid (it was not found in SeuratData). It should be one of the following: \n"), log_flag)
+      print_SPEEDI(paste0(possible_seuratdata_references, collapse = "\n"), log_flag)
     }
   }
   return(sc_obj)

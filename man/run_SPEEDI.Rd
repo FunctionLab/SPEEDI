@@ -8,8 +8,8 @@ run_SPEEDI(
   tissue,
   data_path = getwd(),
   reference_dir = getwd(),
-  output_dir = getwd(),
   reference_file_name = NULL,
+  output_dir = getwd(),
   sample_id_list = NULL,
   species = "human",
   record_doublets = FALSE
@@ -21,6 +21,8 @@ run_SPEEDI(
 \item{data_path}{path to where data is located}
 
 \item{reference_dir}{path to dir where reference is located}
+
+\item{reference_file_name}{name of reference file}
 
 \item{output_dir}{path to dir where output will be saved}
 

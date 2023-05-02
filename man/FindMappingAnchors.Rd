@@ -4,7 +4,7 @@
 \alias{FindMappingAnchors}
 \title{Find mapping anchors between reference and query}
 \usage{
-FindMappingAnchors(sc_obj, reference, data_type = "scRNA", azimuth = FALSE)
+FindMappingAnchors(sc_obj, reference, data_type = "scRNA", log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
@@ -13,7 +13,7 @@ FindMappingAnchors(sc_obj, reference, data_type = "scRNA", azimuth = FALSE)
 
 \item{data_type}{string to indicate whether we're analyzing scRNA or snRNA data}
 
-\item{azimuth}{Are we using an Azimuth reference? If so, we have to map our anchors slightly differently}
+\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }
 \value{
 Mapping anchors between reference and query
