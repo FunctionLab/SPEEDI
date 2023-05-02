@@ -18,7 +18,7 @@ lappend <- function (lst, ...){ c(lst, list(...))}
 print_SPEEDI <- function(current_message, log_flag = FALSE) {
   message(current_message)
   if(log_flag) {
-    logr::log_print(current_message, console = FALSE)
+    logr::log_print(current_message, console = FALSE, hide_notes = TRUE, blank_after = FALSE)
   }
   return(TRUE)
 }

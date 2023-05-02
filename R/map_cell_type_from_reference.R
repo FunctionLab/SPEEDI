@@ -16,6 +16,7 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
   if(last_char_of_reference_path != "/") {
     reference_dir <- paste0(reference_dir, "/")
   }
+  print_SPEEDI("\n", log_flag)
   print_SPEEDI(paste0("Step 7: loading ", tissue, " reference (and installing data if necessary)"), log_flag)
   print_SPEEDI(paste0("tissue is: ", tissue), log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
@@ -225,6 +226,7 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' @return A Seurat object which contains majority vote labels
 #' @export
 MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
+  print_SPEEDI("\n", log_flag)
   print_SPEEDI("Step 8: Reference-based cell type mapping")
   print_SPEEDI(paste0("reference is: ", reference), log_flag)
   print_SPEEDI(paste0("data_type is: ", data_type), log_flag)

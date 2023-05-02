@@ -5,7 +5,8 @@
 #' @return A Seurat object which contains labeled batches
 #' @export
 InferBatches <- function(sc_obj, log_flag = FALSE) {
-  print_SPEEDI("Step 4: Infer heterogeneous groups for integration...", log_flag)
+  print_SPEEDI("\n", log_flag)
+  print_SPEEDI("Step 4: Inferring heterogeneous groups for integration", log_flag)
   print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   # Find clusters in data (prior to batch correction)
   sc_obj <- Seurat::FindNeighbors(object = sc_obj, dims = 1:30)
@@ -97,14 +98,12 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
     levels.batch[!levels.batch %in% c(1:length(batch.assign))] <- length(batch.assign)+1
     levels(batch) <- levels.batch
     sc_obj$batch <- as.character(batch)
-  }
-
-  else {
+  } else {
     print_SPEEDI("No batch effect detected!", log_flag)
     sc_obj$batch <- "No Batch"
   }
 
-  print_SPEEDI(paste0("Batches detected: ", unique(batch)), log_flag)
+  print_SPEEDI(paste0("Total batches detected: ", length(unique(batch))), log_flag)
   return(sc_obj)
 }
 
@@ -116,6 +115,7 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
 #' @export
 #' @importFrom foreach %dopar%
 IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
+  print_SPEEDI("\n", log_flag)
   print_SPEEDI("Step 5: Integrating samples based on inferred groups", log_flag)
   print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   sc_obj_list <- Seurat::SplitObject(sc_obj, split.by = "batch")
@@ -198,6 +198,7 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
 #' @return A Seurat object with SCT markers and visualizations
 #' @export
 VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
+  print_SPEEDI("\n", log_flag)
   print_SPEEDI("Step 6: Scaling integrated data, creating UMAP of integration and prepping data for FindMarkers", log_flag)
   print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)

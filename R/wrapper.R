@@ -21,11 +21,12 @@ run_SPEEDI <- function(tissue, data_path = getwd(), reference_dir = getwd(), ref
   # Create log file
   log_file_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
   log_file_name <- gsub(":", "-", log_file_name)
-  log_file <- logr::log_open(paste0(output_dir, log_file_name), logdir = FALSE)
+  log_file_name <- paste0(output_dir, log_file_name)
+  log_file <- logr::log_open(log_file_name, logdir = FALSE)
   # Stage 1 - read in data
   all_sc_exp_matrices <- Read_h5(data_path, sample_id_list, log_flag = TRUE)
   # Stage 2 - filter data
-  sc_obj <- FilterRawData(all_sc_exp_matrices, species, record_doublets, log_flag = TRUE)
+  sc_obj <- FilterRawData(all_sc_exp_matrices, species, record_doublets, log_file_path = log_file_name, log_flag = TRUE)
   rm(all_sc_exp_matrices)
   # Stage 3 - process data
   sc_obj <- InitialProcessing(sc_obj, species, log_flag = TRUE)

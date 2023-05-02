@@ -7,7 +7,7 @@
 #' @export
 #' @importFrom foreach %dopar%
 Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE) {
-  print_SPEEDI("Step 1: Reading all samples...")
+  print_SPEEDI("Step 1: Reading all samples", log_flag)
   print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
   if(!is.null(sample_id_list)) {
     print_SPEEDI(paste0("sample_id_list is: ", sample_id_list), log_flag)

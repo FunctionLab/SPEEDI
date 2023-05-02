@@ -3,13 +3,15 @@
 #' @param all_sc_exp_matrices list of single cell expression matrices
 #' @param species flag to indicate whether we're processing human or mouse data
 #' @param record_doublets flag to indicate whether we're recording doublet info in the data (using scDblFinder)
+#' @param log_file_path path to log file (used to capture QC thresholds during parallel processing)
 #' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
 #' @return A Seurat object which contains filtered data from all input data
 #' @export
 #' @importFrom foreach %dopar%
-FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_flag = FALSE) {
+FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_file_path = NULL, log_flag = FALSE) {
   species <- tolower(species)
-  print_SPEEDI("Step 2: Filtering out bad samples...")
+  print_SPEEDI("\n", log_flag)
+  print_SPEEDI("Step 2: Filtering out bad samples", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   print_SPEEDI(paste0("record_doublets is: ", record_doublets), log_flag)
   print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
@@ -27,12 +29,12 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
   scDblFinder.class <- NULL
   # If requested, record doublet info in samples
   if(record_doublets) {
-    print_SPEEDI("Recording doublet info...")
+    print_SPEEDI("Recording doublet info", log_flag)
     sc_obj <- Seurat::as.Seurat(scDblFinder::scDblFinder(Seurat::as.SingleCellExperiment(sc_obj), samples = "sample"))
     # See distribution of doublets in each sample
     doublet_sc_obj <- subset(x = sc_obj, subset = scDblFinder.class %in% "doublet")
-    print_SPEEDI("Number of doublets in each sample:")
-    print_SPEEDI(table(doublet_sc_obj$sample))
+    print_SPEEDI("Number of doublets in each sample:", log_flag)
+    print_SPEEDI(table(doublet_sc_obj$sample), log_flag)
     rm(doublet_sc_obj)
   }
   # Grab QC-related metrics (regular expression is different for human vs. mouse)
@@ -85,12 +87,13 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
     n.cores <- length(objects)
   }
 
-  print_SPEEDI(paste0("Number of cores: ", n.cores))
+  print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
   doParallel::registerDoParallel(n.cores)
-  print_SPEEDI("Begin parallelizing...")
+  print_SPEEDI("Begin parallelizing...", log_flag)
   # Dummy declarations to avoid check() complaining
   i <- 0
   nFeature_RNA <- percent.mt <- percent.rps <- percent.rpl <- percent.hb <- NULL
+  sample_parameters <- list()
   sc_obj <- foreach::foreach(
     i = 1:length(objects),
     .combine = 'merge',
@@ -122,17 +125,39 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
                        percent.rps <= stats::quantile(objects[[i]]$percent.rps, .99) &
                        percent.rpl <= stats::quantile(objects[[i]]$percent.rpl, .99) &
                        percent.hb <= max_hb)
-    print_SPEEDI(paste0("QC Thresholds used for sample: ", current_sample_name), log_flag)
-    print_SPEEDI(paste0("lower nFeature: ", lower_nF), log_flag)
-    print_SPEEDI(paste0("upper nFeature: ", stats::quantile(objects[[i]]$nFeature_RNA, .99)), log_flag)
-    print_SPEEDI(paste0("max mt: ", max_mt), log_flag)
-    print_SPEEDI(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99)), log_flag)
-    print_SPEEDI(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99)), log_flag)
-    print_SPEEDI(paste0("max hb: ", max_hb), log_flag)
+    # Print info about QC thresholds for current sample to console
+    # Note that this will not work in certain environments (e.g., RStudio) because of parallel processing
+    message(paste0("QC Thresholds used for sample: ", current_sample_name))
+    message(paste0("lower nFeature: ", lower_nF), log_flag)
+    message(paste0("upper nFeature: ", stats::quantile(objects[[i]]$nFeature_RNA, .99)))
+    message(paste0("max mt: ", max_mt), log_flag)
+    message(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99)))
+    message(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99)))
+    message(paste0("max hb: ", max_hb))
+    if(log_flag) {
+      current_sample_parameters <- paste0(current_sample_name, ",", lower_nF, ",", stats::quantile(objects[[i]]$nFeature_RNA, .99),
+                                          ",", max_mt, ",", stats::quantile(objects[[i]]$percent.rps, .99), ",", stats::quantile(objects[[i]]$percent.rpl, .99),
+                                          ",", max_hb)
+      sample_log_file_name <- paste0(log_file_path, "_", current_sample_name, ".QC.sample.txt")
+      write.table(current_sample_parameters, file = sample_log_file_name)
+    }
     return(object)
   }
-
-  print_SPEEDI(paste0("Filtered data has ", dim(sc_obj)[2], " barcodes and ", dim(sc_obj)[1], " transcripts."))
+  sample_qc_file_paths <- list.files(dirname(log_file_name), pattern = paste0(basename(log_file_name), ".+.QC.sample.txt"), full.names = TRUE)
+  for(sample_qc_file_path in sample_qc_file_paths) {
+    sample_qc_stats <- strsplit(read.table(sample_qc_file_path)$x, split = ",")[[1]]
+    cat(paste0("\nQC Thresholds used for sample: ", sample_qc_stats[1]), file = paste0(log_file_path, ".log"), append = TRUE)
+    cat(paste0("\n\nlower nFeature: ", sample_qc_stats[2]), file = paste0(log_file_path, ".log"), append = TRUE)
+    cat(paste0("\nupper nFeature: ", sample_qc_stats[3]), file = paste0(log_file_path, ".log"), append = TRUE)
+    cat(paste0("\nmax mt: ", sample_qc_stats[4]), file = paste0(log_file_path, ".log"), append = TRUE)
+    cat(paste0("\nmax rps: ", sample_qc_stats[5]), file = paste0(log_file_path, ".log"), append = TRUE)
+    cat(paste0("\nmax rpl: ", sample_qc_stats[6]), file = paste0(log_file_path, ".log"), append = TRUE)
+    cat(paste0("\nmax hb: ", sample_qc_stats[7]), file = paste0(log_file_path, ".log"), append = TRUE)
+    cat("\n", file = paste0(log_file_path, ".log"), append = TRUE)
+    file.remove(sample_qc_file_path)
+  }
+  print_SPEEDI("\n", log_flag)
+  print_SPEEDI(paste0("Filtered data has ", dim(sc_obj)[2], " barcodes and ", dim(sc_obj)[1], " transcripts."), log_flag)
   return(sc_obj)
 }
 
@@ -145,7 +170,8 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
 #' @export
 InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
   species <- tolower(species)
-  print_SPEEDI("Step 3: Processing raw data...")
+  print_SPEEDI("\n", log_flag)
+  print_SPEEDI("Step 3: Processing raw data", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   # Load cell cycle genes and perform cell cycle scoring
