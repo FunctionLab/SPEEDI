@@ -244,14 +244,14 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALS
                      reduction.model = "wnn.umap",
                      verbose = TRUE)
     print_SPEEDI("Done mapping reference onto query cells", log_flag)
-    sc_obj <- MajorityVote(sc_obj, log_flag)
+    sc_obj <- MajorityVote(sc_obj, log_flag = log_flag)
   } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
     print_SPEEDI("Running Azimuth to map reference onto query cells", log_flag)
     sc_obj <- Azimuth::RunAzimuth(query = sc_obj, reference = reference)
     print_SPEEDI("Done running Azimuth to map reference onto query cells", log_flag)
     sc_obj <- SetDefaultAssay(sc_obj)
     sc_obj <- SetPredictedId(sc_obj, reference, log_flag)
-    sc_obj <- MajorityVote(sc_obj, log_flag)
+    sc_obj <- MajorityVote(sc_obj, log_flag = log_flag)
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
       print_SPEEDI(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."), log_flag)
