@@ -73,6 +73,7 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE
     return(sc_exp_matrix)
   }
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
+  print_SPEEDI("Parallel processing complete", log_flag)
   print_SPEEDI(paste0("Raw data has ", dim(all_sc_exp_matrices)[2], " barcodes and ", dim(all_sc_exp_matrices)[1], " transcripts."), log_flag)
   print_SPEEDI("Step 1: Complete", log_flag)
   gc()

@@ -162,7 +162,7 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
     return(tmp)
   }
   print_SPEEDI(paste0(length(r), " samples transformed."), log_flag)
-  print_SPEEDI("Done parallelizing!", log_flag)
+  print_SPEEDI("Parallel processing complete", log_flag)
 
 
   print_SPEEDI("Selecting integration features", log_flag)
@@ -208,7 +208,7 @@ VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, return.model = T)
   Seurat::DefaultAssay(sc_obj) <- "SCT"
-  print_SPEEDI("Prepparing integrated data for FindMarkers", log_flag)
+  print_SPEEDI("Preparing integrated data for FindMarkers", log_flag)
   sc_obj <- Seurat::PrepSCTFindMarkers(sc_obj)
   print_SPEEDI("Step 6: Complete", log_flag)
   gc()

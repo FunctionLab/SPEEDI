@@ -213,7 +213,6 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
   } else {
     print_SPEEDI("Invalid reference", log_flag)
   }
-  print_SPEEDI("Done choosing appropriate annotation level from reference", log_flag)
   return(sc_obj)
 }
 
