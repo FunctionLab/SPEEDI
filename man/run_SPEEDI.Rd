@@ -8,8 +8,10 @@ run_SPEEDI(
   tissue,
   data_path = getwd(),
   reference_dir = getwd(),
+  output_dir = getwd(),
+  reference_file_name = NULL,
   sample_id_list = NULL,
-  human = TRUE,
+  species = "human",
   record_doublets = FALSE
 )
 }
@@ -20,9 +22,11 @@ run_SPEEDI(
 
 \item{reference_dir}{path to dir where reference is located}
 
+\item{output_dir}{path to dir where output will be saved}
+
 \item{sample_id_list}{list of sample names (optional - if not provided, will select all samples found recursively in data_path)}
 
-\item{human}{flag to indicate whether we're processing human or mouse data}
+\item{species}{flag to indicate whether we're processing human or mouse data}
 
 \item{record_doublets}{flag to indicate whether we're recording doublets in the data (using scDblFinder)}
 }

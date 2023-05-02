@@ -4,12 +4,10 @@
 \alias{MajorityVote}
 \title{In each cluster, vote for majority cell type}
 \usage{
-MajorityVote(sc_obj, used_assay, current_resolution = 1)
+MajorityVote(sc_obj, current_resolution = 1)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
-
-\item{used_assay}{assay used for processing (integrated or SCT)}
 
 \item{current_resolution}{parameter that indicates current resolution for clustering}
 }

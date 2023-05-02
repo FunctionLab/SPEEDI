@@ -4,12 +4,12 @@
 \alias{FilterRawData}
 \title{Filter raw data}
 \usage{
-FilterRawData(all_sc_exp_matrices, human, record_doublets = FALSE)
+FilterRawData(all_sc_exp_matrices, species = "human", record_doublets = FALSE)
 }
 \arguments{
 \item{all_sc_exp_matrices}{list of single cell expression matrices}
 
-\item{human}{flag to indicate whether we're processing human or mouse data}
+\item{species}{flag to indicate whether we're processing human or mouse data}
 
 \item{record_doublets}{flag to indicate whether we're recording doublet info in the data (using scDblFinder)}
 }

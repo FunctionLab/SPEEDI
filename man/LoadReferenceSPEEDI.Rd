@@ -4,14 +4,21 @@
 \alias{LoadReferenceSPEEDI}
 \title{Load appropriate reference for SPEEDI}
 \usage{
-LoadReferenceSPEEDI(tissue, human, reference_dir = getwd())
+LoadReferenceSPEEDI(
+  tissue,
+  species = "human",
+  reference_dir = getwd(),
+  reference_file_name = NULL
+)
 }
 \arguments{
 \item{tissue}{tissue associated with samples}
 
-\item{human}{flag to indicate whether sample is human or mouse}
+\item{species}{flag to indicate whether sample is human or mouse}
 
 \item{reference_dir}{path to base directory for reference}
+
+\item{reference_file_name}{name of reference file, inside of reference_dir, that should be loaded (only used if tissue is set to custom)}
 }
 \value{
 A reference object
