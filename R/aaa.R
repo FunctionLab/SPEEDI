@@ -8,7 +8,7 @@ the$pbmc_reference_url <- "https://atlas.fredhutch.org/data/nygc/multimodal/pbmc
 # List of possible SeuratData references
 the$seuratdata_references <- c("adiposeref", "bonemarrowref", "fetusref",
                                "heartref", "humancortexref", "kidneyref",
-                               "lungref", "pancreasref", "tonsilref", "mousecortexref")
+                               "lungref", "pancreasref", "pbmcref", "tonsilref", "mousecortexref")
 
 #' Get PBMC reference URL
 #' @export

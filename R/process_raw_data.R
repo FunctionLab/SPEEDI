@@ -10,11 +10,10 @@
 #' @importFrom foreach %dopar%
 FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_file_path = NULL, log_flag = FALSE) {
   species <- tolower(species)
-  print_SPEEDI("\n", log_flag)
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 2: Filtering out bad samples", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   print_SPEEDI(paste0("record_doublets is: ", record_doublets), log_flag)
-  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   sc_obj <- Seurat::CreateSeuratObject(counts = all_sc_exp_matrices,
                                assay = "RNA",
                                min.cells = 3,
@@ -89,7 +88,7 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
 
   print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
   doParallel::registerDoParallel(n.cores)
-  print_SPEEDI("Begin parallelizing...", log_flag)
+  print_SPEEDI("Begin parallelizing", log_flag)
   # Dummy declarations to avoid check() complaining
   i <- 0
   nFeature_RNA <- percent.mt <- percent.rps <- percent.rpl <- percent.hb <- NULL
@@ -134,7 +133,9 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
     message(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99)))
     message(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99)))
     message(paste0("max hb: ", max_hb))
+    # If we want to guarantee that our parameters are saved to a log file, we need a different strategy
     if(log_flag) {
+      # Save sample parameters to a temporary text file
       current_sample_parameters <- paste0(current_sample_name, ",", lower_nF, ",", stats::quantile(objects[[i]]$nFeature_RNA, .99),
                                           ",", max_mt, ",", stats::quantile(objects[[i]]$percent.rps, .99), ",", stats::quantile(objects[[i]]$percent.rpl, .99),
                                           ",", max_hb)
@@ -143,21 +144,27 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
     }
     return(object)
   }
-  sample_qc_file_paths <- list.files(dirname(log_file_name), pattern = paste0(basename(log_file_name), ".+.QC.sample.txt"), full.names = TRUE)
-  for(sample_qc_file_path in sample_qc_file_paths) {
-    sample_qc_stats <- strsplit(read.table(sample_qc_file_path)$x, split = ",")[[1]]
-    cat(paste0("\nQC Thresholds used for sample: ", sample_qc_stats[1]), file = paste0(log_file_path, ".log"), append = TRUE)
-    cat(paste0("\n\nlower nFeature: ", sample_qc_stats[2]), file = paste0(log_file_path, ".log"), append = TRUE)
-    cat(paste0("\nupper nFeature: ", sample_qc_stats[3]), file = paste0(log_file_path, ".log"), append = TRUE)
-    cat(paste0("\nmax mt: ", sample_qc_stats[4]), file = paste0(log_file_path, ".log"), append = TRUE)
-    cat(paste0("\nmax rps: ", sample_qc_stats[5]), file = paste0(log_file_path, ".log"), append = TRUE)
-    cat(paste0("\nmax rpl: ", sample_qc_stats[6]), file = paste0(log_file_path, ".log"), append = TRUE)
-    cat(paste0("\nmax hb: ", sample_qc_stats[7]), file = paste0(log_file_path, ".log"), append = TRUE)
-    cat("\n", file = paste0(log_file_path, ".log"), append = TRUE)
-    file.remove(sample_qc_file_path)
+  if(log_flag) {
+    # Read sample QC parameter files one at a time and write content into log
+    sample_qc_file_paths <- list.files(dirname(log_file_path), pattern = paste0(basename(log_file_path), ".+.QC.sample.txt"), full.names = TRUE)
+    for(sample_qc_file_path in sample_qc_file_paths) {
+      sample_qc_stats <- strsplit(read.table(sample_qc_file_path)$x, split = ",")[[1]]
+      cat(paste0("\n", Sys.time(), ": QC Thresholds used for sample: ", sample_qc_stats[1]), file = paste0(log_file_path, ".log"), append = TRUE)
+      cat(paste0("\n\n", Sys.time(), ": lower nFeature: ", sample_qc_stats[2]), file = paste0(log_file_path, ".log"), append = TRUE)
+      cat(paste0("\n", Sys.time(), ": upper nFeature: ", sample_qc_stats[3]), file = paste0(log_file_path, ".log"), append = TRUE)
+      cat(paste0("\n", Sys.time(), ": max mt: ", sample_qc_stats[4]), file = paste0(log_file_path, ".log"), append = TRUE)
+      cat(paste0("\n", Sys.time(), ": max rps: ", sample_qc_stats[5]), file = paste0(log_file_path, ".log"), append = TRUE)
+      cat(paste0("\n", Sys.time(), ": max rpl: ", sample_qc_stats[6]), file = paste0(log_file_path, ".log"), append = TRUE)
+      cat(paste0("\n", Sys.time(), ": max hb: ", sample_qc_stats[7]), file = paste0(log_file_path, ".log"), append = TRUE)
+      cat("\n", file = paste0(log_file_path, ".log"), append = TRUE)
+      # Remove temporary file after we're done
+      file.remove(sample_qc_file_path)
+    }
+    print_SPEEDI("\n", log_flag, silence_time = TRUE)
   }
-  print_SPEEDI("\n", log_flag)
   print_SPEEDI(paste0("Filtered data has ", dim(sc_obj)[2], " barcodes and ", dim(sc_obj)[1], " transcripts."), log_flag)
+  print_SPEEDI("Step 2: Complete", log_flag)
+  gc()
   return(sc_obj)
 }
 
@@ -170,10 +177,9 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
 #' @export
 InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
   species <- tolower(species)
-  print_SPEEDI("\n", log_flag)
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 3: Processing raw data", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
-  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   # Load cell cycle genes and perform cell cycle scoring
   s.genes <- Seurat::cc.genes.updated.2019$s.genes
   g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
@@ -201,6 +207,7 @@ InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
   # TODO: Print plot?
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30)
-  print_SPEEDI("Raw data processing complete", log_flag)
+  print_SPEEDI("Step 3: Complete", log_flag)
+  gc()
   return(sc_obj)
 }

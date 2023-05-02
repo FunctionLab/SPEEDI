@@ -5,9 +5,8 @@
 #' @return A Seurat object which contains labeled batches
 #' @export
 InferBatches <- function(sc_obj, log_flag = FALSE) {
-  print_SPEEDI("\n", log_flag)
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 4: Inferring heterogeneous groups for integration", log_flag)
-  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   # Find clusters in data (prior to batch correction)
   sc_obj <- Seurat::FindNeighbors(object = sc_obj, dims = 1:30)
   sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.1, algorithm = 2)
@@ -104,6 +103,8 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
   }
 
   print_SPEEDI(paste0("Total batches detected: ", length(unique(batch))), log_flag)
+  print_SPEEDI("Step 4: Complete", log_flag)
+  gc()
   return(sc_obj)
 }
 
@@ -115,9 +116,8 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
 #' @export
 #' @importFrom foreach %dopar%
 IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
-  print_SPEEDI("\n", log_flag)
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 5: Integrating samples based on inferred groups", log_flag)
-  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   sc_obj_list <- Seurat::SplitObject(sc_obj, split.by = "batch")
   # If we only have one batch, we don't need to integrate by batch, so we exit the function
   if(length(sc_obj_list) == 1) {
@@ -138,7 +138,7 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
 
   doParallel::registerDoParallel(n.cores)
-  print_SPEEDI("Begin parallelizing...", log_flag)
+  print_SPEEDI("Begin parallelizing", log_flag)
   # Dummy declaration to avoid check() complaining
   i <- 0
   r <- foreach::foreach(
@@ -162,7 +162,7 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
     return(tmp)
   }
   print_SPEEDI(paste0(length(r), " samples transformed."), log_flag)
-  print_SPEEDI("... Done parallelizing...", log_flag)
+  print_SPEEDI("Done parallelizing!", log_flag)
 
 
   print_SPEEDI("Selecting integration features", log_flag)
@@ -186,7 +186,9 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
   rm(sc_obj_list)
   rm(features)
   rm(anchors)
-
+  print_SPEEDI("Finished integration", log_flag)
+  print_SPEEDI("Step 5: Complete", log_flag)
+  gc()
   return(integrated_obj)
 }
 
@@ -198,15 +200,15 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
 #' @return A Seurat object with SCT markers and visualizations
 #' @export
 VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
-  print_SPEEDI("\n", log_flag)
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 6: Scaling integrated data, creating UMAP of integration and prepping data for FindMarkers", log_flag)
-  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, return.model = T)
   Seurat::DefaultAssay(sc_obj) <- "SCT"
   sc_obj <- Seurat::PrepSCTFindMarkers(sc_obj)
-  print_SPEEDI("Step 6 completed", log_flag)
+  print_SPEEDI("Step 6: Complete", log_flag)
+  gc()
   return(sc_obj)
 }
 

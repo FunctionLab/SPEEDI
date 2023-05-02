@@ -4,12 +4,14 @@
 \alias{print_SPEEDI}
 \title{Print to console as well as log file (if it's present)}
 \usage{
-print_SPEEDI(current_message, log_flag = FALSE)
+print_SPEEDI(current_message, log_flag = FALSE, silence_time = FALSE)
 }
 \arguments{
 \item{current_message}{Message to print}
 
 \item{log_flag}{boolean to indicate whether we're also printing to log file}
+
+\item{silence_time}{don't print time in line}
 }
 \value{
 TRUE

@@ -8,6 +8,7 @@ FilterRawData(
   all_sc_exp_matrices,
   species = "human",
   record_doublets = FALSE,
+  log_file_path = NULL,
   log_flag = FALSE
 )
 }
@@ -17,6 +18,8 @@ FilterRawData(
 \item{species}{flag to indicate whether we're processing human or mouse data}
 
 \item{record_doublets}{flag to indicate whether we're recording doublet info in the data (using scDblFinder)}
+
+\item{log_file_path}{path to log file (used to capture QC thresholds during parallel processing)}
 
 \item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
 }

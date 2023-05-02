@@ -14,8 +14,12 @@ lappend <- function (lst, ...){ c(lst, list(...))}
 #' Print to console as well as log file (if it's present)
 #' @param current_message Message to print
 #' @param log_flag boolean to indicate whether we're also printing to log file
+#' @param silence_time don't print time in line
 #' @return TRUE
-print_SPEEDI <- function(current_message, log_flag = FALSE) {
+print_SPEEDI <- function(current_message, log_flag = FALSE, silence_time = FALSE) {
+  if(!silence_time) {
+    current_message <- paste0(Sys.time(), ": ", current_message)
+  }
   message(current_message)
   if(log_flag) {
     logr::log_print(current_message, console = FALSE, hide_notes = TRUE, blank_after = FALSE)

@@ -12,7 +12,6 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE
   if(!is.null(sample_id_list)) {
     print_SPEEDI(paste0("sample_id_list is: ", sample_id_list), log_flag)
   }
-  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
   data_path <- path.expand(data_path)
   # First, remove "/" from end of data_path if it's provided (for use of list.files)
@@ -72,6 +71,9 @@ Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE
     colnames(sc_exp_matrix) <- paste0(prefix, colnames(sc_exp_matrix))
     return(sc_exp_matrix)
   }
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI(paste0("Raw data has ", dim(all_sc_exp_matrices)[2], " barcodes and ", dim(all_sc_exp_matrices)[1], " transcripts."), log_flag)
+  print_SPEEDI("Step 1: Complete", log_flag)
+  gc()
   return(all_sc_exp_matrices)
 }

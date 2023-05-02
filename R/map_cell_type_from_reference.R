@@ -16,43 +16,42 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
   if(last_char_of_reference_path != "/") {
     reference_dir <- paste0(reference_dir, "/")
   }
-  print_SPEEDI("\n", log_flag)
-  print_SPEEDI(paste0("Step 7: loading ", tissue, " reference (and installing data if necessary)"), log_flag)
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
+  print_SPEEDI(paste0("Step 7: loading reference (and installing data if necessary)"), log_flag)
   print_SPEEDI(paste0("tissue is: ", tissue), log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
-  print_SPEEDI(paste0("reference_dir is: ", reference_dir), log_flag)
+  print_SPEEDI(paste0("reference_dir (if necessary) is: ", reference_dir), log_flag)
   if(!is.null(reference_file_name)) {
     print_SPEEDI(paste0("reference_file_name is: ", reference_file_name), log_flag)
   }
-  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   if (species == "human") {
     if (tissue == "adipose") {
       SeuratData::InstallData("adiposeref")
-      return("adiposeref")
+      reference <- "adiposeref"
     } else if (tissue == "bone marrow") {
       SeuratData::InstallData("bonemarrowref")
-      return("bonemarrowref")
+      reference <- "bonemarrowref"
     } else if (tissue == "fetus") {
       SeuratData::InstallData("fetusref")
-      return("fetusref")
+      reference <- "fetusref"
     } else if (tissue == "heart") {
       SeuratData::InstallData("heartref")
-      return("heartref")
+      reference <- "heartref"
     } else if (tissue == "cortex") {
       SeuratData::InstallData("humancortexref")
-      return("humancortexref")
+      reference <- "humancortexref"
     } else if (tissue == "kidney") {
       SeuratData::InstallData("kidneyref")
-      return("kidneyref")
+      reference <- "kidneyref"
     } else if (tissue == "lung") {
       SeuratData::InstallData("lungref")
-      return("lungref")
+      reference <- "lungref"
     } else if (tissue == "pancreas") {
       SeuratData::InstallData("pancreasref")
-      return("pancreasref")
+      reference <- "pancreasref"
     } else if (tissue == "pbmc") {
       SeuratData::InstallData("pbmcref")
-      return("pbmcref")
+      reference <- "pbmcref"
     } else if (tissue == "pbmc_full") {
       reference_url <- get_pbmc_reference_url()
       print_SPEEDI(paste0("Downloading PBMC reference from ", reference_url), log_flag)
@@ -66,26 +65,25 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
       }
       # Load and return PBMC reference
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, basename(reference_url)))
-      return(reference)
     } else if (tissue == "tonsil") {
       SeuratData::InstallData("tonsilref")
-      return("tonsilref")
+      reference <- "tonsilref"
     } else if (tissue == "custom") {
       # Load and return reference
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
-      return(reference)
     } else {
       message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
     }
   } else {
     if (tissue == "cortex") {
       SeuratData::InstallData("mousecortexref")
-      return("mousecortexref")
+      reference <- "mousecortexref"
     } else {
       message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
     }
   }
-  print_SPEEDI("Reference successfully set", log_flag)
+  print_SPEEDI("Step 7: Complete", log_flag)
+  return(reference)
 }
 
 #' Find mapping anchors between reference and query
@@ -226,11 +224,10 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' @return A Seurat object which contains majority vote labels
 #' @export
 MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
-  print_SPEEDI("\n", log_flag)
-  print_SPEEDI("Step 8: Reference-based cell type mapping")
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
+  print_SPEEDI("Step 8: Reference-based cell type mapping", log_flag)
   print_SPEEDI(paste0("reference is: ", reference), log_flag)
   print_SPEEDI(paste0("data_type is: ", data_type), log_flag)
-  print_SPEEDI(paste0("log_flag is: ", log_flag), log_flag)
   # Set default assay (to integrated or SCT)
   sc_obj <- SetDefaultAssay(sc_obj)
   # Grab all possible SeuratData references (to make sure that user provided a valid one)
@@ -260,6 +257,8 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALS
       print_SPEEDI(paste0(possible_seuratdata_references, collapse = "\n"), log_flag)
     }
   }
+  print_SPEEDI("Step 8: Complete", log_flag)
+  gc()
   return(sc_obj)
 }
 
