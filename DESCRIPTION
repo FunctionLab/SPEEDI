@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R: c(
     person("Yuan", "Wang", email = "yuanwang@princeton.edu", role = c("aut", "cre")),
     person("William", "Thistlethwaite", email = "wat2@princeton.edu", role = "aut"))
-Description: TODO: ADD CONTENT ABOUT WHAT SPEEDI DOES.
+Description: To facilitate single cell omics dataset integration and improve reproducibility, we introduce SPEEDI (Single-cell Pipeline for End to End Data Integration), an automated end-to-end tool package for batch label inference, data integration and cell type labeling.
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
