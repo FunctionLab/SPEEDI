@@ -9,7 +9,7 @@
 
 ## Overview of SPEEDI
 
-SPEEDI is a fully automated, end-to-end pipeline that facilitates single cell data analysis and improves robustness and reproducibility. SPEEDI computationally infers batch labels and automates the application of state of the art processing and analysis tools. Additionally, SPEEDI implements a reference-based cell type annotation method coupled with a majority-vote system. SPEEDI takes raw count feature-by-barcode single cell data matrices as input and outputs an integrated and annotated single-cell object, a log file with auto-selected analysis parameters and a set of preliminary analyses.
+Single-cell Pipeline for End to End Data Integration (SPEEDI) is a fully automated, end-to-end pipeline that facilitates single cell data analysis and improves robustness and reproducibility. SPEEDI computationally infers batch labels and automates the application of state of the art processing and analysis tools. Additionally, SPEEDI implements a reference-based cell type annotation method coupled with a majority-vote system. SPEEDI takes raw count feature-by-barcode single cell data matrices as input and outputs an integrated and annotated single-cell object, a log file with auto-selected analysis parameters and a set of preliminary analyses.
 
 ## Using the SPEEDI Website
 
