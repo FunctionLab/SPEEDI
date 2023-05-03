@@ -72,5 +72,7 @@ run_SPEEDI <- function(tissue, data_path = getwd(), reference_dir = getwd(), ref
   reference <- LoadReferenceSPEEDI(tissue, species, reference_dir, reference_file_name, log_flag = TRUE)
   # Stage 8 - Map cell types from reference onto query data
   sc_obj <- MapCellTypes(sc_obj, reference, log_flag = TRUE)
+  # Write Seurat object to output directory
+  save(sc_obj, file = paste0(log_file_name, ".rds"))
   return(sc_obj)
 }
