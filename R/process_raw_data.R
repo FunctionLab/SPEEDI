@@ -1,11 +1,14 @@
 #' Filter raw data
 #'
-#' @param all_sc_exp_matrices list of single cell expression matrices
-#' @param species flag to indicate whether we're processing human or mouse data
-#' @param record_doublets flag to indicate whether we're recording doublet info in the data (using scDblFinder)
-#' @param log_file_path path to log file (used to capture QC thresholds during parallel processing)
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param all_sc_exp_matrices List of single cell expression matrices
+#' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
+#' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
+#' @param log_file_path Path to log file (used to capture QC thresholds during parallel processing). Most likely only used in the context of [run_SPEEDI()].
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains filtered data from all input data
+#' @examples
+#' sc_obj <- FilterRawData(all_sc_exp_matrices)
+#' sc_obj <- FilterRawData(all_sc_exp_matrices, species = "human", record_doublets = TRUE)
 #' @export
 #' @importFrom foreach %dopar%
 FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_file_path = NULL, log_flag = FALSE) {
@@ -174,9 +177,12 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
 #' Process filtered data
 #'
 #' @param sc_obj Seurat object containing cells for all samples
-#' @param species flag to indicate whether we're processing human or mouse data
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains processed data
+#' @examples
+#' sc_obj <- InitialProcessing(sc_obj)
+#' sc_obj <- InitialProcessing(sc_obj, species = "human")
 #' @export
 InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
   species <- tolower(species)

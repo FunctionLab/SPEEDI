@@ -9,15 +9,19 @@ MapCellTypes(sc_obj, reference, data_type = "scRNA", log_flag = FALSE)
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
-\item{reference}{Seurat reference object}
+\item{reference}{Seurat reference object or reference found in \link{SeuratData}}
 
-\item{data_type}{string to indicate whether we're analyzing scRNA or snRNA data}
+\item{data_type}{String to indicate whether we're analyzing scRNA or snRNA data}
 
-\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
+\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
 \value{
 A Seurat object which contains majority vote labels
 }
 \description{
 Map cell types for input data
+}
+\examples{
+sc_obj <- MapCellTypes(sc_obj, reference = custom_reference_seurat_object)
+sc_obj <- MapCellTypes(sc_obj, reference = "adiposeref")
 }

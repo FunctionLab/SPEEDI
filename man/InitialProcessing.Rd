@@ -9,13 +9,17 @@ InitialProcessing(sc_obj, species = "human", log_flag = FALSE)
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
-\item{species}{flag to indicate whether we're processing human or mouse data}
+\item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
 
-\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
+\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
 \value{
 A Seurat object which contains processed data
 }
 \description{
 Process filtered data
+}
+\examples{
+sc_obj <- InitialProcessing(sc_obj)
+sc_obj <- InitialProcessing(sc_obj, species = "human")
 }

@@ -9,11 +9,14 @@ InferBatches(sc_obj, log_flag = FALSE)
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
-\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
+\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
 \value{
 A Seurat object which contains labeled batches
 }
 \description{
 Infer batches using LISI metric
+}
+\examples{
+sc_obj <- InferBatches(sc_obj)
 }

@@ -1,8 +1,10 @@
 #' Infer batches using LISI metric
 #'
 #' @param sc_obj Seurat object containing cells for all samples
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains labeled batches
+#' @examples
+#' sc_obj <- InferBatches(sc_obj)
 #' @export
 InferBatches <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
@@ -110,9 +112,11 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
 
 #' Integrate batches
 #'
-#' @param sc_obj Seurat object
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains integrated data
+#' @examples
+#' sc_obj <- IntegrateByBatch(sc_obj)
 #' @export
 #' @importFrom foreach %dopar%
 IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
@@ -195,9 +199,11 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
 
 #' Visualize integration and prepare SCT for finding markers
 #'
-#' @param sc_obj Seurat object
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object with SCT markers and visualizations
+#' @examples
+#' sc_obj <- VisualizeIntegration(sc_obj)
 #' @export
 VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)

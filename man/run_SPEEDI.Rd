@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrapper.R
 \name{run_SPEEDI}
 \alias{run_SPEEDI}
-\title{Wrapper function for running the SPEEDI pipeline}
+\title{Wrapper function for running the SPEEDI pipeline.}
 \usage{
 run_SPEEDI(
   tissue,
@@ -16,25 +16,61 @@ run_SPEEDI(
 )
 }
 \arguments{
-\item{tissue}{tissue of data (used to map cell types via reference)}
+\item{tissue}{Tissue type of input data (used to map cell types via reference). For human data, possible choices include:
+\itemize{
+\item \code{"adipose"}
+\item \code{"bone marrow"}
+\item \code{"cortex"}
+\item \code{"fetus"}
+\item \code{"heart"}
+\item \code{"kidney"}
+\item \code{"lung"}
+\item \code{"pancreas"}
+\item \code{"pbmc"} (uses \link{Azimuth} reference)
+\item \code{"pbmc_full"} (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
+\item \code{"tonsil"}
+\item \code{"custom"} (\code{reference_file_name} must be provided)
+}
 
-\item{data_path}{path to where data is located}
+For mouse data, possible choices include:
+\itemize{
+\item \verb{"cortex}
+\item \code{"custom"} (\code{reference_file_name} must be provided)
+}}
 
-\item{reference_dir}{path to dir where reference is located}
+\item{data_path}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
-\item{reference_file_name}{name of reference file}
+\item{reference_dir}{Path to directory where reference is either already located (see \code{reference_file_name}) or will be downloaded by \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}} if necessary. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Note that Azimuth references from \link{SeuratData} do not require use of \code{reference_dir}.}
 
-\item{output_dir}{path to dir where output will be saved}
+\item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{tissue} should be set to \code{"custom"}.}
 
-\item{sample_id_list}{list of sample names (optional - if not provided, will select all samples found recursively in data_path)}
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Directory will be created if it doesn't already exist.}
 
-\item{species}{flag to indicate whether we're processing human or mouse data}
+\item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{data_path}).}
 
-\item{record_doublets}{flag to indicate whether we're recording doublets in the data (using scDblFinder)}
+\item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
+
+\item{record_doublets}{Boolean flag to indicate whether we will record doublets in the data (using the \link{scDblFinder} package). Possible choices are \code{TRUE} or \code{FALSE}.}
 }
 \value{
 A Seurat object that has been processed through the SPEEDI pipeline
 }
 \description{
-Wrapper function for running the SPEEDI pipeline
+\code{run_SPEEDI()} performs all steps of the SPEEDI pipeline, including data processing, batch detection and integration, and
+cell type mapping from your selected reference. Parameters chosen by SPEEDI are recorded in a log file written to your
+selected output directory (\code{output_dir}). Relevant individual functions called include:
+\itemize{
+\item \code{\link[=Read_h5]{Read_h5()}}: Reads in input data
+\item \code{\link[=FilterRawData]{FilterRawData()}}: Filters raw data using automatically selected QC thresholds
+\item \code{\link[=InitialProcessing]{InitialProcessing()}}: Process filtered data and prepare for batch inferring and integration
+\item \code{\link[=InferBatches]{InferBatches()}}: Infer batches in data
+\item \code{\link[=IntegrateByBatch]{IntegrateByBatch()}}: Integrate batches together
+\item \code{\link[=VisualizeIntegration]{VisualizeIntegration()}}: Visualize integration and prepare data for marker detection
+\item \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}}: Load reference for mapping onto query data
+\item \code{\link[=MapCellTypes]{MapCellTypes()}}: Map cell types from reference onto query data
+}
+}
+\examples{
+sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")
+sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/", reference_dir = "~/reference_dir/", output_dir = "~/adipose_output", species = "human", record_doublets = TRUE)
 }

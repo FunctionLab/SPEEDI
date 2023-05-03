@@ -7,15 +7,19 @@
 Read_h5(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE)
 }
 \arguments{
-\item{data_path}{path to where data is located (optional - if not provided, will assume the data path is the current working directory)}
+\item{data_path}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
-\item{sample_id_list}{list of sample names (optional - if not provided, will select all samples found recursively in data_path)}
+\item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{data_path}).}
 
-\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
+\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
 \value{
 A set of single cell expression matrices
 }
 \description{
 Read in h5 data for processing
+}
+\examples{
+all_sc_exp_matrices <- Read_h5()
+all_sc_exp_matrices <- Read_h5(data_path = "~/input_data/", sample_id_list = c("sample_1", "sample_2"))
 }

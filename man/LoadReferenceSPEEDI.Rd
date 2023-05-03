@@ -13,19 +13,44 @@ LoadReferenceSPEEDI(
 )
 }
 \arguments{
-\item{tissue}{tissue associated with samples}
+\item{tissue}{Tissue type of input data (used to map cell types via reference). For human data, possible choices include:
+\itemize{
+\item \code{"adipose"}
+\item \code{"bone marrow"}
+\item \code{"cortex"}
+\item \code{"fetus"}
+\item \code{"heart"}
+\item \code{"kidney"}
+\item \code{"lung"}
+\item \code{"pancreas"}
+\item \code{"pbmc"} (uses \link{Azimuth} reference)
+\item \code{"pbmc_full"} (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
+\item \code{"tonsil"}
+\item \code{"custom"} (\code{reference_file_name} must be provided)
+}
 
-\item{species}{flag to indicate whether sample is human or mouse}
+For mouse data, possible choices include:
+\itemize{
+\item \verb{"cortex}
+\item \code{"custom"} (\code{reference_file_name} must be provided)
+}}
 
-\item{reference_dir}{path to base directory for reference}
+\item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
 
-\item{reference_file_name}{name of reference file, inside of reference_dir, that should be loaded (only used if tissue is set to custom)}
+\item{reference_dir}{Path to directory where reference is either already located (see \code{reference_file_name}) or will be downloaded by \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}} if necessary. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Note that Azimuth references from \link{SeuratData} do not require use of \code{reference_dir}.}
 
-\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
+\item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{tissue} should be set to \code{"custom"}.}
+
+\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
 \value{
 A reference object
 }
 \description{
 Load appropriate reference for SPEEDI
+}
+\examples{
+reference <- LoadReferenceSPEEDI(tissue = "PBMC", species = "human")
+reference <- LoadReferenceSPEEDI(tissue = "cortex", species = "mouse")
+reference <- LoadReferenceSPEEDI(tissue = "custom", species = "human", reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")
 }

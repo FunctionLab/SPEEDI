@@ -1,11 +1,31 @@
 #' Load appropriate reference for SPEEDI
 #'
-#' @param tissue tissue associated with samples
-#' @param species flag to indicate whether sample is human or mouse
-#' @param reference_dir path to base directory for reference
-#' @param reference_file_name name of reference file, inside of reference_dir, that should be loaded (only used if tissue is set to custom)
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param tissue Tissue type of input data (used to map cell types via reference). For human data, possible choices include:
+#' * `"adipose"`
+#' * `"bone marrow"`
+#' * `"cortex"`
+#' * `"fetus"`
+#' * `"heart"`
+#' * `"kidney"`
+#' * `"lung"`
+#' * `"pancreas"`
+#' * `"pbmc"` (uses [Azimuth] reference)
+#' * `"pbmc_full"` (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
+#' * `"tonsil"`
+#' * `"custom"` (`reference_file_name` must be provided)
+#'
+#' For mouse data, possible choices include:
+#' * `"cortex`
+#' * `"custom"` (`reference_file_name` must be provided)
+#' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
+#' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
+#' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `tissue` should be set to `"custom"`.
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A reference object
+#' @examples
+#' reference <- LoadReferenceSPEEDI(tissue = "PBMC", species = "human")
+#' reference <- LoadReferenceSPEEDI(tissue = "cortex", species = "mouse")
+#' reference <- LoadReferenceSPEEDI(tissue = "custom", species = "human", reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")
 #' @export
 LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL, log_flag = FALSE) {
   # Change tissue to all lowercase to prevent any issues with casing
@@ -31,15 +51,15 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
     } else if (tissue == "bone marrow") {
       SeuratData::InstallData("bonemarrowref")
       reference <- "bonemarrowref"
+    } else if (tissue == "cortex") {
+      SeuratData::InstallData("humancortexref")
+      reference <- "humancortexref"
     } else if (tissue == "fetus") {
       SeuratData::InstallData("fetusref")
       reference <- "fetusref"
     } else if (tissue == "heart") {
       SeuratData::InstallData("heartref")
       reference <- "heartref"
-    } else if (tissue == "cortex") {
-      SeuratData::InstallData("humancortexref")
-      reference <- "humancortexref"
     } else if (tissue == "kidney") {
       SeuratData::InstallData("kidneyref")
       reference <- "kidneyref"
@@ -78,6 +98,9 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
     if (tissue == "cortex") {
       SeuratData::InstallData("mousecortexref")
       reference <- "mousecortexref"
+    } else if (tissue == "custom") {
+      # Load and return reference
+      reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
     } else {
       message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
     }
@@ -91,9 +114,11 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference A Seurat reference object
-#' @param data_type string to indicate whether we're analyzing scRNA or snRNA data
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param data_type string to indicate whether we're analyzing scRNA data or other data
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return Mapping anchors between reference and query
+#' @examples
+#' anchors <- FindMappingAnchors(sc_obj, reference = custom_reference_seurat_object, data_type = "scRNA")
 #' @export
 FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
   print_SPEEDI("Finding mapping anchors", log_flag)
@@ -113,12 +138,14 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag 
   return(anchors)
 }
 
-#' In each cluster, vote for majority cell type
+#' In each cluster, we vote for majority cell type
 #'
 #' @param sc_obj Seurat object containing cells for all samples
-#' @param current_resolution parameter that indicates current resolution for clustering
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param current_resolution Parameter that indicates resolution for clustering (should not be set too high)
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains majority vote labels
+#' @examples
+#' sc_obj <- MajorityVote(sc_obj)
 #' @export
 MajorityVote <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
   print_SPEEDI("Begin majority voting", log_flag)
@@ -167,8 +194,10 @@ MajorityVote <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
 
 #' Choose assay based on whether there are multiple batches (integrated) or only one batch (SCT)
 #' @param sc_obj Seurat object containing cells for all samples
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object with default assay appropriately set
+#' @examples
+#' sc_obj <- SetDefaultAssay(sc_obj)
 SetDefaultAssay <- function(sc_obj, log_flag = FALSE) {
   # Assay will be integrated if multiple batches were found - otherwise, we use SCT assay
   if(length(unique(sc_obj$batch)) != 1) {
@@ -179,13 +208,15 @@ SetDefaultAssay <- function(sc_obj, log_flag = FALSE) {
   return(sc_obj)
 }
 
-#' We always want to use the predicted.id column in our Seurat object to determine majority vote.
-#' However, if we use Azimuth::RunAzimuth, there are often predictions made at multiple annotation levels.
-#' Depending on the reference, we use SetPredictedId to select the proper annotation level for predicted.id.
+#' We always want to use the `predicted.id` column in our Seurat object to determine majority vote.
+#' However, if we use [Azimuth::RunAzimuth], there are often predictions made at multiple annotation levels.
+#' Depending on the reference, we use `SetPredictedId` to select the proper annotation level for predicted.id.
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference Reference name
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object with predicted.id appropriately set
+#' @examples
+#' sc_obj <- SetPredictedId(sc_obj, reference = "bonemarrowref")
 SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
   print_SPEEDI("Choosing appropriate annotation level from reference", log_flag)
   if(reference == "adiposeref") {
@@ -219,10 +250,13 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' Map cell types for input data
 #'
 #' @param sc_obj Seurat object containing cells for all samples
-#' @param reference Seurat reference object
-#' @param data_type string to indicate whether we're analyzing scRNA or snRNA data
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param reference Seurat reference object or reference found in [SeuratData]
+#' @param data_type String to indicate whether we're analyzing scRNA or snRNA data
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains majority vote labels
+#' @examples
+#' sc_obj <- MapCellTypes(sc_obj, reference = custom_reference_seurat_object)
+#' sc_obj <- MapCellTypes(sc_obj, reference = "adiposeref")
 #' @export
 MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)

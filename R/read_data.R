@@ -1,9 +1,12 @@
 #' Read in h5 data for processing
 #'
-#' @param data_path path to where data is located (optional - if not provided, will assume the data path is the current working directory)
-#' @param sample_id_list list of sample names (optional - if not provided, will select all samples found recursively in data_path)
-#' @param log_flag if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)
+#' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
+#' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A set of single cell expression matrices
+#' @examples
+#' all_sc_exp_matrices <- Read_h5()
+#' all_sc_exp_matrices <- Read_h5(data_path = "~/input_data/", sample_id_list = c("sample_1", "sample_2"))
 #' @export
 #' @importFrom foreach %dopar%
 Read_h5 <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE) {

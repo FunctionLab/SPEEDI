@@ -1,14 +1,46 @@
-#' Wrapper function for running the SPEEDI pipeline
+#' Wrapper function for running the SPEEDI pipeline.
 #'
-#' @param tissue tissue of data (used to map cell types via reference)
-#' @param data_path path to where data is located
-#' @param reference_dir path to dir where reference is located
-#' @param reference_file_name name of reference file
-#' @param output_dir path to dir where output will be saved
-#' @param sample_id_list list of sample names (optional - if not provided, will select all samples found recursively in data_path)
-#' @param species flag to indicate whether we're processing human or mouse data
-#' @param record_doublets flag to indicate whether we're recording doublets in the data (using scDblFinder)
+#' @description
+#' `run_SPEEDI()` performs all steps of the SPEEDI pipeline, including data processing, batch detection and integration, and
+#' cell type mapping from your selected reference. Parameters chosen by SPEEDI are recorded in a log file written to your
+#' selected output directory (`output_dir`). Relevant individual functions called include:
+#'
+#' * [Read_h5()]: Reads in input data
+#' * [FilterRawData()]: Filters raw data using automatically selected QC thresholds
+#' * [InitialProcessing()]: Process filtered data and prepare for batch inferring and integration
+#' * [InferBatches()]: Infer batches in data
+#' * [IntegrateByBatch()]: Integrate batches together
+#' * [VisualizeIntegration()]: Visualize integration and prepare data for marker detection
+#' * [LoadReferenceSPEEDI()]: Load reference for mapping onto query data
+#' * [MapCellTypes()]: Map cell types from reference onto query data
+#' @param tissue Tissue type of input data (used to map cell types via reference). For human data, possible choices include:
+#' * `"adipose"`
+#' * `"bone marrow"`
+#' * `"cortex"`
+#' * `"fetus"`
+#' * `"heart"`
+#' * `"kidney"`
+#' * `"lung"`
+#' * `"pancreas"`
+#' * `"pbmc"` (uses [Azimuth] reference)
+#' * `"pbmc_full"` (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
+#' * `"tonsil"`
+#' * `"custom"` (`reference_file_name` must be provided)
+#'
+#' For mouse data, possible choices include:
+#' * `"cortex`
+#' * `"custom"` (`reference_file_name` must be provided)
+#' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
+#' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
+#' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `tissue` should be set to `"custom"`.
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
+#' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
+#' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
+#' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
 #' @return A Seurat object that has been processed through the SPEEDI pipeline
+#' @examples
+#' sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")
+#' sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/", reference_dir = "~/reference_dir/", output_dir = "~/adipose_output", species = "human", record_doublets = TRUE)
 #' @export
 run_SPEEDI <- function(tissue, data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, output_dir = getwd(), sample_id_list = NULL, species = "human", record_doublets = FALSE) {
   # Create output_dir if it doesn't already exist

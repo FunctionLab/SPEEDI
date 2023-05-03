@@ -2,9 +2,9 @@
 % Please edit documentation in R/map_cell_type_from_reference.R
 \name{SetPredictedId}
 \alias{SetPredictedId}
-\title{We always want to use the predicted.id column in our Seurat object to determine majority vote.
-However, if we use Azimuth::RunAzimuth, there are often predictions made at multiple annotation levels.
-Depending on the reference, we use SetPredictedId to select the proper annotation level for predicted.id.}
+\title{We always want to use the \code{predicted.id} column in our Seurat object to determine majority vote.
+However, if we use \link[Azimuth:RunAzimuth]{Azimuth::RunAzimuth}, there are often predictions made at multiple annotation levels.
+Depending on the reference, we use \code{SetPredictedId} to select the proper annotation level for predicted.id.}
 \usage{
 SetPredictedId(sc_obj, reference, log_flag = FALSE)
 }
@@ -13,13 +13,16 @@ SetPredictedId(sc_obj, reference, log_flag = FALSE)
 
 \item{reference}{Reference name}
 
-\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
+\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
 \value{
 A Seurat object with predicted.id appropriately set
 }
 \description{
-We always want to use the predicted.id column in our Seurat object to determine majority vote.
-However, if we use Azimuth::RunAzimuth, there are often predictions made at multiple annotation levels.
-Depending on the reference, we use SetPredictedId to select the proper annotation level for predicted.id.
+We always want to use the \code{predicted.id} column in our Seurat object to determine majority vote.
+However, if we use \link[Azimuth:RunAzimuth]{Azimuth::RunAzimuth}, there are often predictions made at multiple annotation levels.
+Depending on the reference, we use \code{SetPredictedId} to select the proper annotation level for predicted.id.
+}
+\examples{
+sc_obj <- SetPredictedId(sc_obj, reference = "bonemarrowref")
 }

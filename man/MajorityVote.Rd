@@ -2,20 +2,23 @@
 % Please edit documentation in R/map_cell_type_from_reference.R
 \name{MajorityVote}
 \alias{MajorityVote}
-\title{In each cluster, vote for majority cell type}
+\title{In each cluster, we vote for majority cell type}
 \usage{
 MajorityVote(sc_obj, current_resolution = 1, log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
-\item{current_resolution}{parameter that indicates current resolution for clustering}
+\item{current_resolution}{Parameter that indicates resolution for clustering (should not be set too high)}
 
-\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
+\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
 \value{
 A Seurat object which contains majority vote labels
 }
 \description{
-In each cluster, vote for majority cell type
+In each cluster, we vote for majority cell type
+}
+\examples{
+sc_obj <- MajorityVote(sc_obj)
 }

@@ -11,13 +11,16 @@ FindMappingAnchors(sc_obj, reference, data_type = "scRNA", log_flag = FALSE)
 
 \item{reference}{A Seurat reference object}
 
-\item{data_type}{string to indicate whether we're analyzing scRNA or snRNA data}
+\item{data_type}{string to indicate whether we're analyzing scRNA data or other data}
 
-\item{log_flag}{if set to TRUE, we previously set up a log file where certain output will be written (e.g., parameters)}
+\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
 \value{
 Mapping anchors between reference and query
 }
 \description{
 Find mapping anchors between reference and query
+}
+\examples{
+anchors <- FindMappingAnchors(sc_obj, reference = custom_reference_seurat_object, data_type = "scRNA")
 }
