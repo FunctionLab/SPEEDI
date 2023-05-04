@@ -30,7 +30,7 @@ All dependencies will be installed automatically. After installing, the easiest 
 library(SPEEDI)
 # Learn more about the SPEEDI pipeline wrapper function
 ?run_SPEEDI
-# Example parameters
+# Example parameters - note that some optional parameters were not used
 tissue <- "PBMC"
 data_path <- "~/test_input"
 reference_dir <- "~/references"
