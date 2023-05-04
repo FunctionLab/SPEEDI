@@ -38,7 +38,8 @@ output_dir <- "~/test_output"
 species <- "human"
 record_doublets <- FALSE
 # Run SPEEDI pipeline
-run_SPEEDI(tissue = tissue, data_path = data_path, reference_dir = reference_dir, output_dir = output_dir, species = species, record_doublets = record_doublets)
+run_SPEEDI(tissue = tissue, data_path = data_path, reference_dir = reference_dir, 
+           output_dir = output_dir, species = species, record_doublets = record_doublets)
 ```
 
 You can also run the individual steps of the pipeline separately. Read through the documentation for `run_SPEEDI()` to learn more!
