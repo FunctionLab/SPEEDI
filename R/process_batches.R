@@ -10,8 +10,13 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 4: Inferring heterogeneous groups for integration", log_flag)
   # Find clusters in data (prior to batch correction)
-  sc_obj <- Seurat::FindNeighbors(object = sc_obj, dims = 1:30)
-  sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.1, algorithm = 2)
+  if ('lsi' %in% Seurat::Reductions(sc_obj)) {
+    sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:30)
+    sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.2, algorithm = 2)
+  } else {
+    sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
+    sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.1, algorithm = 2)
+  }
   # Use LISI metric to guess batch labels
   X <- sc_obj@reductions$umap@cell.embeddings
   meta_data <- data.frame(sc_obj$sample)
@@ -90,7 +95,6 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
   }
 
   batch <- as.factor(sc_obj$sample)
-
   if (length(batch.assign) > 0) {
     levels.batch <- levels(batch)
     for (i in 1:length(batch.assign)) {
@@ -103,7 +107,8 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
     print_SPEEDI("No batch effect detected!", log_flag)
     sc_obj$batch <- "No Batch"
   }
-
+  print_SPEEDI(paste0("List of batches (assign): ", unique(batch.assign)), log_flag)
+  print_SPEEDI(paste0("List of batches: ", unique(batch)), log_flag)
   print_SPEEDI(paste0("Total batches detected: ", length(unique(batch))), log_flag)
   print_SPEEDI("Step 4: Complete", log_flag)
   gc()

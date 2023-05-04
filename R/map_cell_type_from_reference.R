@@ -105,7 +105,9 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
       message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
     }
   }
-  print_SPEEDI(paste0("Selected reference based on your tissue is: ", reference), log_flag)
+  if(inherits(reference, "character")) {
+    print_SPEEDI(paste0("Selected reference based on your tissue is: ", reference), log_flag)
+  }
   print_SPEEDI("Step 7: Complete", log_flag)
   return(reference)
 }
