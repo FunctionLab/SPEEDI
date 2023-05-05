@@ -28,8 +28,13 @@
 #' * `"custom"` (`reference_file_name` must be provided)
 #'
 #' For mouse data, possible choices include:
-#' * `"cortex`
+#' * `"cortex"`
 #' * `"custom"` (`reference_file_name` must be provided)
+#' @param data_type Type of data being processed. Possible choices include:
+#' * `"RNA"`
+#' * `"ATAC"` (`tissue` must be set to `"pbmc_full"` or `"custom"`)
+#' * `"sample_paired"` (`tissue` must be set to `"pbmc_full"` or `"custom"`)
+#' * `"true_multiome"`
 #' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
 #' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
 #' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `tissue` should be set to `"custom"`.
@@ -42,7 +47,7 @@
 #' sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")
 #' sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/", reference_dir = "~/reference_dir/", output_dir = "~/adipose_output", species = "human", record_doublets = TRUE)
 #' @export
-run_SPEEDI <- function(tissue, data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, output_dir = getwd(), sample_id_list = NULL, species = "human", record_doublets = FALSE) {
+run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, output_dir = getwd(), sample_id_list = NULL, species = "human", record_doublets = FALSE) {
   # Create output_dir if it doesn't already exist
   if (!dir.exists(output_dir)) {dir.create(output_dir)}
   # Add "/" to end of output_dir if not already present
@@ -56,7 +61,12 @@ run_SPEEDI <- function(tissue, data_path = getwd(), reference_dir = getwd(), ref
   log_file_name <- paste0(output_dir, log_file_name)
   log_file <- logr::log_open(log_file_name, logdir = FALSE)
   # Stage 1 - read in data
-  all_sc_exp_matrices <- Read_h5(data_path, sample_id_list, log_flag = TRUE)
+  # If there are RNA data, we read those in using Read_RNA, and if there are ATAC data, we read those in using Read_ATAC
+  if(data_type != "ATAC") {
+    all_sc_exp_matrices <- Read_RNA(data_path, sample_id_list, log_flag = TRUE)
+  } else if(data_type != "RNA") {
+    atac_proj <- Read_ATAC(data_path, sample_id_list, species, log_flag = TRUE)
+  }
   # Stage 2 - filter data
   sc_obj <- FilterRawData(all_sc_exp_matrices, species, record_doublets, log_file_path = log_file_name, log_flag = TRUE)
   rm(all_sc_exp_matrices)
