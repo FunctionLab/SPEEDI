@@ -380,6 +380,6 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
   print_SPEEDI("Done performing majority voting", log_flag)
   print_SPEEDI("Step 8: Complete", log_flag)
   gc()
-  return(sc_obj)
+  return(proj)
 }
 
