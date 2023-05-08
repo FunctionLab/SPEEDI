@@ -140,16 +140,16 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag 
   return(anchors)
 }
 
-#' In each cluster, we vote for majority cell type
+#' In each cluster, we vote for majority cell type (RNA)
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param current_resolution Parameter that indicates resolution for clustering (should not be set too high)
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains majority vote labels
 #' @examples
-#' sc_obj <- MajorityVote(sc_obj)
+#' sc_obj <- MajorityVote_RNA(sc_obj)
 #' @export
-MajorityVote <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
+MajorityVote_RNA <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
   print_SPEEDI("Begin majority voting", log_flag)
   if(Seurat::DefaultAssay(sc_obj) == "integrated") {
     associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
@@ -249,7 +249,7 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
   return(sc_obj)
 }
 
-#' Map cell types for input data
+#' Map cell types for input data (RNA)
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference Seurat reference object or reference found in [SeuratData]
@@ -257,13 +257,15 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains majority vote labels
 #' @examples
-#' sc_obj <- MapCellTypes(sc_obj, reference = custom_reference_seurat_object)
-#' sc_obj <- MapCellTypes(sc_obj, reference = "adiposeref")
+#' sc_obj <- MapCellTypes_RNA(sc_obj, reference = custom_reference_seurat_object)
+#' sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")
 #' @export
-MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
+MapCellTypes_RNA <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 8: Reference-based cell type mapping", log_flag)
-  print_SPEEDI(paste0("reference is: ", reference), log_flag)
+  print_SPEEDI("Step 8: Reference-based cell type mapping (RNA)", log_flag)
+  if(inherits(reference, "character")) {
+    print_SPEEDI(paste0("reference is: ", reference), log_flag)
+  }
   print_SPEEDI(paste0("data_type is: ", data_type), log_flag)
   # Set default assay (to integrated or SCT)
   sc_obj <- SetDefaultAssay(sc_obj)
@@ -280,14 +282,14 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALS
                      reduction.model = "wnn.umap",
                      verbose = TRUE)
     print_SPEEDI("Done mapping reference onto query cells", log_flag)
-    sc_obj <- MajorityVote(sc_obj, log_flag = log_flag)
+    sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
   } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
     print_SPEEDI("Running Azimuth to map reference onto query cells", log_flag)
     sc_obj <- Azimuth::RunAzimuth(query = sc_obj, reference = reference)
     print_SPEEDI("Done running Azimuth to map reference onto query cells", log_flag)
     sc_obj <- SetDefaultAssay(sc_obj)
     sc_obj <- SetPredictedId(sc_obj, reference, log_flag)
-    sc_obj <- MajorityVote(sc_obj, log_flag = log_flag)
+    sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
       print_SPEEDI(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."), log_flag)
@@ -301,4 +303,48 @@ MapCellTypes <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALS
   return(sc_obj)
 }
 
+#' Map cell types for input data (ATAC)
+#'
+#' @param atac_proj ArchR project containing cells for all samples
+#' @param reference Seurat reference object
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return An ArchR object which contains majority vote labels
+#' @examples
+#' sc_obj <- MapCellTypes_ATAC(atac_proj, reference = custom_reference_seurat_object)
+#' @export
+MapCellTypes_ATAC <- function(atac_proj, reference, log_flag = FALSE) {
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
+  print_SPEEDI("Step 8: Reference-based cell type mapping (ATAC)", log_flag)
+  print_SPEEDI(paste0("reference is: ", reference), log_flag)
+  print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)
+  proj <- addGeneIntegrationMatrix(
+     ArchRProj = atac_proj,
+     useMatrix = "GeneScoreMatrix",
+     matrixName = "GeneIntegrationMatrix",
+     reducedDims = "Harmony",
+     seRNA = reference,
+     dimsToUse = 2:30,
+     addToArrow = FALSE,
+     groupRNA = "Celltype",
+     nameCell = "predictedCell",
+     nameGroup = "predictedGroup",
+     nameScore = "predictedScore",
+     force = TRUE
+  )
+  print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
+  print_SPEEDI("Performing majority voting", log_flag)
+  cM <- as.matrix(confusionMatrix(proj$Harmony_clusters, proj$predictedGroup))
+  pre_cluster <- rownames(cM)
+  max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
+  Cell_type_voting = proj$Harmony_clusters
+  for (m in c(1:length(pre_cluster))){
+    idxSample <- which(proj$Harmony_clusters == pre_cluster[m])
+    Cell_type_voting[idxSample] <- max_celltype[m]
+  }
+  proj <- addCellColData(ArchRProj = proj, data = Cell_type_voting, cells = proj$cellNames, name = "Cell_type_voting", force = TRUE)
+  print_SPEEDI("Done performing majority voting", log_flag)
+  print_SPEEDI("Step 8: Complete", log_flag)
+  gc()
+  return(sc_obj)
+}
 

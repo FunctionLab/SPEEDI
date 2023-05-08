@@ -88,14 +88,15 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
   reference <- LoadReferenceSPEEDI(tissue, species, reference_dir, reference_file_name, log_flag = TRUE)
   # Map cell types from reference onto query data
   if(data_type != "ATAC") {
-    sc_obj <- MapCellTypes(sc_obj, reference, log_flag = TRUE)
+    sc_obj <- MapCellTypes_RNA(sc_obj, reference, log_flag = TRUE)
   }
   if(data_type != "RNA") {
-    atac_proj <- MapCellTypes(atac_proj, reference, log_flag = TRUE)
+    atac_proj <- MapCellTypes_ATAC(atac_proj, reference, log_flag = TRUE)
   }
   # Write Seurat object to output directory
   save(sc_obj, file = paste0(log_file_name, ".rds"))
-  # TODO: save ArchR project
+  # Save ArchR project
+  saveArchRProject(ArchRProj = atac_proj, load = FALSE)
   if(data_type == "RNA") {
     return(sc_obj)
   } else if(data_type == "ATAC") {

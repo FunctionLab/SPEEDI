@@ -6,6 +6,7 @@
 \usage{
 run_SPEEDI(
   tissue,
+  data_type = "RNA",
   data_path = getwd(),
   reference_dir = getwd(),
   reference_file_name = NULL,
@@ -34,8 +35,16 @@ run_SPEEDI(
 
 For mouse data, possible choices include:
 \itemize{
-\item \verb{"cortex}
+\item \code{"cortex"}
 \item \code{"custom"} (\code{reference_file_name} must be provided)
+}}
+
+\item{data_type}{Type of data being processed. Possible choices include:
+\itemize{
+\item \code{"RNA"}
+\item \code{"ATAC"} (\code{tissue} must be set to \code{"pbmc_full"} or \code{"custom"})
+\item \code{"sample_paired"} (\code{tissue} must be set to \code{"pbmc_full"} or \code{"custom"})
+\item \code{"true_multiome"}
 }}
 
 \item{data_path}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
