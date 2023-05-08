@@ -355,13 +355,26 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
   )
   print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
   print_SPEEDI("Performing majority voting", log_flag)
-  cM <- as.matrix(confusionMatrix(proj$Harmony_clusters, proj$predictedGroup))
-  pre_cluster <- rownames(cM)
-  max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
-  Cell_type_voting = proj$Harmony_clusters
-  for (m in c(1:length(pre_cluster))){
-    idxSample <- which(proj$Harmony_clusters == pre_cluster[m])
-    Cell_type_voting[idxSample] <- max_celltype[m]
+  # We have to perform majority voting with a different cluster attribute if Harmony was not run
+  # (due to only having one batch)
+  if(reducedDims_param == "Harmony") {
+    cM <- as.matrix(confusionMatrix(proj$Harmony_clusters, proj$predictedGroup))
+    Cell_type_voting <- proj$Harmony_clusters
+    pre_cluster <- rownames(cM)
+    max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
+    for (m in c(1:length(pre_cluster))){
+      idxSample <- which(proj$Harmony_clusters == pre_cluster[m])
+      Cell_type_voting[idxSample] <- max_celltype[m]
+    }
+  } else {
+    cM <- as.matrix(confusionMatrix(proj$Clusters, proj$predictedGroup))
+    Cell_type_voting <- proj$Clusters
+    pre_cluster <- rownames(cM)
+    max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
+    for (m in c(1:length(pre_cluster))){
+      idxSample <- which(proj$Clusters == pre_cluster[m])
+      Cell_type_voting[idxSample] <- max_celltype[m]
+    }
   }
   proj <- addCellColData(ArchRProj = proj, data = Cell_type_voting, cells = proj$cellNames, name = "Cell_type_voting", force = TRUE)
   print_SPEEDI("Done performing majority voting", log_flag)
