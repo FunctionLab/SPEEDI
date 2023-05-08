@@ -259,7 +259,7 @@ IntegrateByBatch_ATAC <- function(proj, log_flag = FALSE) {
   tile_seurat <- InferBatches(tile_seurat, log_flag)
   proj$Batch <- tile_seurat$batch
   # If we only have one batch, we don't need to integrate by batch, so we exit the function
-  if(length(unique(proj$batch)) == 1) {
+  if(length(unique(proj$Batch)) == 1) {
     print_SPEEDI("Only one batch was found, so we don't need to integrate batches. Exiting IntegrateByBatch!", log_flag)
   } else {
     print_SPEEDI("\n", log_flag, silence_time = TRUE)
