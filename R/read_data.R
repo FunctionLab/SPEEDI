@@ -17,10 +17,12 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
     print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
   }
   if(!is.null(sample_id_list)) {
-    print_SPEEDI(paste0("sample_id_list includes the following sample id: ", sample_id_list, collapse = ". In addition, "), log_flag)
+    print_SPEEDI("sample_id_list includes the following sample ids:", log_flag)
+    print_SPEEDI(paste0(sample_id_list, collapse = ", "), log_flag)
   }
   if(!is.null(sample_file_paths)) {
-    print_SPEEDI(paste0("sample_file_paths includes the following file path: ", sample_file_paths, collapse = ". In addition, "), log_flag)
+    print_SPEEDI("sample_file_paths includes the following file paths:", log_flag)
+    print_SPEEDI(paste0(sample_file_paths, collapse = ", "), log_flag)
   }
   if(!is.null(sample_file_paths) & is.null(sample_id_list)) {
     print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag)
@@ -194,11 +196,13 @@ Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list 
   } else {
     addArchRGenome("mm10")
   }
+  print(data_files)
+  print(sample_id_list)
   names(data_files) <- sample_id_list
   print_SPEEDI("Creating Arrow files (data files for ArchR)", log_flag)
   ArrowFiles <- createArrowFiles(
-    inputFiles = inputFiles,
-    sampleNames = names(inputFiles),
+    inputFiles = data_files,
+    sampleNames = names(data_files),
     minTSS = 4,
     minFrags = 3000,
     maxFrags = 30000,

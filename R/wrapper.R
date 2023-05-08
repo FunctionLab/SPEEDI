@@ -48,6 +48,10 @@
 #' sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/", reference_dir = "~/reference_dir/", output_dir = "~/adipose_output", species = "human", record_doublets = TRUE)
 #' @export
 run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, output_dir = getwd(), sample_id_list = NULL, species = "human", record_doublets = FALSE) {
+  # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
+  # and then reset it to the old working directory once we're done running SPEEDI
+  old_wd <- getwd()
+  setwd(output_dir)
   # Create output_dir if it doesn't already exist
   if (!dir.exists(output_dir)) {dir.create(output_dir)}
   # Add "/" to end of output_dir if not already present
@@ -61,42 +65,45 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
   log_file_name <- paste0(output_dir, log_file_name)
   log_file <- logr::log_open(log_file_name, logdir = FALSE)
   # Error checking
-  if((data_type == "ATAC" | data_type == "sample_paired") & (tissue != "pbmc_full" & tissue != "custom")) {
-    print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", log_flag)
+  if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(tissue) != "pbmc_full" & tolower(tissue) != "custom")) {
+    print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", TRUE)
     stop()
   }
   # If there are RNA data, we read those in using Read_RNA, and if there are ATAC data, we read those in using Read_ATAC
   if(data_type != "ATAC") {
     # Read in RNA data, filter data, perform initial processing, infer batches, and integrate by batch
-    all_sc_exp_matrices <- Read_RNA(data_path, sample_id_list, log_flag = TRUE)
-    sc_obj <- FilterRawData_RNA(all_sc_exp_matrices, species, record_doublets, log_file_path = log_file_name, log_flag = TRUE)
+    all_sc_exp_matrices <- Read_RNA(data_path = data_path, sample_id_list = sample_id_list, log_flag = TRUE)
+    sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = species,
+                                record_doublets = record_doublets, log_file_path = log_file_name, log_flag = TRUE)
     rm(all_sc_exp_matrices)
-    sc_obj <- InitialProcessing_RNA(sc_obj, species, log_flag = TRUE)
-    sc_obj <- InferBatches(sc_obj, log_flag = TRUE)
-    sc_obj <- IntegrateByBatch_RNA(sc_obj, log_flag = TRUE)
+    sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = species, log_flag = TRUE)
+    sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
+    sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = TRUE)
     # Create UMAP of integration (and prep for FindMarkers)
-    sc_obj <- VisualizeIntegration(sc_obj, log_flag = TRUE)
+    sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = TRUE)
   }
   if(data_type != "RNA") {
     # Read in ATAC data, filter data, perform initial processing, infer batches, and integrate by batch
-    atac_proj <- Read_ATAC(data_path, sample_id_list, species, log_flag = TRUE)
-    atac_proj <- FilterRawData_ATAC(atac_proj, species, log_flag = TRUE)
-    atac_proj <- InitialProcessing_ATAC(atac_proj, log_flag = TRUE)
-    atac_proj <- IntegrateByBatch_ATAC(atac_proj, log_flag = TRUE)
+    atac_proj <- Read_ATAC(data_path = data_path, sample_id_list = sample_id_list, species = species, log_flag = TRUE)
+    atac_proj <- FilterRawData_ATAC(atac_proj = atac_proj, species = species, log_flag = TRUE)
+    atac_proj <- InitialProcessing_ATAC(atac_proj = atac_proj, log_flag = TRUE)
+    atac_proj <- IntegrateByBatch_ATAC(atac_proj = atac_proj, log_flag = TRUE)
   }
   # Load reference
-  reference <- LoadReferenceSPEEDI(tissue, species, reference_dir, reference_file_name, log_flag = TRUE)
+  reference <- LoadReferenceSPEEDI(tissue = tissue, species = species, reference_dir = reference_dir,
+                                   reference_file_name = reference_file_name, log_flag = TRUE)
   # Map cell types from reference onto query data
   if(data_type != "ATAC") {
-    sc_obj <- MapCellTypes_RNA(sc_obj, reference, log_flag = TRUE)
+    sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference, log_flag = TRUE)
   }
   if(data_type != "RNA") {
-    atac_proj <- MapCellTypes_ATAC(atac_proj, reference, log_flag = TRUE)
+    atac_proj <- MapCellTypes_ATAC(atac_proj = atac_proj, reference = reference, log_flag = TRUE)
   }
   # Write Seurat object to output directory
   save(sc_obj, file = paste0(log_file_name, ".rds"))
   # Save ArchR project
   saveArchRProject(ArchRProj = atac_proj, load = FALSE)
+  setwd(old_wd)
   if(data_type == "RNA") {
     return(sc_obj)
   } else if(data_type == "ATAC") {
