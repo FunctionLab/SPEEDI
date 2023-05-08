@@ -10,6 +10,7 @@ run_SPEEDI(
   data_path = getwd(),
   reference_dir = getwd(),
   reference_file_name = NULL,
+  reference_cell_type_attribute = "celltype.l2",
   output_dir = getwd(),
   sample_id_list = NULL,
   species = "human",
@@ -52,6 +53,8 @@ For mouse data, possible choices include:
 \item{reference_dir}{Path to directory where reference is either already located (see \code{reference_file_name}) or will be downloaded by \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}} if necessary. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Note that Azimuth references from \link{SeuratData} do not require use of \code{reference_dir}.}
 
 \item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{tissue} should be set to \code{"custom"}.}
+
+\item{reference_cell_type_attribute}{If using a Seurat reference object, this parameter captures where the cell type information is stored}
 
 \item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Directory will be created if it doesn't already exist.}
 

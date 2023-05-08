@@ -4,12 +4,19 @@
 \alias{MapCellTypes_ATAC}
 \title{Map cell types for input data (ATAC)}
 \usage{
-MapCellTypes_ATAC(atac_proj, reference, log_flag = FALSE)
+MapCellTypes_ATAC(
+  atac_proj,
+  reference,
+  reference_cell_type_attribute = "celltype.l2",
+  log_flag = FALSE
+)
 }
 \arguments{
 \item{atac_proj}{ArchR project containing cells for all samples}
 
 \item{reference}{Seurat reference object}
+
+\item{reference_cell_type_attribute}{If using a Seurat reference object, this parameter captures where the cell type information is stored}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }

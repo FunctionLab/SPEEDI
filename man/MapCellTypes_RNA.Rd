@@ -4,12 +4,20 @@
 \alias{MapCellTypes_RNA}
 \title{Map cell types for input data (RNA)}
 \usage{
-MapCellTypes_RNA(sc_obj, reference, data_type = "scRNA", log_flag = FALSE)
+MapCellTypes_RNA(
+  sc_obj,
+  reference,
+  reference_cell_type_attribute = "celltype.l2",
+  data_type = "scRNA",
+  log_flag = FALSE
+)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{reference}{Seurat reference object or reference found in \link{SeuratData}}
+
+\item{reference_cell_type_attribute}{If using a Seurat reference object, this parameter captures where the cell type information is stored}
 
 \item{data_type}{String to indicate whether we're analyzing scRNA or snRNA data}
 
@@ -22,6 +30,6 @@ A Seurat object which contains majority vote labels
 Map cell types for input data (RNA)
 }
 \examples{
-sc_obj <- MapCellTypes_RNA(sc_obj, reference = custom_reference_seurat_object)
+sc_obj <- MapCellTypes_RNA(sc_obj, reference = custom_reference_seurat_object, reference_cell_type_attribute = "Celltype")
 sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")
 }
