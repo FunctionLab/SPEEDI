@@ -1,4 +1,4 @@
-#' Filter raw data
+#' Filter raw data for RNA
 #'
 #' @param all_sc_exp_matrices List of single cell expression matrices
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
@@ -7,14 +7,14 @@
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains filtered data from all input data
 #' @examples
-#' sc_obj <- FilterRawData(all_sc_exp_matrices)
-#' sc_obj <- FilterRawData(all_sc_exp_matrices, species = "human", record_doublets = TRUE)
+#' sc_obj <- FilterRawData_RNA(all_sc_exp_matrices)
+#' sc_obj <- FilterRawData_RNA(all_sc_exp_matrices, species = "human", record_doublets = TRUE)
 #' @export
 #' @importFrom foreach %dopar%
-FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_file_path = NULL, log_flag = FALSE) {
+FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_file_path = NULL, log_flag = FALSE) {
   species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 2: Filtering out bad samples", log_flag)
+  print_SPEEDI("Step 2: Filtering out bad samples (RNA)", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   print_SPEEDI(paste0("record_doublets is: ", record_doublets), log_flag)
   print_SPEEDI("Creating Seurat object from matrices", log_flag)
@@ -174,20 +174,44 @@ FilterRawData <- function(all_sc_exp_matrices, species = "human", record_doublet
   return(sc_obj)
 }
 
-#' Process filtered data
+#' Filter raw data for ATAC
+#'
+#' @param proj ArchR project associated with data
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return An ArchR project which contains filtered data
+#' @examples
+#' proj <- FilterRawData_ATAC(proj)
+#' @export
+FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
+  species <- tolower(species)
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
+  print_SPEEDI("Step 2: Filtering out bad samples (ATAC)", log_flag)
+  print_SPEEDI(paste0("species is: ", species), log_flag)
+  print_SPEEDI("Filtering out doublets and low quality cells (only keep cells which have TSS enrichment >= 12 and nucleosome ratio < 2)", log_flag)
+  proj <- filterDoublets(ArchRProj = proj)
+  idxPass <- which(proj$TSSEnrichment >= 12 & proj$NucleosomeRatio < 2)
+  cellsPass <- proj$cellNames[idxPass]
+  proj <- proj[cellsPass, ]
+  print_SPEEDI("Successfully filtered data", log_flag)
+  print_SPEEDI("Step 2: Complete", log_flag)
+  gc()
+  return(proj)
+}
+
+#' Process filtered data (RNA)
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains processed data
 #' @examples
-#' sc_obj <- InitialProcessing(sc_obj)
-#' sc_obj <- InitialProcessing(sc_obj, species = "human")
+#' sc_obj <- InitialProcessing_RNA(sc_obj)
+#' sc_obj <- InitialProcessing_RNA(sc_obj, species = "human")
 #' @export
-InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
+InitialProcessing_RNA <- function(sc_obj, species = "human", log_flag = FALSE) {
   species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 3: Processing raw data", log_flag)
+  print_SPEEDI("Step 3: Processing raw data (RNA)", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   # Load cell cycle genes and perform cell cycle scoring
   print_SPEEDI("Loading cell cycle genes and performing cell cycle scoring", log_flag)
@@ -222,4 +246,30 @@ InitialProcessing <- function(sc_obj, species = "human", log_flag = FALSE) {
   print_SPEEDI("Step 3: Complete", log_flag)
   gc()
   return(sc_obj)
+}
+
+#' Process filtered data (ATAC)
+#'
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return An ArchR project which contains processed data
+#' @examples
+#' sc_obj <- InitialProcessing_RNA(sc_obj)
+#' @export
+InitialProcessing_ATAC <- function(proj, log_flag = FALSE) {
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
+  print_SPEEDI("Step 3: Processing raw data (ATAC)", log_flag)
+  proj <- addIterativeLSI(ArchRProj = proj, useMatrix = "TileMatrix", name = "IterativeLSI",
+                         iterations = 2,
+                         force = TRUE,
+                         clusterParams = list(resolution = c(2), sampleCells = 10000, n.start = 30),
+                         varFeatures = 20000, dims = 1:30,
+                         saveIterations = TRUE)
+  proj <- addUMAP(ArchRProj = proj, reducedDims = "IterativeLSI", force = TRUE)
+  proj <- addClusters(input = proj, reducedDims = "IterativeLSI", method = "Seurat",
+                      name = "Clusters", resolution = 2, knnAssign = 30,
+                      maxClusters = NULL, force = TRUE)
+  print_SPEEDI("Step 3: Complete", log_flag)
+  gc()
+  return(proj)
 }

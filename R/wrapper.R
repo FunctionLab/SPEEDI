@@ -60,29 +60,47 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
   log_file_name <- gsub(":", "-", log_file_name)
   log_file_name <- paste0(output_dir, log_file_name)
   log_file <- logr::log_open(log_file_name, logdir = FALSE)
-  # Stage 1 - read in data
+  # Error checking
+  if((data_type == "ATAC" | data_type == "sample_paired") & (tissue != "pbmc_full" & tissue != "custom")) {
+    print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", log_flag)
+    stop()
+  }
   # If there are RNA data, we read those in using Read_RNA, and if there are ATAC data, we read those in using Read_ATAC
   if(data_type != "ATAC") {
+    # Read in RNA data, filter data, perform initial processing, infer batches, and integrate by batch
     all_sc_exp_matrices <- Read_RNA(data_path, sample_id_list, log_flag = TRUE)
-  } else if(data_type != "RNA") {
-    atac_proj <- Read_ATAC(data_path, sample_id_list, species, log_flag = TRUE)
+    sc_obj <- FilterRawData_RNA(all_sc_exp_matrices, species, record_doublets, log_file_path = log_file_name, log_flag = TRUE)
+    rm(all_sc_exp_matrices)
+    sc_obj <- InitialProcessing_RNA(sc_obj, species, log_flag = TRUE)
+    sc_obj <- InferBatches(sc_obj, log_flag = TRUE)
+    sc_obj <- IntegrateByBatch_RNA(sc_obj, log_flag = TRUE)
+    # Create UMAP of integration (and prep for FindMarkers)
+    sc_obj <- VisualizeIntegration(sc_obj, log_flag = TRUE)
   }
-  # Stage 2 - filter data
-  sc_obj <- FilterRawData(all_sc_exp_matrices, species, record_doublets, log_file_path = log_file_name, log_flag = TRUE)
-  rm(all_sc_exp_matrices)
-  # Stage 3 - process data
-  sc_obj <- InitialProcessing(sc_obj, species, log_flag = TRUE)
-  # Stage 4 - find batches
-  sc_obj <- InferBatches(sc_obj, log_flag = TRUE)
-  # Stage 5 - integrate batches
-  sc_obj <- IntegrateByBatch(sc_obj, log_flag = TRUE)
-  # Stage 6 - create UMAP of integration (and prep for FindMarkers)
-  sc_obj <- VisualizeIntegration(sc_obj, log_flag = TRUE)
-  # Stage 7 - Load reference
+  if(data_type != "RNA") {
+    # Read in ATAC data, filter data, perform initial processing, infer batches, and integrate by batch
+    atac_proj <- Read_ATAC(data_path, sample_id_list, species, log_flag = TRUE)
+    atac_proj <- FilterRawData_ATAC(atac_proj, species, log_flag = TRUE)
+    atac_proj <- InitialProcessing_ATAC(atac_proj, log_flag = TRUE)
+    atac_proj <- IntegrateByBatch_ATAC(atac_proj, log_flag = TRUE)
+  }
+  # Load reference
   reference <- LoadReferenceSPEEDI(tissue, species, reference_dir, reference_file_name, log_flag = TRUE)
-  # Stage 8 - Map cell types from reference onto query data
-  sc_obj <- MapCellTypes(sc_obj, reference, log_flag = TRUE)
+  # Map cell types from reference onto query data
+  if(data_type != "ATAC") {
+    sc_obj <- MapCellTypes(sc_obj, reference, log_flag = TRUE)
+  }
+  if(data_type != "RNA") {
+    atac_proj <- MapCellTypes(atac_proj, reference, log_flag = TRUE)
+  }
   # Write Seurat object to output directory
   save(sc_obj, file = paste0(log_file_name, ".rds"))
-  return(sc_obj)
+  # TODO: save ArchR project
+  if(data_type == "RNA") {
+    return(sc_obj)
+  } else if(data_type == "ATAC") {
+    return(atac_proj)
+  } else {
+    return(list(sc_obj, atac_proj))
+  }
 }

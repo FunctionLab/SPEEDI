@@ -2,40 +2,66 @@
 #'
 #' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
+#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If used, `sample_id_list` is required.
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A set of single cell expression matrices
 #' @examples
 #' all_sc_exp_matrices <- Read_RNA()
 #' all_sc_exp_matrices <- Read_RNA(data_path = "~/input_data/", sample_id_list = c("sample_1", "sample_2"))
+#' all_sc_exp_matrices <- Read_RNA(sample_id_list = c("sample_1", "sample_2"), sample_file_paths = c("~/input_data/sample_1/filtered_feature_bc_matrix.h5", "~/input_data/sample_2/filtered_feature_bc_matrix.h5"))
 #' @export
 #' @importFrom foreach %dopar%
-Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALSE) {
+Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_paths = NULL, log_flag = FALSE) {
   print_SPEEDI("Step 1 (RNA): Reading all samples", log_flag)
-  print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
+  if(!is.null(data_path)) {
+    print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
+  }
   if(!is.null(sample_id_list)) {
     print_SPEEDI(paste0("sample_id_list is: ", sample_id_list), log_flag)
   }
-  # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
-  data_path <- path.expand(data_path)
-  # First, remove "/" from end of data_path if it's provided (for use of list.files)
-  last_char_of_data_path <- substr(data_path, nchar(data_path), nchar(data_path))
-  if(last_char_of_data_path == "/") {
-    data_path <- substr(data_path, 1, nchar(data_path) - 1)
+  if(!is.null(sample_file_paths)) {
+    print_SPEEDI(paste0("sample_file_paths is: ", sample_file_paths), log_flag)
   }
-  # Second, look for all filtered_feature_bc_matrix .h5 files in data_path
-  data_files <- list.files(path = data_path, pattern = "filtered_feature_bc_matrix\\.h5$", recursive = TRUE, full.names = TRUE)
-  # Finally, if the user did provide a sample_id_list, pick the subset of .h5 files that have that sample ID in the path
-  if(!is.null(sample_id_list)) {
-    data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
+  if(!is.null(sample_file_paths) & is.null(sample_id_list)) {
+    print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag)
+    stop()
+  }
+  if(is.null(data_path) & is.null(sample_file_paths)) {
+    print_SPEEDI("Error: You must provide a value for \"data_path\" if you do not provide a value for \"sample_file_paths\".", log_flag)
+    stop()
+  }
+  if(is.null(sample_file_paths)) {
+    # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
+    data_path <- path.expand(data_path)
+    # First, remove "/" from end of data_path if it's provided (for use of list.files)
+    last_char_of_data_path <- substr(data_path, nchar(data_path), nchar(data_path))
+    if(last_char_of_data_path == "/") {
+      data_path <- substr(data_path, 1, nchar(data_path) - 1)
+    }
+    # Second, look for all filtered_feature_bc_matrix .h5 files in data_path
+    data_files <- list.files(path = data_path, pattern = "filtered_feature_bc_matrix\\.h5$", recursive = TRUE, full.names = TRUE)
+    # Finally, if the user did provide a sample_id_list, pick the subset of .h5 files that have that sample ID in the path
+    if(!is.null(sample_id_list)) {
+      data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
+    } else {
+      # Else, we are using all data files found above, but we still need to guess what the sample names are because of Cell Ranger's
+      # structure for file output.
+      # We use the following strategy: We look at the paths of all of our data files and split by "/"
+      # Then, at each index, we see if the number of UNIQUE values is equivalent to the number of data files
+      # If we find such an index, we assume that the sample names are stored there
+      sample_id_list <- strsplit(data_files, "/")
+      final_sample_id_list <- c()
+      for(i in 1:length(sample_id_list[[1]])) {
+        current_elements <- sapply(sample_id_list, "[[", i)
+        if(length(unique(current_elements)) == length(data_files)) {
+          final_sample_id_list <- current_elements
+          break
+        }
+      }
+      sample_id_list <- final_sample_id_list
+    }
   } else {
-    # Else, we are using all data files found above, but we still need to guess what the sample names are because of Cell Ranger's
-    # structure for file output.
-    # Our current approach assumes that sample names are the directories right after data_path.
-    # Is there a better way of doing this?
-    sample_id_list <- strsplit(data_files, paste0(data_path, "/"))
-    sample_id_list <- sapply(sample_id_list , "[[", 2)
-    sample_id_list <- strsplit(sample_id_list, "/")
-    sample_id_list <- sapply(sample_id_list , "[[", 1)
+    data_files <- sample_file_paths
   }
   print_SPEEDI(paste0("Total sample count is: ", length(sample_id_list)), log_flag)
   # Set up reading of data so it's parallel (max cores == number of samples)
@@ -86,7 +112,9 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALS
 #' Read in ATAC data for processing
 #'
 #' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
+#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If used, `sample_id_list` is required.
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR project with associated Arrow files
@@ -95,33 +123,57 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, log_flag = FALS
 #' proj <- Read_ATAC(data_path = "~/input_data/", sample_id_list = c("sample_1", "sample_2"), species = "human")
 #' @export
 #' @importFrom foreach %dopar%
-Read_ATAC <- function(data_path = getwd(), sample_id_list = NULL, species = "human", log_flag = FALSE) {
+Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list = NULL, sample_file_paths = NULL, species = "human", log_flag = FALSE) {
   print_SPEEDI("Step 1 (ATAC): Reading all samples", log_flag)
-  print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
+  if(!is.null(data_path)) {
+    print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
+  }
   if(!is.null(sample_id_list)) {
     print_SPEEDI(paste0("sample_id_list is: ", sample_id_list), log_flag)
   }
-  # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
-  data_path <- path.expand(data_path)
-  # First, remove "/" from end of data_path if it's provided (for use of list.files)
-  last_char_of_data_path <- substr(data_path, nchar(data_path), nchar(data_path))
-  if(last_char_of_data_path == "/") {
-    data_path <- substr(data_path, 1, nchar(data_path) - 1)
+  if(!is.null(sample_file_paths)) {
+    print_SPEEDI(paste0("sample_file_paths is: ", sample_file_paths), log_flag)
   }
-  # Second, look for all ATAC fragments files in data_path
-  data_files <- list.files(path = data_path, pattern = "fragments\\.tsv\\.gz$", recursive = TRUE, full.names = TRUE)
-  # Finally, if the user did provide a sample_id_list, pick the subset of ATAC fragment files that have that sample ID in the path
-  if(!is.null(sample_id_list)) {
-    data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
+  if(!is.null(sample_file_paths) & is.null(sample_id_list)) {
+    print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag)
+    stop()
+  }
+  if(is.null(data_path) & is.null(sample_file_paths)) {
+    print_SPEEDI("Error: You must provide a value for \"data_path\" if you do not provide a value for \"sample_file_paths\".", log_flag)
+    stop()
+  }
+  if(is.null(sample_file_paths)) {
+    # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
+    data_path <- path.expand(data_path)
+    # First, remove "/" from end of data_path if it's provided (for use of list.files)
+    last_char_of_data_path <- substr(data_path, nchar(data_path), nchar(data_path))
+    if(last_char_of_data_path == "/") {
+      data_path <- substr(data_path, 1, nchar(data_path) - 1)
+    }
+    # Second, look for all fragment.tsv.gz files in data_path
+    data_files <- list.files(path = data_path, pattern = "fragments\\.tsv\\.gz$", recursive = TRUE, full.names = TRUE)
+    # Finally, if the user did provide a sample_id_list, pick the subset of fragment files that have that sample ID in the path
+    if(!is.null(sample_id_list)) {
+      data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
+    } else {
+      # Else, we are using all data files found above, but we still need to guess what the sample names are because of Cell Ranger's
+      # structure for file output.
+      # We use the following strategy: We look at the paths of all of our data files and split by "/"
+      # Then, at each index, we see if the number of UNIQUE values is equivalent to the number of data files
+      # If we find such an index, we assume that the sample names are stored there
+      sample_id_list <- strsplit(data_files, "/")
+      final_sample_id_list <- c()
+      for(i in 1:length(sample_id_list[[1]])) {
+        current_elements <- sapply(sample_id_list, "[[", i)
+        if(length(unique(current_elements)) == length(data_files)) {
+          final_sample_id_list <- current_elements
+          break
+        }
+      }
+      sample_id_list <- final_sample_id_list
+    }
   } else {
-    # Else, we are using all data files found above, but we still need to guess what the sample names are because of Cell Ranger's
-    # structure for file output.
-    # Our current approach assumes that sample names are the directories right after data_path.
-    # Is there a better way of doing this?
-    sample_id_list <- strsplit(data_files, paste0(data_path, "/"))
-    sample_id_list <- sapply(sample_id_list , "[[", 2)
-    sample_id_list <- strsplit(sample_id_list, "/")
-    sample_id_list <- sapply(sample_id_list , "[[", 1)
+    data_files <- sample_file_paths
   }
   print_SPEEDI(paste0("Total sample count is: ", length(sample_id_list)), log_flag)
   # Set up reading of data so it's parallel (max cores == number of samples)
@@ -142,8 +194,8 @@ Read_ATAC <- function(data_path = getwd(), sample_id_list = NULL, species = "hum
   } else {
     addArchRGenome("mm10")
   }
-  print_SPEEDI("Beginning parallel processing of samples", log_flag)
   names(data_files) <- sample_id_list
+  print_SPEEDI("Creating Arrow files (data files for ArchR)", log_flag)
   ArrowFiles <- createArrowFiles(
     inputFiles = inputFiles,
     sampleNames = names(inputFiles),
@@ -153,34 +205,27 @@ Read_ATAC <- function(data_path = getwd(), sample_id_list = NULL, species = "hum
     addTileMat = TRUE,
     addGeneScoreMat = TRUE
   )
-  # #fake cell check
+  print_SPEEDI("Done creating Arrow files (data files for ArchR)", log_flag)
+  # Calculate doublet scores
+  print_SPEEDI("Calculating doublet scores", log_flag)
   doubScores <- addDoubletScores(
     input = ArrowFiles,
     k = 10, #Refers to how many cells near a "pseudo-doublet" to count.
     knnMethod = "UMAP", #Refers to the embedding to use for nearest neighbor search.
     LSIMethod = 1
   )
+  print_SPEEDI("Done calculating doublet scores", log_flag)
   #key step for sample selection before integration
+  archr_project_dir <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI_ArchR")
+  archr_project_dir <- gsub(":", "-", archr_project_dir)
+  print_SPEEDI("Creating ArchR project", log_flag)
   proj <- ArchRProject(
     ArrowFiles = ArrowFiles,
-    outputDirectory = "Integration",
-    copyArrows = TRUE #This is recommended so that you maintain an unaltered copy for later usage.
+    outputDirectory = archr_project_dir,
+    copyArrows = TRUE
   )
-
-
-
-
-
-
-
-
-
-
-
-  print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Parallel processing complete", log_flag)
-  print_SPEEDI(paste0("Raw data has ", dim(all_sc_exp_matrices)[2], " barcodes and ", dim(all_sc_exp_matrices)[1], " transcripts."), log_flag)
-  print_SPEEDI("Step 1 (RNA): Complete", log_flag)
+  print_SPEEDI("Done creating ArchR project", log_flag)
+  print_SPEEDI("Step 1 (ATAC): Complete", log_flag)
   gc()
-  return(all_sc_exp_matrices)
+  return(proj)
 }

@@ -115,18 +115,18 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
   return(sc_obj)
 }
 
-#' Integrate batches
+#' Integrate batches (RNA)
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains integrated data
 #' @examples
-#' sc_obj <- IntegrateByBatch(sc_obj)
+#' sc_obj <- IntegrateByBatch_RNA(sc_obj)
 #' @export
 #' @importFrom foreach %dopar%
-IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
+IntegrateByBatch_RNA <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 5: Integrating samples based on inferred groups", log_flag)
+  print_SPEEDI("Step 5: Integrating samples based on inferred groups (RNA)", log_flag)
   sc_obj_list <- Seurat::SplitObject(sc_obj, split.by = "batch")
   # If we only have one batch, we don't need to integrate by batch, so we exit the function
   if(length(sc_obj_list) == 1) {
@@ -199,6 +199,86 @@ IntegrateByBatch <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("Step 5: Complete", log_flag)
   gc()
   return(integrated_obj)
+}
+
+#' Integrate batches (ATAC)
+#'
+#' @param proj ArchR project containing cells for all samples
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return An ArchR object which contains integrated data
+#' @examples
+#' sc_obj <- IntegrateByBatch_ATAC(sc_obj)
+#' @export
+IntegrateByBatch_ATAC <- function(proj, log_flag = FALSE) {
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
+  print_SPEEDI("Preparing ATAC samples for batch inference", log_flag)
+  tile_sce <- getMatrixFromProject(proj, useMatrix='TileMatrix', binarize = TRUE)
+  tile_reduc <- getReducedDims(ArchRProj = proj, reducedDims = "IterativeLSI", returnMatrix = TRUE)
+  tile_reduc <- tile_reduc[match(colnames(tile_sce), rownames(tile_reduc)),]
+  for (i in colnames(colData(tile_sce))) {
+    colData(tile_sce)[[i]] <- as.vector(colData(tile_sce)[[i]])
+  }
+  rownames(tile_sce) <- paste0(as.character(rowData(tile_sce)$seqnames),
+                               '-',
+                               as.character(rowData(tile_sce)$start))
+  tile_seurat <- CreateSeuratObject(assays(tile_sce)$TileMatrix[, rownames(tile_reduc)],
+                                    project = "peaks",
+                                    assay = "tileMatrix")
+  tile_seurat <- AddMetaData(tile_seurat, data.frame(t(colData(tile_sce))))
+  cell.embeddings <- tile_reduc
+  feature.loadings <- matrix()
+  assay <- "tileMatrix"
+  sdev <- 0
+  reduction.key <- "LSI_"
+  reduction.data <- CreateDimReducObject(
+    embeddings = cell.embeddings,
+    loadings = feature.loadings,
+    assay = assay,
+    stdev = sdev,
+    key = reduction.key,
+    misc = list()
+  )
+  tile_seurat@reductions$lsi <- reduction.data
+  tile_umap <- getEmbedding(ArchRProj = proj, embedding = "UMAP", returnDF = TRUE)
+  cell.embeddings <- as.matrix(tile_umap)
+  feature.loadings <- matrix()
+  assay <- "tileMatrix"
+  sdev <- 0
+  reduction.key <- "UMAP_"
+  reduction.data <- CreateDimReducObject(
+    embeddings = cell.embeddings,
+    loadings = feature.loadings,
+    assay = assay,
+    stdev = sdev,
+    key = reduction.key,
+    misc = list()
+  )
+  tile_seurat@reductions$umap <- reduction.data
+  tile_seurat$sample <- proj$Sample
+  # Step 4: Inferring batches
+  tile_seurat <- InferBatches(tile_seurat, log_flag)
+  proj$Batch <- tile_seurat$batch
+  # If we only have one batch, we don't need to integrate by batch, so we exit the function
+  if(length(unique(proj$batch)) == 1) {
+    print_SPEEDI("Only one batch was found, so we don't need to integrate batches. Exiting IntegrateByBatch!", log_flag)
+  } else {
+    print_SPEEDI("\n", log_flag, silence_time = TRUE)
+    print_SPEEDI("Step 5: Integrating samples based on inferred groups", log_flag)
+    print_SPEEDI("Beginning integration", log_flag)
+    proj <- addHarmony(ArchRProj = proj, reducedDims = "IterativeLSI",
+                       dimsToUse = 2:30, scaleDims = TRUE,
+                       corCutOff = 0.75, groupBy = "Batch", force = TRUE)
+    print_SPEEDI("Step 5: Complete", log_flag)
+    print_SPEEDI("\n", log_flag, silence_time = TRUE)
+    print_SPEEDI("Step 6: Final processing of integrated data", log_flag)
+    proj <- addUMAP(ArchRProj = proj, reducedDims = "Harmony", force = TRUE)
+    proj <- addClusters(input = proj, reducedDims = "Harmony", method = "Seurat",
+                        name = "Harmony_clusters", resolution = 2, knnAssign = 30,
+                        maxClusters = NULL, force = TRUE)
+    print_SPEEDI("Step 6: Complete", log_flag)
+  }
+  gc()
+  return(proj)
 }
 
 
