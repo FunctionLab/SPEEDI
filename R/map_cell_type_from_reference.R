@@ -337,7 +337,7 @@ MapCellTypes_ATAC <- function(atac_proj, reference, reference_cell_type_attribut
      ArchRProj = atac_proj,
      useMatrix = "GeneScoreMatrix",
      matrixName = "GeneIntegrationMatrix",
-     reducedDims = "Harmony",
+     reducedDims = reducedDims_param,
      seRNA = reference,
      dimsToUse = 2:30,
      addToArrow = FALSE,
