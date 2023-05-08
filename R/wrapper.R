@@ -38,6 +38,7 @@
 #' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
 #' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
 #' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `tissue` should be set to `"custom"`.
+#' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
@@ -47,7 +48,7 @@
 #' sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")
 #' sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/", reference_dir = "~/reference_dir/", output_dir = "~/adipose_output", species = "human", record_doublets = TRUE)
 #' @export
-run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, output_dir = getwd(), sample_id_list = NULL, species = "human", record_doublets = FALSE) {
+run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), sample_id_list = NULL, species = "human", record_doublets = FALSE) {
   # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
   # and then reset it to the old working directory once we're done running SPEEDI
   old_wd <- getwd()
@@ -94,10 +95,12 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
                                    reference_file_name = reference_file_name, log_flag = TRUE)
   # Map cell types from reference onto query data
   if(data_type != "ATAC") {
-    sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference, log_flag = TRUE)
+    sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference,
+                               reference_cell_type_attribute = reference_cell_type_attribute, log_flag = TRUE)
   }
   if(data_type != "RNA") {
-    atac_proj <- MapCellTypes_ATAC(atac_proj = atac_proj, reference = reference, log_flag = TRUE)
+    atac_proj <- MapCellTypes_ATAC(atac_proj = atac_proj, reference = reference,
+                                   reference_cell_type_attribute, log_flag = TRUE)
   }
   # Write Seurat object to output directory
   save(sc_obj, file = paste0(log_file_name, ".rds"))

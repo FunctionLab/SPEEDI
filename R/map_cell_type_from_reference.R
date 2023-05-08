@@ -253,18 +253,22 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param reference Seurat reference object or reference found in [SeuratData]
+#' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param data_type String to indicate whether we're analyzing scRNA or snRNA data
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains majority vote labels
 #' @examples
-#' sc_obj <- MapCellTypes_RNA(sc_obj, reference = custom_reference_seurat_object)
+#' sc_obj <- MapCellTypes_RNA(sc_obj, reference = custom_reference_seurat_object, reference_cell_type_attribute = "Celltype")
 #' sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")
 #' @export
-MapCellTypes_RNA <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
+MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = "celltype.l2", data_type = "scRNA", log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 8: Reference-based cell type mapping (RNA)", log_flag)
   if(inherits(reference, "character")) {
     print_SPEEDI(paste0("reference is: ", reference), log_flag)
+  }
+  if(!is.null(reference_cell_type_attribute)) {
+    print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
   }
   print_SPEEDI(paste0("data_type is: ", data_type), log_flag)
   # Set default assay (to integrated or SCT)
@@ -277,7 +281,7 @@ MapCellTypes_RNA <- function(sc_obj, reference, data_type = "scRNA", log_flag = 
     sc_obj <- Seurat::MapQuery(anchorset = anchors,
                      query = sc_obj,
                      reference = reference,
-                     refdata = "celltype.l2",
+                     refdata = reference_cell_type_attribute,
                      reference.reduction = "spca",
                      reduction.model = "wnn.umap",
                      verbose = TRUE)
@@ -307,16 +311,20 @@ MapCellTypes_RNA <- function(sc_obj, reference, data_type = "scRNA", log_flag = 
 #'
 #' @param atac_proj ArchR project containing cells for all samples
 #' @param reference Seurat reference object
+#' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR object which contains majority vote labels
 #' @examples
 #' sc_obj <- MapCellTypes_ATAC(atac_proj, reference = custom_reference_seurat_object)
 #' @export
-MapCellTypes_ATAC <- function(atac_proj, reference, log_flag = FALSE) {
+MapCellTypes_ATAC <- function(atac_proj, reference, reference_cell_type_attribute = "celltype.l2", log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 8: Reference-based cell type mapping (ATAC)", log_flag)
   if(inherits(reference, "character")) {
     print_SPEEDI(paste0("reference is: ", reference), log_flag)
+  }
+  if(!is.null(reference_cell_type_attribute)) {
+    print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
   }
   print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)
   proj <- addGeneIntegrationMatrix(
@@ -327,7 +335,7 @@ MapCellTypes_ATAC <- function(atac_proj, reference, log_flag = FALSE) {
      seRNA = reference,
      dimsToUse = 2:30,
      addToArrow = FALSE,
-     groupRNA = "Celltype",
+     groupRNA = reference_cell_type_attribute,
      nameCell = "predictedCell",
      nameGroup = "predictedGroup",
      nameScore = "predictedScore",
