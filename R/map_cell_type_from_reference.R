@@ -309,15 +309,15 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
 
 #' Map cell types for input data (ATAC)
 #'
-#' @param atac_proj ArchR project containing cells for all samples
+#' @param proj ArchR project containing cells for all samples
 #' @param reference Seurat reference object
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR object which contains majority vote labels
 #' @examples
-#' sc_obj <- MapCellTypes_ATAC(atac_proj, reference = custom_reference_seurat_object)
+#' sc_obj <- MapCellTypes_ATAC(proj, reference = custom_reference_seurat_object)
 #' @export
-MapCellTypes_ATAC <- function(atac_proj, reference, reference_cell_type_attribute = "celltype.l2", log_flag = FALSE) {
+MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "celltype.l2", log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 8: Reference-based cell type mapping (ATAC)", log_flag)
   if(inherits(reference, "character")) {
@@ -334,7 +334,7 @@ MapCellTypes_ATAC <- function(atac_proj, reference, reference_cell_type_attribut
     reducedDims_param <- "Harmony"
   }
   proj <- addGeneIntegrationMatrix(
-     ArchRProj = atac_proj,
+     ArchRProj = proj,
      useMatrix = "GeneScoreMatrix",
      matrixName = "GeneIntegrationMatrix",
      reducedDims = reducedDims_param,
