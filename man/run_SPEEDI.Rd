@@ -72,14 +72,19 @@ A Seurat object that has been processed through the SPEEDI pipeline
 cell type mapping from your selected reference. Parameters chosen by SPEEDI are recorded in a log file written to your
 selected output directory (\code{output_dir}). Relevant individual functions called include:
 \itemize{
-\item \code{\link[=Read_h5]{Read_h5()}}: Reads in input data
-\item \code{\link[=FilterRawData]{FilterRawData()}}: Filters raw data using automatically selected QC thresholds
-\item \code{\link[=InitialProcessing]{InitialProcessing()}}: Process filtered data and prepare for batch inferring and integration
-\item \code{\link[=InferBatches]{InferBatches()}}: Infer batches in data
-\item \code{\link[=IntegrateByBatch]{IntegrateByBatch()}}: Integrate batches together
-\item \code{\link[=VisualizeIntegration]{VisualizeIntegration()}}: Visualize integration and prepare data for marker detection
-\item \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}}: Load reference for mapping onto query data
-\item \code{\link[=MapCellTypes]{MapCellTypes()}}: Map cell types from reference onto query data
+\item \code{\link[=Read_RNA]{Read_RNA()}}: Reads in input data (RNA)
+\item \code{\link[=Read_ATAC]{Read_ATAC()}}: Reads in input data (ATAC)
+\item \code{\link[=FilterRawData_RNA]{FilterRawData_RNA()}}: Filters raw data using automatically selected QC thresholds (RNA)
+\item \code{\link[=FilterRawData_ATAC]{FilterRawData_ATAC()}}: Filters raw data using automatically selected QC thresholds (ATAC)
+\item \code{\link[=InitialProcessing_RNA]{InitialProcessing_RNA()}}: Process filtered data and prepare for batch inferring and integration (RNA)
+\item \code{\link[=InitialProcessing_ATAC]{InitialProcessing_ATAC()}}: Process filtered data and prepare for batch inferring and integration (ATAC)
+\item \code{\link[=InferBatches]{InferBatches()}}: Infer batches in data (both RNA and ATAC)
+\item \code{\link[=IntegrateByBatch_RNA]{IntegrateByBatch_RNA()}}: Integrate batches together (RNA)
+\item \code{\link[=IntegrateByBatch_ATAC]{IntegrateByBatch_ATAC()}}: Integrate batches together (ATAC)
+\item \code{\link[=VisualizeIntegration]{VisualizeIntegration()}}: Visualize integration and prepare data for marker detection (RNA)
+\item \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}}: Load reference for mapping onto query data (both RNA and ATAC)
+\item \code{\link[=MapCellTypes_RNA]{MapCellTypes_RNA()}}: Map cell types from reference onto query data (RNA)
+\item \code{\link[=MapCellTypes_ATAC]{MapCellTypes_ATAC()}}: Map cell types from reference onto query data (ATAC)
 }
 }
 \examples{

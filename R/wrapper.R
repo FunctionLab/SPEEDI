@@ -5,14 +5,19 @@
 #' cell type mapping from your selected reference. Parameters chosen by SPEEDI are recorded in a log file written to your
 #' selected output directory (`output_dir`). Relevant individual functions called include:
 #'
-#' * [Read_h5()]: Reads in input data
-#' * [FilterRawData()]: Filters raw data using automatically selected QC thresholds
-#' * [InitialProcessing()]: Process filtered data and prepare for batch inferring and integration
-#' * [InferBatches()]: Infer batches in data
-#' * [IntegrateByBatch()]: Integrate batches together
-#' * [VisualizeIntegration()]: Visualize integration and prepare data for marker detection
-#' * [LoadReferenceSPEEDI()]: Load reference for mapping onto query data
-#' * [MapCellTypes()]: Map cell types from reference onto query data
+#' * [Read_RNA()]: Reads in input data (RNA)
+#' * [Read_ATAC()]: Reads in input data (ATAC)
+#' * [FilterRawData_RNA()]: Filters raw data using automatically selected QC thresholds (RNA)
+#' * [FilterRawData_ATAC()]: Filters raw data using automatically selected QC thresholds (ATAC)
+#' * [InitialProcessing_RNA()]: Process filtered data and prepare for batch inferring and integration (RNA)
+#' * [InitialProcessing_ATAC()]: Process filtered data and prepare for batch inferring and integration (ATAC)
+#' * [InferBatches()]: Infer batches in data (both RNA and ATAC)
+#' * [IntegrateByBatch_RNA()]: Integrate batches together (RNA)
+#' * [IntegrateByBatch_ATAC()]: Integrate batches together (ATAC)
+#' * [VisualizeIntegration()]: Visualize integration and prepare data for marker detection (RNA)
+#' * [LoadReferenceSPEEDI()]: Load reference for mapping onto query data (both RNA and ATAC)
+#' * [MapCellTypes_RNA()]: Map cell types from reference onto query data (RNA)
+#' * [MapCellTypes_ATAC()]: Map cell types from reference onto query data (ATAC)
 #' @param tissue Tissue type of input data (used to map cell types via reference). For human data, possible choices include:
 #' * `"adipose"`
 #' * `"bone marrow"`
