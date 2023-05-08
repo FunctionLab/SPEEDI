@@ -74,9 +74,9 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
       reference <- "pbmcref"
     } else if (tissue == "pbmc_full") {
       reference_url <- get_pbmc_reference_url()
-      print_SPEEDI(paste0("Downloading PBMC reference from ", reference_url), log_flag)
       # Download PBMC reference if the user doesn't have it
       if(!file.exists(paste0(reference_dir, sub("\\?.*", "", basename(reference_url))))) {
+        print_SPEEDI(paste0("Downloading PBMC reference from ", reference_url), log_flag)
         httr::GET(
           url = reference_url,
           httr::write_disk(paste0(reference_dir, sub("\\?.*", "", basename(reference_url)))),
