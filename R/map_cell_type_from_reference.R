@@ -333,6 +333,11 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
   } else {
     reducedDims_param <- "Harmony"
   }
+  if(DefaultAssay(reference) == "SCT") {
+    normalization_method <- "SCT"
+  } else {
+    normalization_method <- "LogNormalize"
+  }
   proj <- addGeneIntegrationMatrix(
      ArchRProj = proj,
      useMatrix = "GeneScoreMatrix",
@@ -345,6 +350,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
      nameCell = "predictedCell",
      nameGroup = "predictedGroup",
      nameScore = "predictedScore",
+     normalization.method = normalization_method,
      force = TRUE
   )
   print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
