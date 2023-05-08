@@ -17,10 +17,10 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
     print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
   }
   if(!is.null(sample_id_list)) {
-    print_SPEEDI(paste0("sample_id_list is: ", sample_id_list), log_flag)
+    print_SPEEDI(paste0("sample_id_list includes the following sample id: ", sample_id_list, collapse = ". In addition, "), log_flag)
   }
   if(!is.null(sample_file_paths)) {
-    print_SPEEDI(paste0("sample_file_paths is: ", sample_file_paths), log_flag)
+    print_SPEEDI(paste0("sample_file_paths includes the following file path: ", sample_file_paths, collapse = ". In addition, "), log_flag)
   }
   if(!is.null(sample_file_paths) & is.null(sample_id_list)) {
     print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag)
