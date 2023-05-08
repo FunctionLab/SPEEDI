@@ -327,6 +327,12 @@ MapCellTypes_ATAC <- function(atac_proj, reference, reference_cell_type_attribut
     print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
   }
   print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)
+  # If we only had one batch, then we just use IterativeLSI - otherwise, we use Harmony
+  if(length(unique(proj$Batch)) == 1) {
+    reducedDims_param <- "IterativeLSI"
+  } else {
+    reducedDims_param <- "Harmony"
+  }
   proj <- addGeneIntegrationMatrix(
      ArchRProj = atac_proj,
      useMatrix = "GeneScoreMatrix",
