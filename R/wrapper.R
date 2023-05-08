@@ -99,8 +99,8 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
                                reference_cell_type_attribute = reference_cell_type_attribute, log_flag = TRUE)
   }
   if(data_type != "RNA") {
-    atac_proj <- MapCellTypes_ATAC(atac_proj = atac_proj, reference = reference,
-                                   reference_cell_type_attribute, log_flag = TRUE)
+    atac_proj <- MapCellTypes_ATAC(proj = atac_proj, reference = reference,
+                                   reference_cell_type_attribute = reference_cell_type_attribute, log_flag = TRUE)
   }
   # Write Seurat object to output directory
   save(sc_obj, file = paste0(log_file_name, ".rds"))
