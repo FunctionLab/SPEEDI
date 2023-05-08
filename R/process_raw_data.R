@@ -183,10 +183,8 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
 #' proj <- FilterRawData_ATAC(proj)
 #' @export
 FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
-  species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 2: Filtering out bad samples (ATAC)", log_flag)
-  print_SPEEDI(paste0("species is: ", species), log_flag)
   print_SPEEDI("Filtering out doublets and low quality cells (only keep cells which have TSS enrichment >= 12 and nucleosome ratio < 2)", log_flag)
   proj <- filterDoublets(ArchRProj = proj)
   idxPass <- which(proj$TSSEnrichment >= 12 & proj$NucleosomeRatio < 2)

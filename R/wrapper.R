@@ -85,9 +85,9 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
   if(data_type != "RNA") {
     # Read in ATAC data, filter data, perform initial processing, infer batches, and integrate by batch
     atac_proj <- Read_ATAC(data_path = data_path, sample_id_list = sample_id_list, species = species, log_flag = TRUE)
-    atac_proj <- FilterRawData_ATAC(atac_proj = atac_proj, species = species, log_flag = TRUE)
-    atac_proj <- InitialProcessing_ATAC(atac_proj = atac_proj, log_flag = TRUE)
-    atac_proj <- IntegrateByBatch_ATAC(atac_proj = atac_proj, log_flag = TRUE)
+    atac_proj <- FilterRawData_ATAC(proj = atac_proj, log_flag = TRUE)
+    atac_proj <- InitialProcessing_ATAC(proj = atac_proj, log_flag = TRUE)
+    atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, log_flag = TRUE)
   }
   # Load reference
   reference <- LoadReferenceSPEEDI(tissue = tissue, species = species, reference_dir = reference_dir,
