@@ -107,9 +107,7 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
     print_SPEEDI("No batch effect detected!", log_flag)
     sc_obj$batch <- "No Batch"
   }
-  print_SPEEDI(paste0("List of batches (assign): ", unique(batch.assign)), log_flag)
-  print_SPEEDI(paste0("List of batches: ", unique(batch)), log_flag)
-  print_SPEEDI(paste0("Total batches detected: ", length(unique(batch))), log_flag)
+  print_SPEEDI(paste0("Total batches detected: ", length(unique(sc_obj$batch))), log_flag)
   print_SPEEDI("Step 4: Complete", log_flag)
   gc()
   return(sc_obj)
