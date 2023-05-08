@@ -6,9 +6,12 @@
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A set of single cell expression matrices
 #' @examples
-#' all_sc_exp_matrices <- Read_RNA()
-#' all_sc_exp_matrices <- Read_RNA(data_path = "~/input_data/", sample_id_list = c("sample_1", "sample_2"))
-#' all_sc_exp_matrices <- Read_RNA(sample_id_list = c("sample_1", "sample_2"), sample_file_paths = c("~/input_data/sample_1/filtered_feature_bc_matrix.h5", "~/input_data/sample_2/filtered_feature_bc_matrix.h5"))
+#' \dontrun{all_sc_exp_matrices <- Read_RNA()}
+#' \dontrun{all_sc_exp_matrices <- Read_RNA(data_path = "~/input_data/",
+#' sample_id_list = c("sample_1", "sample_2"))}
+#' \dontrun{all_sc_exp_matrices <- Read_RNA(sample_id_list = c("sample_1", "sample_2"),
+#' sample_file_paths = c("~/input_data/sample_1/filtered_feature_bc_matrix.h5",
+#' "~/input_data/sample_2/filtered_feature_bc_matrix.h5"))}
 #' @export
 #' @importFrom foreach %dopar%
 Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_paths = NULL, log_flag = FALSE) {
@@ -121,8 +124,9 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR project with associated Arrow files
 #' @examples
-#' proj <- Read_ATAC()
-#' proj <- Read_ATAC(data_path = "~/input_data/", sample_id_list = c("sample_1", "sample_2"), species = "human")
+#' \dontrun{proj <- Read_ATAC()}
+#' \dontrun{proj <- Read_ATAC(data_path = "~/input_data/",
+#' sample_id_list = c("sample_1", "sample_2"), species = "human")}
 #' @export
 #' @importFrom foreach %dopar%
 Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list = NULL, sample_file_paths = NULL, species = "human", log_flag = FALSE) {
@@ -189,18 +193,16 @@ Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list 
   }
   print_SPEEDI(paste0("Number of cores: ", n.cores))
   # Set number of threads that ArchR will use
-  addArchRThreads(n.cores)
+  ArchR::addArchRThreads(n.cores)
   # Set ArchR genome depending on species
   if(species == "human") {
-    addArchRGenome("hg38")
+    ArchR::addArchRGenome("hg38")
   } else {
-    addArchRGenome("mm10")
+    ArchR::addArchRGenome("mm10")
   }
-  print(data_files)
-  print(sample_id_list)
   names(data_files) <- sample_id_list
   print_SPEEDI("Creating Arrow files (data files for ArchR)", log_flag)
-  ArrowFiles <- createArrowFiles(
+  ArrowFiles <- ArchR::createArrowFiles(
     inputFiles = data_files,
     sampleNames = names(data_files),
     minTSS = 4,
@@ -212,7 +214,7 @@ Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list 
   print_SPEEDI("Done creating Arrow files (data files for ArchR)", log_flag)
   # Calculate doublet scores
   print_SPEEDI("Calculating doublet scores", log_flag)
-  doubScores <- addDoubletScores(
+  doubScores <- ArchR::addDoubletScores(
     input = ArrowFiles,
     k = 10, #Refers to how many cells near a "pseudo-doublet" to count.
     knnMethod = "UMAP", #Refers to the embedding to use for nearest neighbor search.
@@ -223,7 +225,7 @@ Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list 
   archr_project_dir <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI_ArchR")
   archr_project_dir <- gsub(":", "-", archr_project_dir)
   print_SPEEDI("Creating ArchR project", log_flag)
-  proj <- ArchRProject(
+  proj <- ArchR::ArchRProject(
     ArrowFiles = ArrowFiles,
     outputDirectory = archr_project_dir,
     copyArrows = TRUE

@@ -23,9 +23,10 @@
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A reference object
 #' @examples
-#' reference <- LoadReferenceSPEEDI(tissue = "PBMC", species = "human")
-#' reference <- LoadReferenceSPEEDI(tissue = "cortex", species = "mouse")
-#' reference <- LoadReferenceSPEEDI(tissue = "custom", species = "human", reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")
+#' \dontrun{reference <- LoadReferenceSPEEDI(tissue = "PBMC", species = "human")}
+#' \dontrun{reference <- LoadReferenceSPEEDI(tissue = "cortex", species = "mouse")}
+#' \dontrun{reference <- LoadReferenceSPEEDI(tissue = "custom", species = "human",
+#' reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")}
 #' @export
 LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL, log_flag = FALSE) {
   # Change tissue to all lowercase to prevent any issues with casing
@@ -120,7 +121,8 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return Mapping anchors between reference and query
 #' @examples
-#' anchors <- FindMappingAnchors(sc_obj, reference = custom_reference_seurat_object, data_type = "scRNA")
+#' \dontrun{anchors <- FindMappingAnchors(sc_obj, reference = custom_reference_seurat_object,
+#' data_type = "scRNA")}
 #' @export
 FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag = FALSE) {
   print_SPEEDI("Finding mapping anchors", log_flag)
@@ -147,7 +149,7 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag 
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains majority vote labels
 #' @examples
-#' sc_obj <- MajorityVote_RNA(sc_obj)
+#' \dontrun{sc_obj <- MajorityVote_RNA(sc_obj)}
 #' @export
 MajorityVote_RNA <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
   print_SPEEDI("Begin majority voting", log_flag)
@@ -199,7 +201,7 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object with default assay appropriately set
 #' @examples
-#' sc_obj <- SetDefaultAssay(sc_obj)
+#' \dontrun{sc_obj <- SetDefaultAssay(sc_obj)}
 SetDefaultAssay <- function(sc_obj, log_flag = FALSE) {
   # Assay will be integrated if multiple batches were found - otherwise, we use SCT assay
   if(length(unique(sc_obj$batch)) != 1) {
@@ -218,7 +220,7 @@ SetDefaultAssay <- function(sc_obj, log_flag = FALSE) {
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object with predicted.id appropriately set
 #' @examples
-#' sc_obj <- SetPredictedId(sc_obj, reference = "bonemarrowref")
+#' \dontrun{sc_obj <- SetPredictedId(sc_obj, reference = "bonemarrowref")}
 SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
   print_SPEEDI("Choosing appropriate annotation level from reference", log_flag)
   if(reference == "adiposeref") {
@@ -258,8 +260,9 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains majority vote labels
 #' @examples
-#' sc_obj <- MapCellTypes_RNA(sc_obj, reference = custom_reference_seurat_object, reference_cell_type_attribute = "Celltype")
-#' sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")
+#' \dontrun{sc_obj <- MapCellTypes_RNA(sc_obj, reference = custom_reference_seurat_object,
+#' reference_cell_type_attribute = "Celltype")}
+#' \dontrun{sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")}
 #' @export
 MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = "celltype.l2", data_type = "scRNA", log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
@@ -315,7 +318,7 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR object which contains majority vote labels
 #' @examples
-#' sc_obj <- MapCellTypes_ATAC(proj, reference = custom_reference_seurat_object)
+#' \dontrun{sc_obj <- MapCellTypes_ATAC(proj, reference = custom_reference_seurat_object)}
 #' @export
 MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "celltype.l2", log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
@@ -333,12 +336,12 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
   } else {
     reducedDims_param <- "Harmony"
   }
-  if(DefaultAssay(reference) == "SCT") {
+  if(Seurat::DefaultAssay(reference) == "SCT") {
     normalization_method <- "SCT"
   } else {
     normalization_method <- "LogNormalize"
   }
-  proj <- addGeneIntegrationMatrix(
+  proj <- ArchR::addGeneIntegrationMatrix(
      ArchRProj = proj,
      useMatrix = "GeneScoreMatrix",
      matrixName = "GeneIntegrationMatrix",
@@ -358,7 +361,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
   # We have to perform majority voting with a different cluster attribute if Harmony was not run
   # (due to only having one batch)
   if(reducedDims_param == "Harmony") {
-    cM <- as.matrix(confusionMatrix(proj$Harmony_clusters, proj$predictedGroup))
+    cM <- as.matrix(ArchR::confusionMatrix(proj$Harmony_clusters, proj$predictedGroup))
     Cell_type_voting <- proj$Harmony_clusters
     pre_cluster <- rownames(cM)
     max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
@@ -367,7 +370,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
       Cell_type_voting[idxSample] <- max_celltype[m]
     }
   } else {
-    cM <- as.matrix(confusionMatrix(proj$Clusters, proj$predictedGroup))
+    cM <- as.matrix(ArchR::confusionMatrix(proj$Clusters, proj$predictedGroup))
     Cell_type_voting <- proj$Clusters
     pre_cluster <- rownames(cM)
     max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
@@ -376,7 +379,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
       Cell_type_voting[idxSample] <- max_celltype[m]
     }
   }
-  proj <- addCellColData(ArchRProj = proj, data = Cell_type_voting, cells = proj$cellNames, name = "Cell_type_voting", force = TRUE)
+  proj <- ArchR::addCellColData(ArchRProj = proj, data = Cell_type_voting, cells = proj$cellNames, name = "Cell_type_voting", force = TRUE)
   print_SPEEDI("Done performing majority voting", log_flag)
   print_SPEEDI("Step 8: Complete", log_flag)
   gc()

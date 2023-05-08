@@ -27,7 +27,10 @@ A set of single cell expression matrices
 Read in RNA data for processing
 }
 \examples{
-all_sc_exp_matrices <- Read_RNA()
-all_sc_exp_matrices <- Read_RNA(data_path = "~/input_data/", sample_id_list = c("sample_1", "sample_2"))
-all_sc_exp_matrices <- Read_RNA(sample_id_list = c("sample_1", "sample_2"), sample_file_paths = c("~/input_data/sample_1/filtered_feature_bc_matrix.h5", "~/input_data/sample_2/filtered_feature_bc_matrix.h5"))
+\dontrun{all_sc_exp_matrices <- Read_RNA()}
+\dontrun{all_sc_exp_matrices <- Read_RNA(data_path = "~/input_data/",
+sample_id_list = c("sample_1", "sample_2"))}
+\dontrun{all_sc_exp_matrices <- Read_RNA(sample_id_list = c("sample_1", "sample_2"),
+sample_file_paths = c("~/input_data/sample_1/filtered_feature_bc_matrix.h5",
+"~/input_data/sample_2/filtered_feature_bc_matrix.h5"))}
 }

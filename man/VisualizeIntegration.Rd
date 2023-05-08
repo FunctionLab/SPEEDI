@@ -18,5 +18,5 @@ A Seurat object with SCT markers and visualizations
 Visualize integration and prepare SCT for finding markers
 }
 \examples{
-sc_obj <- VisualizeIntegration(sc_obj)
+\dontrun{sc_obj <- VisualizeIntegration(sc_obj)}
 }

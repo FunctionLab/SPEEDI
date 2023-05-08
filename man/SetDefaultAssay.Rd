@@ -18,5 +18,5 @@ A Seurat object with default assay appropriately set
 Choose assay based on whether there are multiple batches (integrated) or only one batch (SCT)
 }
 \examples{
-sc_obj <- SetDefaultAssay(sc_obj)
+\dontrun{sc_obj <- SetDefaultAssay(sc_obj)}
 }

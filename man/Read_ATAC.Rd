@@ -33,6 +33,7 @@ An ArchR project with associated Arrow files
 Read in ATAC data for processing
 }
 \examples{
-proj <- Read_ATAC()
-proj <- Read_ATAC(data_path = "~/input_data/", sample_id_list = c("sample_1", "sample_2"), species = "human")
+\dontrun{proj <- Read_ATAC()}
+\dontrun{proj <- Read_ATAC(data_path = "~/input_data/",
+sample_id_list = c("sample_1", "sample_2"), species = "human")}
 }

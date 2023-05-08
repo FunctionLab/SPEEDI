@@ -20,6 +20,6 @@ A Seurat object which contains processed data
 Process filtered data (RNA)
 }
 \examples{
-sc_obj <- InitialProcessing_RNA(sc_obj)
-sc_obj <- InitialProcessing_RNA(sc_obj, species = "human")
+\dontrun{sc_obj <- InitialProcessing_RNA(sc_obj)}
+\dontrun{sc_obj <- InitialProcessing_RNA(sc_obj, species = "human")}
 }

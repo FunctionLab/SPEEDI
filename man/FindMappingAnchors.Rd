@@ -22,5 +22,6 @@ Mapping anchors between reference and query
 Find mapping anchors between reference and query
 }
 \examples{
-anchors <- FindMappingAnchors(sc_obj, reference = custom_reference_seurat_object, data_type = "scRNA")
+\dontrun{anchors <- FindMappingAnchors(sc_obj, reference = custom_reference_seurat_object,
+data_type = "scRNA")}
 }

@@ -83,6 +83,8 @@ selected output directory (\code{output_dir}). Relevant individual functions cal
 }
 }
 \examples{
-sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")
-sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/", reference_dir = "~/reference_dir/", output_dir = "~/adipose_output", species = "human", record_doublets = TRUE)
+\dontrun{sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")}
+\dontrun{sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/",
+reference_dir = "~/reference_dir/", output_dir = "~/adipose_output",
+species = "human", record_doublets = TRUE)}
 }

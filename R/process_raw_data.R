@@ -7,8 +7,9 @@
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains filtered data from all input data
 #' @examples
-#' sc_obj <- FilterRawData_RNA(all_sc_exp_matrices)
-#' sc_obj <- FilterRawData_RNA(all_sc_exp_matrices, species = "human", record_doublets = TRUE)
+#' \dontrun{sc_obj <- FilterRawData_RNA(all_sc_exp_matrices)}
+#' \dontrun{sc_obj <- FilterRawData_RNA(all_sc_exp_matrices,
+#' species = "human", record_doublets = TRUE)}
 #' @export
 #' @importFrom foreach %dopar%
 FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_file_path = NULL, log_flag = FALSE) {
@@ -145,7 +146,7 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
                                           ",", max_mt, ",", stats::quantile(objects[[i]]$percent.rps, .99), ",", stats::quantile(objects[[i]]$percent.rpl, .99),
                                           ",", max_hb)
       sample_log_file_name <- paste0(log_file_path, "_", current_sample_name, ".QC.sample.txt")
-      write.table(current_sample_parameters, file = sample_log_file_name)
+      utils::write.table(current_sample_parameters, file = sample_log_file_name)
     }
     return(object)
   }
@@ -153,7 +154,7 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
     # Read sample QC parameter files one at a time and write content into log
     sample_qc_file_paths <- list.files(dirname(log_file_path), pattern = paste0(basename(log_file_path), ".+.QC.sample.txt"), full.names = TRUE)
     for(sample_qc_file_path in sample_qc_file_paths) {
-      sample_qc_stats <- strsplit(read.table(sample_qc_file_path)$x, split = ",")[[1]]
+      sample_qc_stats <- strsplit(utils::read.table(sample_qc_file_path)$x, split = ",")[[1]]
       cat(paste0("\n", Sys.time(), ": QC Thresholds used for sample: ", sample_qc_stats[1]), file = paste0(log_file_path, ".log"), append = TRUE)
       cat(paste0("\n\n", Sys.time(), ": lower nFeature: ", sample_qc_stats[2]), file = paste0(log_file_path, ".log"), append = TRUE)
       cat(paste0("\n", Sys.time(), ": upper nFeature: ", sample_qc_stats[3]), file = paste0(log_file_path, ".log"), append = TRUE)
@@ -180,13 +181,13 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR project which contains filtered data
 #' @examples
-#' proj <- FilterRawData_ATAC(proj)
+#' \dontrun{proj <- FilterRawData_ATAC(proj)}
 #' @export
 FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 2: Filtering out bad samples (ATAC)", log_flag)
   print_SPEEDI("Filtering out doublets and low quality cells (only keep cells which have TSS enrichment >= 12 and nucleosome ratio < 2)", log_flag)
-  proj <- filterDoublets(ArchRProj = proj)
+  proj <- ArchR::filterDoublets(ArchRProj = proj)
   idxPass <- which(proj$TSSEnrichment >= 12 & proj$NucleosomeRatio < 2)
   cellsPass <- proj$cellNames[idxPass]
   proj <- proj[cellsPass, ]
@@ -203,8 +204,8 @@ FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains processed data
 #' @examples
-#' sc_obj <- InitialProcessing_RNA(sc_obj)
-#' sc_obj <- InitialProcessing_RNA(sc_obj, species = "human")
+#' \dontrun{sc_obj <- InitialProcessing_RNA(sc_obj)}
+#' \dontrun{sc_obj <- InitialProcessing_RNA(sc_obj, species = "human")}
 #' @export
 InitialProcessing_RNA <- function(sc_obj, species = "human", log_flag = FALSE) {
   species <- tolower(species)
@@ -248,23 +249,23 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", log_flag = FALSE) {
 
 #' Process filtered data (ATAC)
 #'
-#' @param sc_obj Seurat object containing cells for all samples
+#' @param proj ArchR project associated with data
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR project which contains processed data
 #' @examples
-#' sc_obj <- InitialProcessing_RNA(sc_obj)
+#' \dontrun{proj <- InitialProcessing_ATAC(proj)}
 #' @export
 InitialProcessing_ATAC <- function(proj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 3: Processing raw data (ATAC)", log_flag)
-  proj <- addIterativeLSI(ArchRProj = proj, useMatrix = "TileMatrix", name = "IterativeLSI",
+  proj <- ArchR::addIterativeLSI(ArchRProj = proj, useMatrix = "TileMatrix", name = "IterativeLSI",
                          iterations = 2,
                          force = TRUE,
                          clusterParams = list(resolution = c(2), sampleCells = 10000, n.start = 30),
                          varFeatures = 20000, dims = 1:30,
                          saveIterations = TRUE)
-  proj <- addUMAP(ArchRProj = proj, reducedDims = "IterativeLSI", force = TRUE)
-  proj <- addClusters(input = proj, reducedDims = "IterativeLSI", method = "Seurat",
+  proj <- ArchR::addUMAP(ArchRProj = proj, reducedDims = "IterativeLSI", force = TRUE)
+  proj <- ArchR::addClusters(input = proj, reducedDims = "IterativeLSI", method = "Seurat",
                       name = "Clusters", resolution = 2, knnAssign = 30,
                       maxClusters = NULL, force = TRUE)
   print_SPEEDI("Step 3: Complete", log_flag)

@@ -30,6 +30,7 @@ A Seurat object which contains filtered data from all input data
 Filter raw data for RNA
 }
 \examples{
-sc_obj <- FilterRawData_RNA(all_sc_exp_matrices)
-sc_obj <- FilterRawData_RNA(all_sc_exp_matrices, species = "human", record_doublets = TRUE)
+\dontrun{sc_obj <- FilterRawData_RNA(all_sc_exp_matrices)}
+\dontrun{sc_obj <- FilterRawData_RNA(all_sc_exp_matrices,
+species = "human", record_doublets = TRUE)}
 }

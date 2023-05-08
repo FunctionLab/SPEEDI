@@ -20,5 +20,5 @@ A Seurat object which contains majority vote labels
 In each cluster, we vote for majority cell type (RNA)
 }
 \examples{
-sc_obj <- MajorityVote_RNA(sc_obj)
+\dontrun{sc_obj <- MajorityVote_RNA(sc_obj)}
 }

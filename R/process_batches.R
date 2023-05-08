@@ -4,7 +4,7 @@
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains labeled batches
 #' @examples
-#' sc_obj <- InferBatches(sc_obj)
+#' \dontrun{sc_obj <- InferBatches(sc_obj)}
 #' @export
 InferBatches <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
@@ -119,7 +119,7 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains integrated data
 #' @examples
-#' sc_obj <- IntegrateByBatch_RNA(sc_obj)
+#' \dontrun{sc_obj <- IntegrateByBatch_RNA(sc_obj)}
 #' @export
 #' @importFrom foreach %dopar%
 IntegrateByBatch_RNA <- function(sc_obj, log_flag = FALSE) {
@@ -205,30 +205,30 @@ IntegrateByBatch_RNA <- function(sc_obj, log_flag = FALSE) {
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR object which contains integrated data
 #' @examples
-#' sc_obj <- IntegrateByBatch_ATAC(sc_obj)
+#' \dontrun{proj <- IntegrateByBatch_ATAC(proj)}
 #' @export
 IntegrateByBatch_ATAC <- function(proj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Preparing ATAC samples for batch inference", log_flag)
-  tile_sce <- getMatrixFromProject(proj, useMatrix='TileMatrix', binarize = TRUE)
-  tile_reduc <- getReducedDims(ArchRProj = proj, reducedDims = "IterativeLSI", returnMatrix = TRUE)
+  tile_sce <- ArchR::getMatrixFromProject(proj, useMatrix='TileMatrix', binarize = TRUE)
+  tile_reduc <- ArchR::getReducedDims(ArchRProj = proj, reducedDims = "IterativeLSI", returnMatrix = TRUE)
   tile_reduc <- tile_reduc[match(colnames(tile_sce), rownames(tile_reduc)),]
-  for (i in colnames(colData(tile_sce))) {
-    colData(tile_sce)[[i]] <- as.vector(colData(tile_sce)[[i]])
+  for (i in colnames(SummarizedExperiment::colData(tile_sce))) {
+    SummarizedExperiment::colData(tile_sce)[[i]] <- as.vector(SummarizedExperiment::colData(tile_sce)[[i]])
   }
-  rownames(tile_sce) <- paste0(as.character(rowData(tile_sce)$seqnames),
+  rownames(tile_sce) <- paste0(as.character(SummarizedExperiment::rowData(tile_sce)$seqnames),
                                '-',
-                               as.character(rowData(tile_sce)$start))
-  tile_seurat <- CreateSeuratObject(assays(tile_sce)$TileMatrix[, rownames(tile_reduc)],
+                               as.character(SummarizedExperiment::rowData(tile_sce)$start))
+  tile_seurat <- Seurat::CreateSeuratObject(SummarizedExperiment::assays(tile_sce)$TileMatrix[, rownames(tile_reduc)],
                                     project = "peaks",
                                     assay = "tileMatrix")
-  tile_seurat <- AddMetaData(tile_seurat, data.frame(t(colData(tile_sce))))
+  tile_seurat <- Seurat::AddMetaData(tile_seurat, data.frame(t(SummarizedExperiment::colData(tile_sce))))
   cell.embeddings <- tile_reduc
   feature.loadings <- matrix()
   assay <- "tileMatrix"
   sdev <- 0
   reduction.key <- "LSI_"
-  reduction.data <- CreateDimReducObject(
+  reduction.data <- Seurat::CreateDimReducObject(
     embeddings = cell.embeddings,
     loadings = feature.loadings,
     assay = assay,
@@ -237,13 +237,13 @@ IntegrateByBatch_ATAC <- function(proj, log_flag = FALSE) {
     misc = list()
   )
   tile_seurat@reductions$lsi <- reduction.data
-  tile_umap <- getEmbedding(ArchRProj = proj, embedding = "UMAP", returnDF = TRUE)
+  tile_umap <- ArchR::getEmbedding(ArchRProj = proj, embedding = "UMAP", returnDF = TRUE)
   cell.embeddings <- as.matrix(tile_umap)
   feature.loadings <- matrix()
   assay <- "tileMatrix"
   sdev <- 0
   reduction.key <- "UMAP_"
-  reduction.data <- CreateDimReducObject(
+  reduction.data <- Seurat::CreateDimReducObject(
     embeddings = cell.embeddings,
     loadings = feature.loadings,
     assay = assay,
@@ -263,14 +263,14 @@ IntegrateByBatch_ATAC <- function(proj, log_flag = FALSE) {
     print_SPEEDI("\n", log_flag, silence_time = TRUE)
     print_SPEEDI("Step 5: Integrating samples based on inferred groups", log_flag)
     print_SPEEDI("Beginning integration", log_flag)
-    proj <- addHarmony(ArchRProj = proj, reducedDims = "IterativeLSI",
+    proj <- ArchR::addHarmony(ArchRProj = proj, reducedDims = "IterativeLSI",
                        dimsToUse = 2:30, scaleDims = TRUE,
                        corCutOff = 0.75, groupBy = "Batch", force = TRUE)
     print_SPEEDI("Step 5: Complete", log_flag)
     print_SPEEDI("\n", log_flag, silence_time = TRUE)
     print_SPEEDI("Step 6: Final processing of integrated data", log_flag)
-    proj <- addUMAP(ArchRProj = proj, reducedDims = "Harmony", force = TRUE)
-    proj <- addClusters(input = proj, reducedDims = "Harmony", method = "Seurat",
+    proj <- ArchR::addUMAP(ArchRProj = proj, reducedDims = "Harmony", force = TRUE)
+    proj <- ArchR::addClusters(input = proj, reducedDims = "Harmony", method = "Seurat",
                         name = "Harmony_clusters", resolution = 2, knnAssign = 30,
                         maxClusters = NULL, force = TRUE)
     print_SPEEDI("Step 6: Complete", log_flag)
@@ -286,7 +286,7 @@ IntegrateByBatch_ATAC <- function(proj, log_flag = FALSE) {
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object with SCT markers and visualizations
 #' @examples
-#' sc_obj <- VisualizeIntegration(sc_obj)
+#' \dontrun{sc_obj <- VisualizeIntegration(sc_obj)}
 #' @export
 VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)

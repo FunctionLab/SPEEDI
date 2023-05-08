@@ -12,6 +12,7 @@ RoxygenNote: 7.2.3
 LazyData: true
 biocViews:
 Imports: 
+    ArchR,
     Azimuth,
     doParallel,
     foreach,
@@ -28,8 +29,10 @@ Imports:
     scDblFinder,
     Seurat,
     SeuratData,
-    SeuratDisk
+    SeuratDisk,
+    SummarizedExperiment
 Remotes: 
+    github::GreenleafLab/ArchR,
     github::satijalab/azimuth,
     github::etam4260/kneedle,
     github::immunogenomics/lisi,

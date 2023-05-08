@@ -18,5 +18,5 @@ An ArchR object which contains integrated data
 Integrate batches (ATAC)
 }
 \examples{
-sc_obj <- IntegrateByBatch_ATAC(sc_obj)
+\dontrun{proj <- IntegrateByBatch_ATAC(proj)}
 }

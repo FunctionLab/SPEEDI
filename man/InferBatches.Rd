@@ -18,5 +18,5 @@ A Seurat object which contains labeled batches
 Infer batches using LISI metric
 }
 \examples{
-sc_obj <- InferBatches(sc_obj)
+\dontrun{sc_obj <- InferBatches(sc_obj)}
 }

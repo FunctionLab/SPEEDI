@@ -18,5 +18,5 @@ A Seurat object which contains integrated data
 Integrate batches (RNA)
 }
 \examples{
-sc_obj <- IntegrateByBatch_RNA(sc_obj)
+\dontrun{sc_obj <- IntegrateByBatch_RNA(sc_obj)}
 }

@@ -5,14 +5,14 @@
 \title{Map cell types for input data (ATAC)}
 \usage{
 MapCellTypes_ATAC(
-  atac_proj,
+  proj,
   reference,
   reference_cell_type_attribute = "celltype.l2",
   log_flag = FALSE
 )
 }
 \arguments{
-\item{atac_proj}{ArchR project containing cells for all samples}
+\item{proj}{ArchR project containing cells for all samples}
 
 \item{reference}{Seurat reference object}
 
@@ -27,5 +27,5 @@ An ArchR object which contains majority vote labels
 Map cell types for input data (ATAC)
 }
 \examples{
-sc_obj <- MapCellTypes_ATAC(atac_proj, reference = custom_reference_seurat_object)
+\dontrun{sc_obj <- MapCellTypes_ATAC(proj, reference = custom_reference_seurat_object)}
 }

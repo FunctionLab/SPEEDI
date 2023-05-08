@@ -30,6 +30,7 @@ A Seurat object which contains majority vote labels
 Map cell types for input data (RNA)
 }
 \examples{
-sc_obj <- MapCellTypes_RNA(sc_obj, reference = custom_reference_seurat_object, reference_cell_type_attribute = "Celltype")
-sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")
+\dontrun{sc_obj <- MapCellTypes_RNA(sc_obj, reference = custom_reference_seurat_object,
+reference_cell_type_attribute = "Celltype")}
+\dontrun{sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")}
 }

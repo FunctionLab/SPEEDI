@@ -50,7 +50,8 @@ A reference object
 Load appropriate reference for SPEEDI
 }
 \examples{
-reference <- LoadReferenceSPEEDI(tissue = "PBMC", species = "human")
-reference <- LoadReferenceSPEEDI(tissue = "cortex", species = "mouse")
-reference <- LoadReferenceSPEEDI(tissue = "custom", species = "human", reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")
+\dontrun{reference <- LoadReferenceSPEEDI(tissue = "PBMC", species = "human")}
+\dontrun{reference <- LoadReferenceSPEEDI(tissue = "cortex", species = "mouse")}
+\dontrun{reference <- LoadReferenceSPEEDI(tissue = "custom", species = "human",
+reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")}
 }

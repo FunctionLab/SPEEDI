@@ -24,5 +24,5 @@ However, if we use \link[Azimuth:RunAzimuth]{Azimuth::RunAzimuth}, there are oft
 Depending on the reference, we use \code{SetPredictedId} to select the proper annotation level for predicted.id.
 }
 \examples{
-sc_obj <- SetPredictedId(sc_obj, reference = "bonemarrowref")
+\dontrun{sc_obj <- SetPredictedId(sc_obj, reference = "bonemarrowref")}
 }

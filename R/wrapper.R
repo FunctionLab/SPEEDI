@@ -45,8 +45,10 @@
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
 #' @return A Seurat object that has been processed through the SPEEDI pipeline
 #' @examples
-#' sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")
-#' sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/", reference_dir = "~/reference_dir/", output_dir = "~/adipose_output", species = "human", record_doublets = TRUE)
+#' \dontrun{sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")}
+#' \dontrun{sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/",
+#' reference_dir = "~/reference_dir/", output_dir = "~/adipose_output",
+#' species = "human", record_doublets = TRUE)}
 #' @export
 run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), sample_id_list = NULL, species = "human", record_doublets = FALSE) {
   # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
@@ -72,7 +74,7 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
   }
   # If there are RNA data, we read those in using Read_RNA, and if there are ATAC data, we read those in using Read_ATAC
   if(data_type != "ATAC") {
-    # Read in RNA data, filter data, perform initial processing, infer batches, and integrate by batch
+    # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
     all_sc_exp_matrices <- Read_RNA(data_path = data_path, sample_id_list = sample_id_list, log_flag = TRUE)
     sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = species,
                                 record_doublets = record_doublets, log_file_path = log_file_name, log_flag = TRUE)
@@ -80,7 +82,6 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
     sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = species, log_flag = TRUE)
     sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
     sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = TRUE)
-    # Create UMAP of integration (and prep for FindMarkers)
     sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = TRUE)
   }
   if(data_type != "RNA") {
@@ -105,7 +106,7 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
   # Write Seurat object to output directory
   save(sc_obj, file = paste0(log_file_name, ".rds"))
   # Save ArchR project
-  saveArchRProject(ArchRProj = atac_proj, load = FALSE)
+  ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE)
   setwd(old_wd)
   if(data_type == "RNA") {
     return(sc_obj)

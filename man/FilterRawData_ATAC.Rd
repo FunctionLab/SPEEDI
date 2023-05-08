@@ -18,5 +18,5 @@ An ArchR project which contains filtered data
 Filter raw data for ATAC
 }
 \examples{
-proj <- FilterRawData_ATAC(proj)
+\dontrun{proj <- FilterRawData_ATAC(proj)}
 }

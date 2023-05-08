@@ -7,9 +7,9 @@
 InitialProcessing_ATAC(proj, log_flag = FALSE)
 }
 \arguments{
-\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
+\item{proj}{ArchR project associated with data}
 
-\item{sc_obj}{Seurat object containing cells for all samples}
+\item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
 \value{
 An ArchR project which contains processed data
@@ -18,5 +18,5 @@ An ArchR project which contains processed data
 Process filtered data (ATAC)
 }
 \examples{
-sc_obj <- InitialProcessing_RNA(sc_obj)
+\dontrun{proj <- InitialProcessing_ATAC(proj)}
 }
