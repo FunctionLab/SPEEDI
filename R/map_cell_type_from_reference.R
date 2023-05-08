@@ -315,7 +315,9 @@ MapCellTypes_RNA <- function(sc_obj, reference, data_type = "scRNA", log_flag = 
 MapCellTypes_ATAC <- function(atac_proj, reference, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 8: Reference-based cell type mapping (ATAC)", log_flag)
-  print_SPEEDI(paste0("reference is: ", reference), log_flag)
+  if(inherits(reference, "character")) {
+    print_SPEEDI(paste0("reference is: ", reference), log_flag)
+  }
   print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)
   proj <- addGeneIntegrationMatrix(
      ArchRProj = atac_proj,
