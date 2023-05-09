@@ -5,20 +5,21 @@
 \title{Wrapper function for running the SPEEDI pipeline.}
 \usage{
 run_SPEEDI(
-  tissue,
+  reference_tissue,
   data_type = "RNA",
   data_path = getwd(),
   reference_dir = getwd(),
   reference_file_name = NULL,
   reference_cell_type_attribute = "celltype.l2",
   output_dir = getwd(),
+  analysis_name = NULL,
   sample_id_list = NULL,
   species = "human",
   record_doublets = FALSE
 )
 }
 \arguments{
-\item{tissue}{Tissue type of input data (used to map cell types via reference). For human data, possible choices include:
+\item{reference_tissue}{Reference tissue type (used to map cell types via reference). For human data, possible choices include:
 \itemize{
 \item \code{"adipose"}
 \item \code{"bone marrow"}
@@ -32,31 +33,35 @@ run_SPEEDI(
 \item \code{"pbmc_full"} (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
 \item \code{"tonsil"}
 \item \code{"custom"} (\code{reference_file_name} must be provided)
+\item \code{"none"} (cell mapping from reference will not be performed)
 }
 
 For mouse data, possible choices include:
 \itemize{
 \item \code{"cortex"}
 \item \code{"custom"} (\code{reference_file_name} must be provided)
+\item \code{"none"} (cell mapping from reference will not be performed)
 }}
 
 \item{data_type}{Type of data being processed. Possible choices include:
 \itemize{
 \item \code{"RNA"}
-\item \code{"ATAC"} (\code{tissue} must be set to \code{"pbmc_full"} or \code{"custom"})
-\item \code{"sample_paired"} (\code{tissue} must be set to \code{"pbmc_full"} or \code{"custom"})
-\item \code{"true_multiome"}
+\item \code{"ATAC"} (\code{reference_tissue} must be set to \code{"pbmc_full"}, \code{"custom"}, or \code{"none"})
+\item \code{"sample_paired"} (reference mapping for ATAC will not be performed if an Azimuth reference is selected)
+\item \code{"true_multiome"} (reference mapping for full ATAC will not be performed if an Azimuth reference is selected, but RNA cell types will be mapped over to ATAC for overlapping cells that pass QC)
 }}
 
 \item{data_path}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{reference_dir}{Path to directory where reference is either already located (see \code{reference_file_name}) or will be downloaded by \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}} if necessary. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Note that Azimuth references from \link{SeuratData} do not require use of \code{reference_dir}.}
 
-\item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{tissue} should be set to \code{"custom"}.}
+\item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{reference_tissue} should be set to \code{"custom"}.}
 
 \item{reference_cell_type_attribute}{If using a Seurat reference object, this parameter captures where the cell type information is stored}
 
 \item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Directory will be created if it doesn't already exist.}
+
+\item{analysis_name}{Name used to create subdirectory in \code{output_dir} for current analysis run. Directory will be created if it doesn't already exist.}
 
 \item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{data_path}).}
 
@@ -88,8 +93,8 @@ selected output directory (\code{output_dir}). Relevant individual functions cal
 }
 }
 \examples{
-\dontrun{sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")}
-\dontrun{sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/",
+\dontrun{sc_obj <- run_SPEEDI(reference_tissue = "PBMC", species = "human")}
+\dontrun{sc_obj <- run_SPEEDI(reference_tissue = "adipose", data_path = "~/input_data/",
 reference_dir = "~/reference_dir/", output_dir = "~/adipose_output",
 species = "human", record_doublets = TRUE)}
 }

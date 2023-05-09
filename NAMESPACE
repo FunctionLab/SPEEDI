@@ -3,6 +3,7 @@
 export(FilterRawData_ATAC)
 export(FilterRawData_RNA)
 export(FindMappingAnchors)
+export(FindMultiomeOverlap)
 export(InferBatches)
 export(InitialProcessing_ATAC)
 export(InitialProcessing_RNA)

@@ -221,13 +221,9 @@ Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list 
     LSIMethod = 1
   )
   print_SPEEDI("Done calculating doublet scores", log_flag)
-  #key step for sample selection before integration
-  archr_project_dir <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI_ArchR")
-  archr_project_dir <- gsub(":", "-", archr_project_dir)
   print_SPEEDI("Creating ArchR project", log_flag)
   proj <- ArchR::ArchRProject(
     ArrowFiles = ArrowFiles,
-    outputDirectory = archr_project_dir,
     copyArrows = TRUE
   )
   print_SPEEDI("Done creating ArchR project", log_flag)

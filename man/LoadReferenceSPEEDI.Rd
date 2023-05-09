@@ -5,7 +5,7 @@
 \title{Load appropriate reference for SPEEDI}
 \usage{
 LoadReferenceSPEEDI(
-  tissue,
+  reference_tissue,
   species = "human",
   reference_dir = getwd(),
   reference_file_name = NULL,
@@ -13,7 +13,7 @@ LoadReferenceSPEEDI(
 )
 }
 \arguments{
-\item{tissue}{Tissue type of input data (used to map cell types via reference). For human data, possible choices include:
+\item{reference_tissue}{Reference tissue type (used to map cell types via reference). For human data, possible choices include:
 \itemize{
 \item \code{"adipose"}
 \item \code{"bone marrow"}
@@ -27,19 +27,21 @@ LoadReferenceSPEEDI(
 \item \code{"pbmc_full"} (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
 \item \code{"tonsil"}
 \item \code{"custom"} (\code{reference_file_name} must be provided)
+\item \code{"none"} (reference will not be loaded)
 }
 
 For mouse data, possible choices include:
 \itemize{
 \item \verb{"cortex}
 \item \code{"custom"} (\code{reference_file_name} must be provided)
+#' * \code{"none"} (reference will not be loaded)
 }}
 
 \item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
 
 \item{reference_dir}{Path to directory where reference is either already located (see \code{reference_file_name}) or will be downloaded by \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}} if necessary. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Note that Azimuth references from \link{SeuratData} do not require use of \code{reference_dir}.}
 
-\item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{tissue} should be set to \code{"custom"}.}
+\item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{reference_tissue} should be set to \code{"custom"}.}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
@@ -50,8 +52,8 @@ A reference object
 Load appropriate reference for SPEEDI
 }
 \examples{
-\dontrun{reference <- LoadReferenceSPEEDI(tissue = "PBMC", species = "human")}
-\dontrun{reference <- LoadReferenceSPEEDI(tissue = "cortex", species = "mouse")}
-\dontrun{reference <- LoadReferenceSPEEDI(tissue = "custom", species = "human",
+\dontrun{reference <- LoadReferenceSPEEDI(reference_tissue = "PBMC", species = "human")}
+\dontrun{reference <- LoadReferenceSPEEDI(reference_tissue = "cortex", species = "mouse")}
+\dontrun{reference <- LoadReferenceSPEEDI(reference_tissue = "custom", species = "human",
 reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")}
 }

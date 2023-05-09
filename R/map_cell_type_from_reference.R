@@ -94,6 +94,8 @@ LoadReferenceSPEEDI <- function(reference_tissue, species = "human", reference_d
     } else if (reference_tissue == "custom") {
       # Load and return reference
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
+    } else if (reference_tissue == "none") {
+      reference <- "none"
     } else {
       message(paste0("\nYour reference tissue ", reference_tissue, " is not valid for the selected species"))
     }
@@ -104,6 +106,8 @@ LoadReferenceSPEEDI <- function(reference_tissue, species = "human", reference_d
     } else if (reference_tissue == "custom") {
       # Load and return reference
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
+    } else if (reference_tissue == "none") {
+      reference <- "none"
     } else {
       message(paste0("\nYour reference tissue ", reference_tissue, " is not valid for the selected species"))
     }
@@ -299,6 +303,8 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
     sc_obj <- SetDefaultAssay(sc_obj)
     sc_obj <- SetPredictedId(sc_obj, reference, log_flag)
     sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
+  } else if(reference == "none") {
+    print_SPEEDI("Not performing reference mapping because no reference was provided", log_flag)
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
       print_SPEEDI(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."), log_flag)
@@ -331,58 +337,62 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
   if(!is.null(reference_cell_type_attribute)) {
     print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
   }
-  print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)
-  # If we only had one batch, then we just use IterativeLSI - otherwise, we use Harmony
-  if(length(unique(proj$Batch)) == 1) {
-    reducedDims_param <- "IterativeLSI"
+  if(reference == "none") {
+    print_SPEEDI("Not performing reference mapping because no reference was provided", log_flag)
   } else {
-    reducedDims_param <- "Harmony"
-  }
-  if(Seurat::DefaultAssay(reference) == "SCT") {
-    normalization_method <- "SCT"
-  } else {
-    normalization_method <- "LogNormalize"
-  }
-  proj <- ArchR::addGeneIntegrationMatrix(
-     ArchRProj = proj,
-     useMatrix = "GeneScoreMatrix",
-     matrixName = "GeneIntegrationMatrix",
-     reducedDims = reducedDims_param,
-     seRNA = reference,
-     dimsToUse = 2:30,
-     addToArrow = FALSE,
-     groupRNA = reference_cell_type_attribute,
-     nameCell = "predictedCell",
-     nameGroup = "predictedGroup",
-     nameScore = "predictedScore",
-     normalization.method = normalization_method,
-     force = TRUE
-  )
-  print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
-  print_SPEEDI("Performing majority voting", log_flag)
-  # We have to perform majority voting with a different cluster attribute if Harmony was not run
-  # (due to only having one batch)
-  if(reducedDims_param == "Harmony") {
-    cM <- as.matrix(ArchR::confusionMatrix(proj$Harmony_clusters, proj$predictedGroup))
-    Cell_type_voting <- proj$Harmony_clusters
-    pre_cluster <- rownames(cM)
-    max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
-    for (m in c(1:length(pre_cluster))){
-      idxSample <- which(proj$Harmony_clusters == pre_cluster[m])
-      Cell_type_voting[idxSample] <- max_celltype[m]
+    print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)
+    # If we only had one batch, then we just use IterativeLSI - otherwise, we use Harmony
+    if(length(unique(proj$Batch)) == 1) {
+      reducedDims_param <- "IterativeLSI"
+    } else {
+      reducedDims_param <- "Harmony"
     }
-  } else {
-    cM <- as.matrix(ArchR::confusionMatrix(proj$Clusters, proj$predictedGroup))
-    Cell_type_voting <- proj$Clusters
-    pre_cluster <- rownames(cM)
-    max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
-    for (m in c(1:length(pre_cluster))){
-      idxSample <- which(proj$Clusters == pre_cluster[m])
-      Cell_type_voting[idxSample] <- max_celltype[m]
+    if(Seurat::DefaultAssay(reference) == "SCT") {
+      normalization_method <- "SCT"
+    } else {
+      normalization_method <- "LogNormalize"
     }
+    proj <- ArchR::addGeneIntegrationMatrix(
+      ArchRProj = proj,
+      useMatrix = "GeneScoreMatrix",
+      matrixName = "GeneIntegrationMatrix",
+      reducedDims = reducedDims_param,
+      seRNA = reference,
+      dimsToUse = 2:30,
+      addToArrow = FALSE,
+      groupRNA = reference_cell_type_attribute,
+      nameCell = "predictedCell",
+      nameGroup = "predictedGroup",
+      nameScore = "predictedScore",
+      normalization.method = normalization_method,
+      force = TRUE
+    )
+    print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
+    print_SPEEDI("Performing majority voting", log_flag)
+    # We have to perform majority voting with a different cluster attribute if Harmony was not run
+    # (due to only having one batch)
+    if(reducedDims_param == "Harmony") {
+      cM <- as.matrix(ArchR::confusionMatrix(proj$Harmony_clusters, proj$predictedGroup))
+      Cell_type_voting <- proj$Harmony_clusters
+      pre_cluster <- rownames(cM)
+      max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
+      for (m in c(1:length(pre_cluster))){
+        idxSample <- which(proj$Harmony_clusters == pre_cluster[m])
+        Cell_type_voting[idxSample] <- max_celltype[m]
+      }
+    } else {
+      cM <- as.matrix(ArchR::confusionMatrix(proj$Clusters, proj$predictedGroup))
+      Cell_type_voting <- proj$Clusters
+      pre_cluster <- rownames(cM)
+      max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
+      for (m in c(1:length(pre_cluster))){
+        idxSample <- which(proj$Clusters == pre_cluster[m])
+        Cell_type_voting[idxSample] <- max_celltype[m]
+      }
+    }
+    proj <- ArchR::addCellColData(ArchRProj = proj, data = Cell_type_voting, cells = proj$cellNames, name = "Cell_type_voting", force = TRUE)
+    print_SPEEDI("Done performing majority voting", log_flag)
   }
-  proj <- ArchR::addCellColData(ArchRProj = proj, data = Cell_type_voting, cells = proj$cellNames, name = "Cell_type_voting", force = TRUE)
-  print_SPEEDI("Done performing majority voting", log_flag)
   print_SPEEDI("Step 8: Complete", log_flag)
   gc()
   return(proj)
