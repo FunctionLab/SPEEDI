@@ -18,7 +18,7 @@
 #' * [LoadReferenceSPEEDI()]: Load reference for mapping onto query data (both RNA and ATAC)
 #' * [MapCellTypes_RNA()]: Map cell types from reference onto query data (RNA)
 #' * [MapCellTypes_ATAC()]: Map cell types from reference onto query data (ATAC)
-#' @param tissue Tissue type of input data (used to map cell types via reference). For human data, possible choices include:
+#' @param reference_tissue Reference tissue type (used to map cell types via reference). For human data, possible choices include:
 #' * `"adipose"`
 #' * `"bone marrow"`
 #' * `"cortex"`
@@ -31,18 +31,20 @@
 #' * `"pbmc_full"` (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
 #' * `"tonsil"`
 #' * `"custom"` (`reference_file_name` must be provided)
+#' * `"none"` (cell mapping from reference will not be performed)
 #'
 #' For mouse data, possible choices include:
 #' * `"cortex"`
 #' * `"custom"` (`reference_file_name` must be provided)
+#' * `"none"` (cell mapping from reference will not be performed)
 #' @param data_type Type of data being processed. Possible choices include:
 #' * `"RNA"`
-#' * `"ATAC"` (`tissue` must be set to `"pbmc_full"` or `"custom"`)
-#' * `"sample_paired"` (`tissue` must be set to `"pbmc_full"` or `"custom"`)
-#' * `"true_multiome"`
+#' * `"ATAC"` (`reference_tissue` must be set to `"pbmc_full"`, `"custom"`, or `"none"`)
+#' * `"sample_paired"` (reference mapping for ATAC will not be performed if an Azimuth reference is selected)
+#' * `"true_multiome"` (reference mapping for full ATAC will not be performed if an Azimuth reference is selected, but RNA cell types will be mapped over to ATAC for overlapping cells that pass QC)
 #' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
 #' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
-#' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `tissue` should be set to `"custom"`.
+#' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `reference_tissue` should be set to `"custom"`.
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
@@ -50,12 +52,12 @@
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
 #' @return A Seurat object that has been processed through the SPEEDI pipeline
 #' @examples
-#' \dontrun{sc_obj <- run_SPEEDI(tissue = "PBMC", species = "human")}
-#' \dontrun{sc_obj <- run_SPEEDI(tissue = "adipose", data_path = "~/input_data/",
+#' \dontrun{sc_obj <- run_SPEEDI(reference_tissue = "PBMC", species = "human")}
+#' \dontrun{sc_obj <- run_SPEEDI(reference_tissue = "adipose", data_path = "~/input_data/",
 #' reference_dir = "~/reference_dir/", output_dir = "~/adipose_output",
 #' species = "human", record_doublets = TRUE)}
 #' @export
-run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), sample_id_list = NULL, species = "human", record_doublets = FALSE) {
+run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), sample_id_list = NULL, species = "human", record_doublets = FALSE) {
   # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
   # and then reset it to the old working directory once we're done running SPEEDI
   old_wd <- getwd()
@@ -73,10 +75,13 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
   log_file_name <- paste0(output_dir, log_file_name)
   log_file <- logr::log_open(log_file_name, logdir = FALSE)
   # Error checking
-  if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(tissue) != "pbmc_full" & tolower(tissue) != "custom")) {
+  if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full" & tolower(reference_tissue) != "custom")) {
     print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", TRUE)
     stop()
   }
+  # Load reference
+  reference <- LoadReferenceSPEEDI(reference_tissue = reference_tissue, species = species, reference_dir = reference_dir,
+                                   reference_file_name = reference_file_name, log_flag = TRUE)
   # If there are RNA data, we read those in using Read_RNA, and if there are ATAC data, we read those in using Read_ATAC
   if(data_type != "ATAC") {
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
@@ -96,9 +101,6 @@ run_SPEEDI <- function(tissue, data_type = "RNA", data_path = getwd(), reference
     atac_proj <- InitialProcessing_ATAC(proj = atac_proj, log_flag = TRUE)
     atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, log_flag = TRUE)
   }
-  # Load reference
-  reference <- LoadReferenceSPEEDI(tissue = tissue, species = species, reference_dir = reference_dir,
-                                   reference_file_name = reference_file_name, log_flag = TRUE)
   # Map cell types from reference onto query data
   if(data_type != "ATAC") {
     sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference,

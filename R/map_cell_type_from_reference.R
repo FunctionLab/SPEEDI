@@ -1,6 +1,6 @@
 #' Load appropriate reference for SPEEDI
 #'
-#' @param tissue Tissue type of input data (used to map cell types via reference). For human data, possible choices include:
+#' @param reference_tissue Reference tissue type (used to map cell types via reference). For human data, possible choices include:
 #' * `"adipose"`
 #' * `"bone marrow"`
 #' * `"cortex"`
@@ -13,24 +13,26 @@
 #' * `"pbmc_full"` (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
 #' * `"tonsil"`
 #' * `"custom"` (`reference_file_name` must be provided)
+#' * `"none"` (reference will not be loaded)
 #'
 #' For mouse data, possible choices include:
 #' * `"cortex`
 #' * `"custom"` (`reference_file_name` must be provided)
+#' #' * `"none"` (reference will not be loaded)
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
 #' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
-#' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `tissue` should be set to `"custom"`.
+#' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `reference_tissue` should be set to `"custom"`.
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A reference object
 #' @examples
-#' \dontrun{reference <- LoadReferenceSPEEDI(tissue = "PBMC", species = "human")}
-#' \dontrun{reference <- LoadReferenceSPEEDI(tissue = "cortex", species = "mouse")}
-#' \dontrun{reference <- LoadReferenceSPEEDI(tissue = "custom", species = "human",
+#' \dontrun{reference <- LoadReferenceSPEEDI(reference_tissue = "PBMC", species = "human")}
+#' \dontrun{reference <- LoadReferenceSPEEDI(reference_tissue = "cortex", species = "mouse")}
+#' \dontrun{reference <- LoadReferenceSPEEDI(reference_tissue = "custom", species = "human",
 #' reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")}
 #' @export
-LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL, log_flag = FALSE) {
-  # Change tissue to all lowercase to prevent any issues with casing
-  tissue <- tolower(tissue)
+LoadReferenceSPEEDI <- function(reference_tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL, log_flag = FALSE) {
+  # Change reference_tissue to all lowercase to prevent any issues with casing
+  reference_tissue <- tolower(reference_tissue)
   species <- tolower(species)
   # Add "/" to end of reference path if not already present
   last_char_of_reference_path <- substr(reference_dir, nchar(reference_dir), nchar(reference_dir))
@@ -39,41 +41,41 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
   }
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI(paste0("Step 7: loading reference (and installing data if necessary)"), log_flag)
-  print_SPEEDI(paste0("tissue is: ", tissue), log_flag)
+  print_SPEEDI(paste0("reference_tissue is: ", reference_tissue), log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   print_SPEEDI(paste0("reference_dir (if necessary) is: ", reference_dir), log_flag)
   if(!is.null(reference_file_name)) {
     print_SPEEDI(paste0("reference_file_name is: ", reference_file_name), log_flag)
   }
   if (species == "human") {
-    if (tissue == "adipose") {
+    if (reference_tissue == "adipose") {
       SeuratData::InstallData("adiposeref")
       reference <- "adiposeref"
-    } else if (tissue == "bone marrow") {
+    } else if (reference_tissue == "bone marrow") {
       SeuratData::InstallData("bonemarrowref")
       reference <- "bonemarrowref"
-    } else if (tissue == "cortex") {
+    } else if (reference_tissue == "cortex") {
       SeuratData::InstallData("humancortexref")
       reference <- "humancortexref"
-    } else if (tissue == "fetus") {
+    } else if (reference_tissue == "fetus") {
       SeuratData::InstallData("fetusref")
       reference <- "fetusref"
-    } else if (tissue == "heart") {
+    } else if (reference_tissue == "heart") {
       SeuratData::InstallData("heartref")
       reference <- "heartref"
-    } else if (tissue == "kidney") {
+    } else if (reference_tissue == "kidney") {
       SeuratData::InstallData("kidneyref")
       reference <- "kidneyref"
-    } else if (tissue == "lung") {
+    } else if (reference_tissue == "lung") {
       SeuratData::InstallData("lungref")
       reference <- "lungref"
-    } else if (tissue == "pancreas") {
+    } else if (reference_tissue == "pancreas") {
       SeuratData::InstallData("pancreasref")
       reference <- "pancreasref"
-    } else if (tissue == "pbmc") {
+    } else if (reference_tissue == "pbmc") {
       SeuratData::InstallData("pbmcref")
       reference <- "pbmcref"
-    } else if (tissue == "pbmc_full") {
+    } else if (reference_tissue == "pbmc_full") {
       reference_url <- get_pbmc_reference_url()
       # Download PBMC reference if the user doesn't have it
       if(!file.exists(paste0(reference_dir, sub("\\?.*", "", basename(reference_url))))) {
@@ -86,28 +88,28 @@ LoadReferenceSPEEDI <- function(tissue, species = "human", reference_dir = getwd
       }
       # Load and return PBMC reference
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, basename(reference_url)))
-    } else if (tissue == "tonsil") {
+    } else if (reference_tissue == "tonsil") {
       SeuratData::InstallData("tonsilref")
       reference <- "tonsilref"
-    } else if (tissue == "custom") {
+    } else if (reference_tissue == "custom") {
       # Load and return reference
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
     } else {
-      message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
+      message(paste0("\nYour reference tissue ", reference_tissue, " is not valid for the selected species"))
     }
   } else {
-    if (tissue == "cortex") {
+    if (reference_tissue == "cortex") {
       SeuratData::InstallData("mousecortexref")
       reference <- "mousecortexref"
-    } else if (tissue == "custom") {
+    } else if (reference_tissue == "custom") {
       # Load and return reference
       reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
     } else {
-      message(paste0("\nYour tissue ", tissue, " is not valid for the selected species"))
+      message(paste0("\nYour reference tissue ", reference_tissue, " is not valid for the selected species"))
     }
   }
   if(inherits(reference, "character")) {
-    print_SPEEDI(paste0("Selected reference based on your tissue is: ", reference), log_flag)
+    print_SPEEDI(paste0("Selected reference based on reference_tissue is: ", reference), log_flag)
   }
   print_SPEEDI("Step 7: Complete", log_flag)
   return(reference)
