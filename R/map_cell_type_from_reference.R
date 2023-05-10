@@ -337,7 +337,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
   if(!is.null(reference_cell_type_attribute)) {
     print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
   }
-  if(reference == "none") {
+  if(inherits(reference, "character") && reference == "none") {
     print_SPEEDI("Not performing reference mapping because no reference was provided", log_flag)
   } else {
     print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)

@@ -13,11 +13,17 @@ LazyData: true
 biocViews:
 Depends: 
     utils,
-    ArchR,
+    ArchR (== 1.0.1)
 Imports: 
     Azimuth,
+    BiocGenerics,
+    BiocManager,
+    Biostrings,
+    chromVAR,
+    ComplexHeatmap,
     doParallel,
     foreach,
+    GenomicRanges,
     glmGamPoi,
     hdf5r,
     httr,
@@ -25,16 +31,20 @@ Imports:
     lisi,
     logr,
     Matrix,
+    motifmatchr,
     outliers,
     parallel,
     RCurl,
+    rhdf5,
+    Rsamtools,
+    S4Vectors,
     scDblFinder,
     Seurat,
     SeuratData,
     SeuratDisk,
     SummarizedExperiment
 Remotes: 
-    github::GreenleafLab/ArchR,
+    github::GreenleafLab/ArchR@v1.0.1,
     github::satijalab/azimuth,
     github::etam4260/kneedle,
     github::immunogenomics/lisi,

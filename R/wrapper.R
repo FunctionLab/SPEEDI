@@ -57,7 +57,6 @@
 #' \dontrun{sc_obj <- run_SPEEDI(reference_tissue = "adipose", data_path = "~/input_data/",
 #' reference_dir = "~/reference_dir/", output_dir = "~/adipose_output",
 #' species = "human", record_doublets = TRUE)}
-#' @import ArchR
 #' @export
 run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), analysis_name = NULL, sample_id_list = NULL, species = "human", record_doublets = FALSE) {
   # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
