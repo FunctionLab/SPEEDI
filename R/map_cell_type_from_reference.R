@@ -263,6 +263,7 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' @param reference Seurat reference object or reference found in [SeuratData]
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param data_type String to indicate whether we're analyzing scRNA or snRNA data
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains majority vote labels
 #' @examples
@@ -270,7 +271,7 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' reference_cell_type_attribute = "Celltype")}
 #' \dontrun{sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")}
 #' @export
-MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = "celltype.l2", data_type = "scRNA", log_flag = FALSE) {
+MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = "celltype.l2", data_type = "scRNA", output_dir = getwd(), log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 8: Reference-based cell type mapping (RNA)", log_flag)
   if(inherits(reference, "character")) {
@@ -303,7 +304,7 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
     sc_obj <- SetDefaultAssay(sc_obj)
     sc_obj <- SetPredictedId(sc_obj, reference, log_flag)
     sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
-  } else if(reference == "none") {
+  } else if(inherits(reference, "character") && reference == "none") {
     print_SPEEDI("Not performing reference mapping because no reference was provided", log_flag)
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
@@ -312,6 +313,12 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
       print_SPEEDI(paste0("\nYour reference name (", reference, ") is not valid (it was not found in SeuratData). It should be one of the following: \n"), log_flag)
       print_SPEEDI(paste0(possible_seuratdata_references, collapse = "\n"), log_flag)
     }
+  }
+  if(reference != "none") {
+    print_SPEEDI("Printing UMAP", log_flag)
+    print_UMAP(sc_obj, file_name = "Final_RNA_UMAP_by_Predicted_Cell_Type.png",
+               group_by_category = "predicted_celltype_majority_vote", output_dir = output_dir,
+               log_flag = log_flag)
   }
   print_SPEEDI("Step 8: Complete", log_flag)
   gc()

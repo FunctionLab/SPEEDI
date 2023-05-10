@@ -39,3 +39,29 @@ print_SPEEDI <- function(current_message, log_flag = FALSE, silence_time = FALSE
   }
   return(TRUE)
 }
+
+#' Print UMAP for Seurat object
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param file_name File name for saved plot
+#' @param group_by_category Category to group samples by
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
+#' @param log_flag boolean to indicate whether we're also printing to log file
+#' @return TRUE
+print_UMAP <- function(sc_obj, file_name, group_by_category = NULL, output_dir = getwd(), log_flag = FALSE) {
+  sample_count <- length(unique(sc_obj$sample))
+  cell_count <- length(sc_obj$cell_name)
+  current_title <- paste0("RNA Data Integration \n (", sample_count, " Samples, ", cell_count, " Cells)")
+  if(!is.null(group_by_category)) {
+    Seurat::DimPlot(sc_obj, reduction = "umap", group.by = group_by_category, label = TRUE,
+                    label.size = 3, repel = TRUE, raster = FALSE) +
+      labs(title = current_title) +
+      theme(plot.title = element_text(hjust = 0.5))
+  } else {
+    Seurat::DimPlot(sc_obj, reduction = "umap", label = TRUE,
+                    label.size = 3, repel = TRUE, raster = FALSE) +
+      labs(title = current_title) +
+      theme(plot.title = element_text(hjust = 0.5))
+  }
+  ggplot2::ggsave(paste0(output_dir, file_name), device = "png", dpi = 300)
+  return(TRUE)
+}

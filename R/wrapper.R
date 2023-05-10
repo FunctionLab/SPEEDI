@@ -84,7 +84,8 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
   output_dir <- paste0(output_dir, analysis_name, "/")
   if (!dir.exists(output_dir)) {dir.create(output_dir)}
   # Error checking
-  if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full" & tolower(reference_tissue) != "custom")) {
+  if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full"
+                                                             & tolower(reference_tissue) != "custom") & tolower(reference_tissue) != "none") {
     print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", TRUE)
     stop()
   }
@@ -92,8 +93,9 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
   reference <- LoadReferenceSPEEDI(reference_tissue = reference_tissue, species = species, reference_dir = reference_dir,
                                    reference_file_name = reference_file_name, log_flag = TRUE)
   # If there are RNA data, we read those in using Read_RNA, and if there are ATAC data, we read those in using Read_ATAC
+  RNA_output_dir <- paste0(output_dir, "RNA", "/")
+  ATAC_output_dir <- paste0(output_dir, "ATAC", "/")
   if(data_type != "ATAC") {
-    RNA_output_dir <- paste0(output_dir, "RNA", "/")
     if (!dir.exists(RNA_output_dir)) {dir.create(RNA_output_dir)}
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
     all_sc_exp_matrices <- Read_RNA(data_path = data_path, sample_id_list = sample_id_list, log_flag = TRUE)
@@ -107,7 +109,6 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
     sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = TRUE)
   }
   if(data_type != "RNA") {
-    ATAC_output_dir <- paste0(output_dir, "ATAC", "/")
     if (!dir.exists(ATAC_output_dir)) {dir.create(ATAC_output_dir)}
     setwd(ATAC_output_dir)
     # Read in ATAC data, filter data, perform initial processing, infer batches, and integrate by batch
@@ -119,7 +120,8 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
   # Map cell types from reference onto query data
   if(data_type != "ATAC") {
     sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference,
-                               reference_cell_type_attribute = reference_cell_type_attribute, log_flag = TRUE)
+                               reference_cell_type_attribute = reference_cell_type_attribute,
+                               output_dir = RNA_output_dir, log_flag = TRUE)
   }
   if(data_type != "RNA") {
     atac_proj <- MapCellTypes_ATAC(proj = atac_proj, reference = reference,

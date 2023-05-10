@@ -9,6 +9,7 @@ MapCellTypes_RNA(
   reference,
   reference_cell_type_attribute = "celltype.l2",
   data_type = "scRNA",
+  output_dir = getwd(),
   log_flag = FALSE
 )
 }
@@ -20,6 +21,8 @@ MapCellTypes_RNA(
 \item{reference_cell_type_attribute}{If using a Seurat reference object, this parameter captures where the cell type information is stored}
 
 \item{data_type}{String to indicate whether we're analyzing scRNA or snRNA data}
+
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
