@@ -58,6 +58,7 @@
 #' reference_dir = "~/reference_dir/", output_dir = "~/adipose_output",
 #' species = "human", record_doublets = TRUE)}
 #' @export
+#' @import ArchR
 run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), analysis_name = NULL, sample_id_list = NULL, species = "human", record_doublets = FALSE) {
   # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
   # and then reset it to the original working directory once we're done running SPEEDI

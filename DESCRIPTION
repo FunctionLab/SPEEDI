@@ -44,7 +44,7 @@ Imports:
     SeuratDisk,
     SummarizedExperiment
 Remotes: 
-    github::GreenleafLab/ArchR@v1.0.1,
+    github::GreenleafLab/ArchR,
     github::satijalab/azimuth,
     github::etam4260/kneedle,
     github::immunogenomics/lisi,

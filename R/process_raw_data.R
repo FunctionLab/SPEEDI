@@ -79,7 +79,7 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
                                    col.name = "percent.rp")
   }
   # Print QC related output for user
-  Create_RNA_QC_Output(sc_obj, output_dir, log_flag)
+  Create_QC_Output_Prefiltered_RNA(sc_obj, output_dir, log_flag)
   # Split up samples for individual processing
   objects <- Seurat::SplitObject(sc_obj, split.by = "sample")
 
@@ -188,6 +188,7 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
 FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 2: Filtering out bad samples (ATAC)", log_flag)
+  Create_QC_Output_Prefiltered_ATAC(proj, log_flag)
   print_SPEEDI("Filtering out doublets and low quality cells (only keep cells which have TSS enrichment >= 12 and nucleosome ratio < 2)", log_flag)
   proj <- ArchR::filterDoublets(ArchRProj = proj)
   idxPass <- which(proj$TSSEnrichment >= 12 & proj$NucleosomeRatio < 2)

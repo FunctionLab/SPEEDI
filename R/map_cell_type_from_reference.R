@@ -359,7 +359,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
     } else {
       normalization_method <- "LogNormalize"
     }
-    proj <- ArchR::addGeneIntegrationMatrix(
+    proj <- addGeneIntegrationMatrix_SPEEDI(
       ArchRProj = proj,
       useMatrix = "GeneScoreMatrix",
       matrixName = "GeneIntegrationMatrix",
