@@ -60,7 +60,7 @@
 #' @export
 run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), analysis_name = NULL, sample_id_list = NULL, species = "human", record_doublets = FALSE) {
   # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
-  # and then reset it to the old working directory once we're done running SPEEDI
+  # and then reset it to the original working directory once we're done running SPEEDI
   old_wd <- getwd()
   setwd(output_dir)
   # Create output_dir if it doesn't already exist
@@ -98,7 +98,8 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
     all_sc_exp_matrices <- Read_RNA(data_path = data_path, sample_id_list = sample_id_list, log_flag = TRUE)
     sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = species,
-                                record_doublets = record_doublets, log_file_path = log_file_name, log_flag = TRUE)
+                                record_doublets = record_doublets, output_dir = RNA_output_dir,
+                                log_file_path = log_file_name, log_flag = TRUE)
     rm(all_sc_exp_matrices)
     sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = species, log_flag = TRUE)
     sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
@@ -135,6 +136,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
     ATAC_multiome_output_dir <- paste0(output_dir, "ATAC_multiome", "/")
     if (!dir.exists(ATAC_multiome_output_dir)) {dir.create(ATAC_multiome_output_dir)}
     ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
+
     # Do some plots and stuff here - maybe transfer RNA labels here to ATAC and save obj or at least print plot?
   }
   setwd(old_wd)

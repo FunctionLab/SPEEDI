@@ -13,7 +13,7 @@ LazyData: true
 biocViews:
 Depends: 
     utils,
-    ArchR (== 1.0.1)
+    ArchR
 Imports: 
     Azimuth,
     BiocGenerics,

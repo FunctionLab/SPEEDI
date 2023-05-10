@@ -11,6 +11,19 @@ scale_zero_one <- function(x) {(x - min(x))/(max(x) - min(x))}
 #' @return A list of lists
 lappend <- function (lst, ...){ c(lst, list(...))}
 
+#' Parse namespace and function name for do.call
+#'
+#' @param x Function name (potentially with namespace attached)
+#' @return Parsed function
+parse_namespace_and_function <- function(x) {
+  if(length(grep("::", x)) > 0) {
+    parts <- strsplit(x, "::")[[1]]
+    getExportedValue(parts[1], parts[2])
+  } else {
+    x
+  }
+}
+
 #' Print to console as well as log file (if it's present)
 #' @param current_message Message to print
 #' @param log_flag boolean to indicate whether we're also printing to log file

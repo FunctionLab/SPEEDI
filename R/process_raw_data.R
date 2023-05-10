@@ -12,7 +12,7 @@
 #' species = "human", record_doublets = TRUE)}
 #' @export
 #' @importFrom foreach %dopar%
-FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, log_file_path = NULL, log_flag = FALSE) {
+FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, output_dir = getwd(), log_file_path = NULL, log_flag = FALSE) {
   species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 2: Filtering out bad samples (RNA)", log_flag)
@@ -78,7 +78,9 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
                                    pattern = "^Rp[sl]",
                                    col.name = "percent.rp")
   }
-
+  # Print QC related output for user
+  Create_RNA_QC_Output(sc_obj, output_dir, log_flag)
+  # Split up samples for individual processing
   objects <- Seurat::SplitObject(sc_obj, split.by = "sample")
 
   # Set up reading of data so it's parallel (max cores == number of samples)

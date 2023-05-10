@@ -8,6 +8,7 @@ FilterRawData_RNA(
   all_sc_exp_matrices,
   species = "human",
   record_doublets = FALSE,
+  output_dir = getwd(),
   log_file_path = NULL,
   log_flag = FALSE
 )
