@@ -16,7 +16,8 @@ FindMultiomeOverlap <- function(sc_obj, proj, data_modality = "RNA", log_flag = 
   if(data_modality == "ATAC") {
     proj <- ArchR::subsetArchRProject(ArchRProj = proj,
                                cells = colnames(sc_obj),
-                               force = TRUE)
+                               force = TRUE,
+                               outputDirectory = "ArchRMultiomeOverlap")
   } else if(data_modality == "RNA") {
     sc_obj <- sc_obj[,ArchR::getCellNames(proj)]
   } else {

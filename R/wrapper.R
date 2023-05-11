@@ -131,7 +131,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
   # Write Seurat object to output directory
   save(sc_obj, file = paste0(RNA_output_dir, analysis_name, ".RNA.rds"))
   # Save ArchR project
-  ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_output_dir)
+  ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE)
   if(data_type == "true_multiome") {
     sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", log_flag = log_flag)
     atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", log_flag = log_flag)
