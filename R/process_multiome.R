@@ -31,3 +31,25 @@ FindMultiomeOverlap <- function(sc_obj, proj, data_modality = "RNA", log_flag = 
     return(sc_obj)
   }
 }
+
+#' Transfer cell type labels from RNA to ATAC (only works for true multiome since same cells in both assays)
+#'
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param proj ArchR project associated with data
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return An ArchR project with cell type labels transferred from RNA
+#' @examples
+#' \dontrun{sc_obj <- FindMultiomeOverlap(sc_obj, proj, data_modality = "RNA")}
+#' \dontrun{proj <- FindMultiomeOverlap(sc_obj, proj, data_modality = "ATAC")}
+#' @export
+TransferRNALabels <- function(sc_obj, proj, log_flag = FALSE) {
+  print_SPEEDI("\n", log_flag, silence_time = TRUE)
+  print_SPEEDI("Step 10: Transferring cell type labels from RNA data to ATAC data (true multiome)", log_flag)
+  #curated_snRNA_seq_cells <- curated_snRNA_seq_cells[curated_snRNA_seq_cells$cells %in% proj$cellNames,]
+  #curated_snRNA_seq_cells <- curated_snRNA_seq_cells[order(match(curated_snRNA_seq_cells$cells,proj$cellNames)),]
+  #snRNA_seq_cell_votes <- curated_snRNA_seq_cells$voted_type
+  #proj <- addCellColData(ArchRProj = proj, data = snRNA_seq_cell_votes, cells = proj$cellNames, name = "predictedGroup", force = TRUE)
+  print_SPEEDI("Step 10: Complete", log_flag)
+  gc()
+  return(proj)
+}

@@ -3,6 +3,7 @@
 #' @param all_sc_exp_matrices List of single cell expression matrices
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
 #' @param log_file_path Path to log file (used to capture QC thresholds during parallel processing). Most likely only used in the context of [run_SPEEDI()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains filtered data from all input data
@@ -271,6 +272,11 @@ InitialProcessing_ATAC <- function(proj, log_flag = FALSE) {
   proj <- ArchR::addClusters(input = proj, reducedDims = "IterativeLSI", method = "Seurat",
                       name = "Clusters", resolution = 2, knnAssign = 30,
                       maxClusters = NULL, force = TRUE)
+  print_SPEEDI("Printing UMAPs of filtered data", log_flag)
+  p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+  p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+  p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+  ArchR::plotPDF(p1,p2,p3, name = "filtered_UMAPs_After_Initial_Processing.pdf", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
   print_SPEEDI("Step 3: Complete", log_flag)
   gc()
   return(proj)

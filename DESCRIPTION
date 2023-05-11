@@ -25,6 +25,7 @@ Imports:
     foreach,
     GenomicRanges,
     glmGamPoi,
+    ggplot2,
     hdf5r,
     httr,
     kneedle,
@@ -42,7 +43,8 @@ Imports:
     Seurat,
     SeuratData,
     SeuratDisk,
-    SummarizedExperiment
+    SummarizedExperiment,
+    uwot
 Remotes: 
     github::GreenleafLab/ArchR,
     github::satijalab/azimuth,

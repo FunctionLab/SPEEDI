@@ -10,8 +10,6 @@ Create_QC_Output_Prefiltered_ATAC(proj, log_flag = FALSE)
 \item{proj}{ArchR project associated with data}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
-
-\item{output_dir}{Directory where QC output will be saved}
 }
 \value{
 TRUE

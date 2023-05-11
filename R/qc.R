@@ -39,7 +39,6 @@ Create_QC_Output_Prefiltered_RNA <- function(sc_obj, output_dir = getwd(), log_f
 #' Create QC output files for prefiltered data (ATAC)
 #'
 #' @param proj ArchR project associated with data
-#' @param output_dir Directory where QC output will be saved
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return TRUE
 #' @examples
@@ -51,7 +50,7 @@ Create_QC_Output_Prefiltered_ATAC <- function(proj, log_flag = FALSE) {
   p1 <- ArchR::plotGroups(ArchRProj = proj, groupBy = "Sample", colorBy = "cellColData", name = "TSSEnrichment", plotAs = "ridges")
   p2 <- ArchR::plotGroups(ArchRProj = proj, groupBy = "Sample", colorBy = "cellColData", name = "DoubletEnrichment", plotAs = "ridges")
   p3 <- ArchR::plotGroups(ArchRProj = proj, groupBy = "Sample", colorBy = "cellColData", name = "NucleosomeRatio", plotAs = "ridges")
-  ArchR::plotPDF(p1,p2,p3, name = "pre-filtered_QC_metrics.png", ArchRProj = proj, addDOC = FALSE, width = 7, height = 5)
+  ArchR::plotPDF(p1,p2,p3, name = "pre-filtered_QC_metrics.pdf", ArchRProj = proj, addDOC = FALSE, width = 7, height = 5)
   gc()
   return(TRUE)
 }
