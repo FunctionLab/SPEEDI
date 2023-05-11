@@ -388,7 +388,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
     print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
     pal <- paletteDiscrete(values = proj$predictedGroup)
     p1 <- plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "predictedGroup", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
-    ArchR::plotPDF(p1, name = "UMAP_after_Initial_Cell_Type_Reference_Mapping.pdf", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+    ArchR::plotPDF(p1, name = "UMAP_after_Initial_Cell_Type_Reference_Mapping_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
     print_SPEEDI("Performing majority voting", log_flag)
     # We have to perform majority voting with a different cluster attribute if Harmony was not run
     # (due to only having one batch)
@@ -418,7 +418,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
     p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
     p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
     p4 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
-    ArchR::plotPDF(p1,p2,p3,p4, name = "UMAP_after_Final_Cell_Type_Majority_Voting.pdf", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+    ArchR::plotPDF(p1,p2,p3,p4, name = "UMAP_after_Final_Cell_Type_Majority_Voting_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
   }
   print_SPEEDI("Step 8: Complete", log_flag)
   gc()

@@ -276,7 +276,7 @@ InitialProcessing_ATAC <- function(proj, log_flag = FALSE) {
   p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
   p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
   p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
-  ArchR::plotPDF(p1,p2,p3, name = "filtered_UMAPs_After_Initial_Processing.pdf", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+  ArchR::plotPDF(p1,p2,p3, name = "UMAPs_After_Initial_Processing_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
   print_SPEEDI("Step 3: Complete", log_flag)
   gc()
   return(proj)

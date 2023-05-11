@@ -134,18 +134,16 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
   ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE)
   if(data_type == "true_multiome") {
     sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", log_flag = log_flag)
+    save(sc_obj, file = paste0(RNA_output_dir, analysis_name, ".RNA.multiome.rds"))
     atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", log_flag = log_flag)
-    save(sc_obj, file = paste0(RNA_output_dir, analysis_name, "RNA.multiome.rds"))
-    ATAC_multiome_output_dir <- paste0(output_dir, "ATAC_multiome", "/")
-    if (!dir.exists(ATAC_multiome_output_dir)) {dir.create(ATAC_multiome_output_dir)}
-    ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
-    ATAC_multiome_with_rna_labels_output_dir <- paste0(output_dir, "ATAC_multiome_with_RNA_cell_type_labels", "/")
-    if (!dir.exists(ATAC_multiome_with_rna_labels_output_dir)) {dir.create(ATAC_multiome_with_rna_labels_output_dir)}
-    setwd(ATAC_multiome_with_rna_labels_output_dir)
+    ATAC_multiome_output_dir <- paste0(ATAC_output_dir, "ArchRMultiomeOverlap", "/")
     atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, log_flag = log_flag)
-
-
-    # Do some plots and stuff here - maybe transfer RNA labels here to ATAC and save obj or at least print plot?
+    saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
+  }
+  # If any ATAC plots exist, copy them to the base directory so they're easier for the user to find
+  if(data_type != "RNA") {
+    atac_plot_files <- list.files(path = ATAC_output_dir, pattern = "_plots\\.pdf$", recursive = TRUE, full.names = TRUE)
+    file.copy(from = atac_plot_files, to = ATAC_output_dir)
   }
   setwd(old_wd)
   if(data_type == "RNA") {
