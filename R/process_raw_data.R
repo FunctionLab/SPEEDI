@@ -256,7 +256,7 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", metadata_df = NULL,
       for(j in 1:nrow(metadata_df)) {
         sample_metadata <- gsub(rownames(metadata_df)[j], metadata_df[j,i], sample_metadata)
       }
-      sc_obj <- AddMetaData(object = sc_obj, metadata = sample_metadata, col.name = current_metadata_attribute)
+      sc_obj <- Seurat::AddMetaData(object = sc_obj, metadata = sample_metadata, col.name = current_metadata_attribute)
     }
   }
   print_SPEEDI("Step 3: Complete", log_flag)
