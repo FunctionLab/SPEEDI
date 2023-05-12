@@ -16,7 +16,7 @@
 FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, output_dir = getwd(), log_file_path = NULL, log_flag = FALSE) {
   species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 2: Filtering out bad samples (RNA)", log_flag)
+  print_SPEEDI("Step 3: Filtering out bad samples (RNA)", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   print_SPEEDI(paste0("record_doublets is: ", record_doublets), log_flag)
   print_SPEEDI("Creating Seurat object from matrices", log_flag)
@@ -174,7 +174,7 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
   print_SPEEDI("Parallel processing complete", log_flag)
 
   print_SPEEDI(paste0("Filtered data has ", dim(sc_obj)[2], " barcodes and ", dim(sc_obj)[1], " transcripts."), log_flag)
-  print_SPEEDI("Step 2: Complete", log_flag)
+  print_SPEEDI("Step 3: Complete", log_flag)
   gc()
   return(sc_obj)
 }
@@ -189,7 +189,7 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
 #' @export
 FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 2: Filtering out bad samples (ATAC)", log_flag)
+  print_SPEEDI("Step 3: Filtering out bad samples (ATAC)", log_flag)
   Create_QC_Output_Prefiltered_ATAC(proj, log_flag)
   print_SPEEDI("Filtering out doublets and low quality cells (only keep cells which have TSS enrichment >= 12 and nucleosome ratio < 2)", log_flag)
   proj <- ArchR::filterDoublets(ArchRProj = proj)
@@ -197,7 +197,7 @@ FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
   cellsPass <- proj$cellNames[idxPass]
   proj <- proj[cellsPass, ]
   print_SPEEDI("Successfully filtered data", log_flag)
-  print_SPEEDI("Step 2: Complete", log_flag)
+  print_SPEEDI("Step 3: Complete", log_flag)
   gc()
   return(proj)
 }
@@ -216,7 +216,7 @@ FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
 InitialProcessing_RNA <- function(sc_obj, species = "human", metadata_df = NULL, log_flag = FALSE) {
   species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 3: Processing raw data (RNA)", log_flag)
+  print_SPEEDI("Step 4: Processing raw data (RNA)", log_flag)
   print_SPEEDI(paste0("species is: ", species), log_flag)
   # Load cell cycle genes and perform cell cycle scoring
   print_SPEEDI("Loading cell cycle genes and performing cell cycle scoring", log_flag)
@@ -259,7 +259,7 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", metadata_df = NULL,
       sc_obj <- Seurat::AddMetaData(object = sc_obj, metadata = sample_metadata, col.name = current_metadata_attribute)
     }
   }
-  print_SPEEDI("Step 3: Complete", log_flag)
+  print_SPEEDI("Step 4: Complete", log_flag)
   gc()
   return(sc_obj)
 }
@@ -274,7 +274,7 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", metadata_df = NULL,
 #' @export
 InitialProcessing_ATAC <- function(proj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 3: Processing raw data (ATAC)", log_flag)
+  print_SPEEDI("Step 4: Processing raw data (ATAC)", log_flag)
   proj <- ArchR::addIterativeLSI(ArchRProj = proj, useMatrix = "TileMatrix", name = "IterativeLSI",
                          iterations = 2,
                          force = TRUE,
@@ -290,7 +290,7 @@ InitialProcessing_ATAC <- function(proj, log_flag = FALSE) {
   p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
   p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
   ArchR::plotPDF(p1,p2,p3, name = "UMAPs_After_Initial_Processing_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
-  print_SPEEDI("Step 3: Complete", log_flag)
+  print_SPEEDI("Step 4: Complete", log_flag)
   gc()
   return(proj)
 }

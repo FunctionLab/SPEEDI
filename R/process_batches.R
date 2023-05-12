@@ -8,7 +8,7 @@
 #' @export
 InferBatches <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 4: Inferring heterogeneous groups for integration", log_flag)
+  print_SPEEDI("Step 5: Inferring heterogeneous groups for integration", log_flag)
   # Find clusters in data (prior to batch correction)
   if ('lsi' %in% Seurat::Reductions(sc_obj)) {
     sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:30)
@@ -108,7 +108,7 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
     sc_obj$batch <- "No Batch"
   }
   print_SPEEDI(paste0("Total batches detected: ", length(unique(sc_obj$batch))), log_flag)
-  print_SPEEDI("Step 4: Complete", log_flag)
+  print_SPEEDI("Step 5: Complete", log_flag)
   gc()
   return(sc_obj)
 }
@@ -124,7 +124,7 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
 #' @importFrom foreach %dopar%
 IntegrateByBatch_RNA <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 5: Integrating samples based on inferred groups (RNA)", log_flag)
+  print_SPEEDI("Step 6: Integrating samples based on inferred groups (RNA)", log_flag)
   sc_obj_list <- Seurat::SplitObject(sc_obj, split.by = "batch")
   # If we only have one batch, we don't need to integrate by batch, so we exit the function
   if(length(sc_obj_list) == 1) {
@@ -194,7 +194,7 @@ IntegrateByBatch_RNA <- function(sc_obj, log_flag = FALSE) {
   rm(anchors)
 
   print_SPEEDI("Finished integration", log_flag)
-  print_SPEEDI("Step 5: Complete", log_flag)
+  print_SPEEDI("Step 6: Complete", log_flag)
   gc()
   return(integrated_obj)
 }
@@ -261,19 +261,19 @@ IntegrateByBatch_ATAC <- function(proj, log_flag = FALSE) {
     print_SPEEDI("Only one batch was found, so we don't need to integrate batches. Exiting IntegrateByBatch!", log_flag)
   } else {
     print_SPEEDI("\n", log_flag, silence_time = TRUE)
-    print_SPEEDI("Step 5: Integrating samples based on inferred groups", log_flag)
+    print_SPEEDI("Step 6: Integrating samples based on inferred groups", log_flag)
     print_SPEEDI("Beginning integration", log_flag)
     proj <- ArchR::addHarmony(ArchRProj = proj, reducedDims = "IterativeLSI",
                        dimsToUse = 2:30, scaleDims = TRUE,
                        corCutOff = 0.75, groupBy = "Batch", force = TRUE)
-    print_SPEEDI("Step 5: Complete", log_flag)
+    print_SPEEDI("Step 6: Complete", log_flag)
     print_SPEEDI("\n", log_flag, silence_time = TRUE)
-    print_SPEEDI("Step 6: Final processing of integrated data", log_flag)
+    print_SPEEDI("Step 7: Final processing of integrated data (ATAC)", log_flag)
     proj <- ArchR::addUMAP(ArchRProj = proj, reducedDims = "Harmony", force = TRUE)
     proj <- ArchR::addClusters(input = proj, reducedDims = "Harmony", method = "Seurat",
                         name = "Harmony_clusters", resolution = 2, knnAssign = 30,
                         maxClusters = NULL, force = TRUE)
-    print_SPEEDI("Step 6: Complete", log_flag)
+    print_SPEEDI("Step 7: Complete", log_flag)
   }
   gc()
   return(proj)
@@ -290,7 +290,7 @@ IntegrateByBatch_ATAC <- function(proj, log_flag = FALSE) {
 #' @export
 VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 6: Final processing of integrated data", log_flag)
+  print_SPEEDI("Step 7: Final processing of integrated data (RNA)", log_flag)
   print_SPEEDI("Scaling integrated data", log_flag)
   sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)
   print_SPEEDI("Running PCA and UMAP on integrated data", log_flag)
@@ -299,7 +299,7 @@ VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
   Seurat::DefaultAssay(sc_obj) <- "SCT"
   print_SPEEDI("Preparing integrated data for FindMarkers", log_flag)
   sc_obj <- Seurat::PrepSCTFindMarkers(sc_obj)
-  print_SPEEDI("Step 6: Complete", log_flag)
+  print_SPEEDI("Step 7: Complete", log_flag)
   gc()
   return(sc_obj)
 }

@@ -15,7 +15,7 @@
 #' @export
 #' @importFrom foreach %dopar%
 Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_paths = NULL, log_flag = FALSE) {
-  print_SPEEDI("Step 1 (RNA): Reading all samples", log_flag)
+  print_SPEEDI("Step 2 (RNA): Reading all samples", log_flag)
   if(!is.null(data_path)) {
     print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
   }
@@ -109,7 +109,7 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Parallel processing complete", log_flag)
   print_SPEEDI(paste0("Raw data has ", dim(all_sc_exp_matrices)[2], " barcodes and ", dim(all_sc_exp_matrices)[1], " transcripts."), log_flag)
-  print_SPEEDI("Step 1 (RNA): Complete", log_flag)
+  print_SPEEDI("Step 2 (RNA): Complete", log_flag)
   gc()
   return(all_sc_exp_matrices)
 }
@@ -130,7 +130,7 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
 #' @export
 #' @importFrom foreach %dopar%
 Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list = NULL, sample_file_paths = NULL, species = "human", log_flag = FALSE) {
-  print_SPEEDI("Step 1 (ATAC): Reading all samples", log_flag)
+  print_SPEEDI("Step 2 (ATAC): Reading all samples", log_flag)
   if(!is.null(data_path)) {
     print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
   }
@@ -227,7 +227,7 @@ Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list 
     copyArrows = TRUE
   )
   print_SPEEDI("Done creating ArchR project", log_flag)
-  print_SPEEDI("Step 1 (ATAC): Complete", log_flag)
+  print_SPEEDI("Step 2 (ATAC): Complete", log_flag)
   gc()
   return(proj)
 }
