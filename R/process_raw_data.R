@@ -251,9 +251,12 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", metadata_df = NULL,
   if(!is.null(metadata_df)) {
     print_SPEEDI("Adding user metadata to samples", log_flag)
     for(i in 1:ncol(metadata_df)) {
-      current_metadata_attribute <- colnames(metadata_df[,i])
-      current_metadata_values <- metadata_df[,i]
-      sc_obj <- AddMetaData(sc_obj, current_metadata_values, current_metadata_attribute)
+      current_metadata_attribute <- colnames(metadata_df)[i]
+      sample_metadata <- sc_obj$sample
+      for(j in 1:nrow(metadata_df)) {
+        sample_metadata <- gsub(rownames(metadata_df)[j], metadata_df[j,i], sample_metadata)
+      }
+      sc_obj <- AddMetaData(object = sc_obj, metadata = sample_metadata, col.name = current_metadata_attribute)
     }
   }
   print_SPEEDI("Step 3: Complete", log_flag)
