@@ -42,14 +42,15 @@
 #' * `"ATAC"` (`reference_tissue` must be set to `"pbmc_full"`, `"custom"`, or `"none"`)
 #' * `"sample_paired"` (reference mapping for ATAC will not be performed if an Azimuth reference is selected)
 #' * `"true_multiome"` (reference mapping for full ATAC will not be performed if an Azimuth reference is selected, but RNA cell types will be mapped over to ATAC for overlapping cells that pass QC)
+#' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
 #' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
 #' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
+#' @param metadata_df Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
 #' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `reference_tissue` should be set to `"custom"`.
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
-#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
 #' @param analysis_name Name used to create subdirectory in `output_dir` for current analysis run. Directory will be created if it doesn't already exist.
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
-#' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
 #' @return A Seurat object that has been processed through the SPEEDI pipeline
 #' @examples
@@ -59,11 +60,10 @@
 #' species = "human", record_doublets = TRUE)}
 #' @export
 #' @import ArchR
-run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(), reference_dir = getwd(), reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), analysis_name = NULL, sample_id_list = NULL, species = "human", record_doublets = FALSE) {
+run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, record_doublets = FALSE) {
   # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
   # and then reset it to the original working directory once we're done running SPEEDI
   old_wd <- getwd()
-  setwd(output_dir)
   # Create output_dir if it doesn't already exist
   if (!dir.exists(output_dir)) {dir.create(output_dir)}
   # Add "/" to end of output_dir if not already present
@@ -84,6 +84,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
   # Update our output dir to be the specific analysis directory
   output_dir <- paste0(output_dir, analysis_name, "/")
   if (!dir.exists(output_dir)) {dir.create(output_dir)}
+  setwd(output_dir)
   # Error checking
   if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full"
                                                              & tolower(reference_tissue) != "custom") & tolower(reference_tissue) != "none") {
@@ -93,6 +94,10 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
   # Load reference
   reference <- LoadReferenceSPEEDI(reference_tissue = reference_tissue, species = species, reference_dir = reference_dir,
                                    reference_file_name = reference_file_name, log_flag = TRUE)
+  # If metadata_df is not null, set sample_id_list according to rownames of metadata_df
+  if(!is.null(metadata_df)) {
+    sample_id_list <- rownames(metadata_df)
+  }
   # If there are RNA data, we read those in using Read_RNA, and if there are ATAC data, we read those in using Read_ATAC
   RNA_output_dir <- paste0(output_dir, "RNA", "/")
   ATAC_output_dir <- paste0(output_dir, "ATAC", "/")
@@ -104,7 +109,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
                                 record_doublets = record_doublets, output_dir = RNA_output_dir,
                                 log_file_path = log_file_name, log_flag = TRUE)
     rm(all_sc_exp_matrices)
-    sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = species, log_flag = TRUE)
+    sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = species, metadata_df = metadata_df, log_flag = TRUE)
     sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
     sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = TRUE)
     sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = TRUE)
@@ -133,11 +138,11 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", data_path = getwd(),
   # Save ArchR project
   ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE)
   if(data_type == "true_multiome") {
-    sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", log_flag = log_flag)
+    sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", log_flag = TRUE)
     save(sc_obj, file = paste0(RNA_output_dir, analysis_name, ".RNA.multiome.rds"))
-    atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", log_flag = log_flag)
+    atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", log_flag = TRUE)
     ATAC_multiome_output_dir <- paste0(ATAC_output_dir, "ArchRMultiomeOverlap", "/")
-    atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, log_flag = log_flag)
+    atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, log_flag = TRUE)
     saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
   }
   # If any ATAC plots exist, copy them to the base directory so they're easier for the user to find

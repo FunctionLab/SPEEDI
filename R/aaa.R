@@ -39,9 +39,13 @@ ignore_unused_imports <- function() {
   Biostrings::AAString
   chromVAR::addGCBias
   ComplexHeatmap::add_heatmap
+  DESeq2::counts
+  edgeR::addPriorCount
   GenomicRanges::absoluteRanges
   glmGamPoi::glm_gp
   hdf5r::as_hex
+  Libra::calculate_delta_variance
+  limma::alias2Symbol
   Matrix::Arith
   motifmatchr::match_motifs
   RCurl::AUTH_ANY

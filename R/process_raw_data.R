@@ -172,6 +172,7 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
     print_SPEEDI("\n", log_flag, silence_time = TRUE)
   }
   print_SPEEDI("Parallel processing complete", log_flag)
+
   print_SPEEDI(paste0("Filtered data has ", dim(sc_obj)[2], " barcodes and ", dim(sc_obj)[1], " transcripts."), log_flag)
   print_SPEEDI("Step 2: Complete", log_flag)
   gc()
@@ -205,13 +206,14 @@ FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
+#' @param metadata_df Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains processed data
 #' @examples
 #' \dontrun{sc_obj <- InitialProcessing_RNA(sc_obj)}
 #' \dontrun{sc_obj <- InitialProcessing_RNA(sc_obj, species = "human")}
 #' @export
-InitialProcessing_RNA <- function(sc_obj, species = "human", log_flag = FALSE) {
+InitialProcessing_RNA <- function(sc_obj, species = "human", metadata_df = NULL, log_flag = FALSE) {
   species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 3: Processing raw data (RNA)", log_flag)
@@ -242,10 +244,18 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", log_flag = FALSE) {
                                     return.only.var.genes = TRUE,
                                     verbose = TRUE))
   # Run PCA and UMAP to visualize data (prior to batch correction)
-  # TODO: Print plot?
   print_SPEEDI("Running PCA and UMAP on normalized data", log_flag)
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30)
+  # Add metadata to samples
+  if(!is.null(metadata_df)) {
+    print_SPEEDI("Adding user metadata to samples", log_flag)
+    for(i in 1:ncol(metadata_df)) {
+      current_metadata_attribute <- colnames(metadata_df[,i])
+      current_metadata_values <- metadata_df[,i]
+      sc_obj <- AddMetaData(sc_obj, current_metadata_values, current_metadata_attribute)
+    }
+  }
   print_SPEEDI("Step 3: Complete", log_flag)
   gc()
   return(sc_obj)

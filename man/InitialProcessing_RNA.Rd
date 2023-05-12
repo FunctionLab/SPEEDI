@@ -4,12 +4,19 @@
 \alias{InitialProcessing_RNA}
 \title{Process filtered data (RNA)}
 \usage{
-InitialProcessing_RNA(sc_obj, species = "human", log_flag = FALSE)
+InitialProcessing_RNA(
+  sc_obj,
+  species = "human",
+  metadata_df = NULL,
+  log_flag = FALSE
+)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
+
+\item{metadata_df}{Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }

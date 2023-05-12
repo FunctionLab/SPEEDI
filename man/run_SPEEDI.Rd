@@ -7,14 +7,15 @@
 run_SPEEDI(
   reference_tissue,
   data_type = "RNA",
+  species = "human",
   data_path = getwd(),
   reference_dir = getwd(),
+  output_dir = getwd(),
+  metadata_df = NULL,
   reference_file_name = NULL,
   reference_cell_type_attribute = "celltype.l2",
-  output_dir = getwd(),
   analysis_name = NULL,
   sample_id_list = NULL,
-  species = "human",
   record_doublets = FALSE
 )
 }
@@ -51,21 +52,23 @@ For mouse data, possible choices include:
 \item \code{"true_multiome"} (reference mapping for full ATAC will not be performed if an Azimuth reference is selected, but RNA cell types will be mapped over to ATAC for overlapping cells that pass QC)
 }}
 
+\item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
+
 \item{data_path}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{reference_dir}{Path to directory where reference is either already located (see \code{reference_file_name}) or will be downloaded by \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}} if necessary. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Note that Azimuth references from \link{SeuratData} do not require use of \code{reference_dir}.}
+
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Directory will be created if it doesn't already exist.}
+
+\item{metadata_df}{Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)}
 
 \item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{reference_tissue} should be set to \code{"custom"}.}
 
 \item{reference_cell_type_attribute}{If using a Seurat reference object, this parameter captures where the cell type information is stored}
 
-\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Directory will be created if it doesn't already exist.}
-
 \item{analysis_name}{Name used to create subdirectory in \code{output_dir} for current analysis run. Directory will be created if it doesn't already exist.}
 
 \item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{data_path}).}
-
-\item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
 
 \item{record_doublets}{Boolean flag to indicate whether we will record doublets in the data (using the \link{scDblFinder} package). Possible choices are \code{TRUE} or \code{FALSE}.}
 }
