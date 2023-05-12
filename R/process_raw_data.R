@@ -136,9 +136,9 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
     # Print info about QC thresholds for current sample to console
     # Note that this will not work in certain environments (e.g., RStudio) because of parallel processing
     message(paste0("QC Thresholds used for sample: ", current_sample_name))
-    message(paste0("lower nFeature: ", lower_nF), log_flag)
+    message(paste0("lower nFeature: ", lower_nF))
     message(paste0("upper nFeature: ", stats::quantile(objects[[i]]$nFeature_RNA, .99)))
-    message(paste0("max mt: ", max_mt), log_flag)
+    message(paste0("max mt: ", max_mt))
     message(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99)))
     message(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99)))
     message(paste0("max hb: ", max_hb))

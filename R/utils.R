@@ -75,7 +75,7 @@ print_UMAP_RNA <- function(sc_obj, file_name, group_by_category = NULL, output_d
 print_heatmap_cell_type_proportions_RNA <- function(sc_obj, file_name, output_dir = getwd(), log_flag = FALSE) {
   voting_cell_type_proportion <- as.matrix(table(sc_obj$sample, sc_obj$predicted_celltype_majority_vote))
   voting_cell_type_proportion <- apply(voting_cell_type_proportion, 1, function(x){x/sum(x)})
-  output.plot <- ComplexHeatmap::pheatmap(voting_cell_type_proportion,  cluster_rows = FALSE, cluster_cols = FALSE, display_numbers = TRUE, number_format = "%.3f")
-  ggplot2::ggsave(paste0(output_dir, file_name), plot = output.plot, device = "png", width = 8, height = 8, units = "in")
+  output.plot <- pheatmap::pheatmap(voting_cell_type_proportion,  cluster_rows = FALSE, cluster_cols = FALSE, display_numbers = TRUE, number_format = "%.3f", legend = FALSE)
+  ggplot2::ggsave(filename = paste0(output_dir, file_name), plot = output.plot, device = "png", width = 8, height = 8, units = "in")
   return(TRUE)
 }

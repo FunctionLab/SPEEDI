@@ -98,7 +98,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   if(!is.null(metadata_df)) {
     sample_id_list <- rownames(metadata_df)
   }
-  # If there are RNA data, we read those in using Read_RNA, and if there are ATAC data, we read those in using Read_ATAC
+  # Output dirs for RNA and ATAC
   RNA_output_dir <- paste0(output_dir, "RNA", "/")
   ATAC_output_dir <- paste0(output_dir, "ATAC", "/")
   if(data_type != "ATAC") {
@@ -128,6 +128,9 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference,
                                reference_cell_type_attribute = reference_cell_type_attribute,
                                output_dir = RNA_output_dir, log_flag = TRUE)
+    if(!is.null(metadata_df)) {
+      RunDE_RNA(sc_obj, metadata_df, RNA_output_dir, log_flag = TRUE)
+    }
   }
   if(data_type != "RNA") {
     atac_proj <- MapCellTypes_ATAC(proj = atac_proj, reference = reference,
