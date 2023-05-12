@@ -16,7 +16,7 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
   for(metadata_attribute in colnames(metadata_df)) {
     current_de <- Libra::run_de(sc_obj, replicate_col = "sample",
                          cell_type_col = "predicted_celltype_majority_vote", label_col = metadata_attribute)
-    write.table(current_de, file = paste0(output_dir, metadata_attribute, ".tsv"), sep = "\t", quote = FALSE)
+    utils::write.table(current_de, file = paste0(output_dir, metadata_attribute, ".tsv"), sep = "\t", quote = FALSE)
   }
   print_SPEEDI("Differential expression analysis complete", log_flag)
   gc()
