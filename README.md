@@ -33,15 +33,16 @@ library(SPEEDI)
 # Learn more about the SPEEDI pipeline wrapper function
 ?run_SPEEDI
 # Example parameters for run_SPEEDI - note that some optional parameters (reference_file_name and sample_id_list) were not used
-tissue <- "PBMC"
+reference_tissue <- "PBMC"
+data_type <- "RNA"
+species <- "human"
 data_path <- "~/test_input"
 reference_dir <- "~/references"
 output_dir <- "~/test_output"
-species <- "human"
 record_doublets <- FALSE
 # Run SPEEDI pipeline
-run_SPEEDI(tissue = tissue, data_path = data_path, reference_dir = reference_dir, 
-           output_dir = output_dir, species = species, record_doublets = record_doublets)
+run_SPEEDI(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path, reference_dir = reference_dir, 
+           output_dir = output_dir, record_doublets = record_doublets)
 ```
 
 You can also run the individual steps of the pipeline separately. Read through the documentation for `run_SPEEDI()` to learn more!
