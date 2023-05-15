@@ -20,6 +20,7 @@ Imports:
     BiocManager,
     Biostrings,
     chromVAR,
+    ComplexHeatMap,
     DESeq2,
     doParallel,
     foreach,
