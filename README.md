@@ -28,23 +28,15 @@ devtools::install_github('FunctionLab/SPEEDI')
 
 All R-related dependencies will be installed automatically. That being said, if you are using a Unix OS, you may have to install some additional dependencies:
 
-[cairo](https://www.cairographics.org/)
-
-[CMake](https://cmake.org/)
-
-[Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/)
-
-[FreeType](https://freetype.org/)
-
-[FriBidi](https://github.com/fribidi/fribidi)
-
-[HarfBuzz](https://harfbuzz.github.io/)
-
-[HDF5](https://github.com/HDFGroup/hdf5)
-
-[Libxml2](https://gitlab.gnome.org/GNOME/libxml2/-/wikis/home)
-
-[OpenSSL](https://www.openssl.org/)
+* [cairo](https://www.cairographics.org/)
+* [CMake](https://cmake.org/)
+* [Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/)
+* [FreeType](https://freetype.org/)
+* [FriBidi](https://github.com/fribidi/fribidi)
+* [HarfBuzz](https://harfbuzz.github.io/)
+* [HDF5](https://github.com/HDFGroup/hdf5)
+* [Libxml2](https://gitlab.gnome.org/GNOME/libxml2/-/wikis/home)
+* [OpenSSL](https://www.openssl.org/)
 
 After installing, the easiest way to use SPEEDI is with the `run_SPEEDI()` wrapper function:
 
