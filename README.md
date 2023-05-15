@@ -29,8 +29,6 @@ devtools::install_github('FunctionLab/SPEEDI')
 All dependencies will be installed automatically. After installing, the easiest way to use SPEEDI is with the `run_SPEEDI()` wrapper function:
 
 ```
-run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, record_doublets = FALSE) {
-
 library(SPEEDI)
 # Learn more about the SPEEDI pipeline wrapper function
 ?run_SPEEDI
