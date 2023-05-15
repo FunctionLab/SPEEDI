@@ -2,7 +2,7 @@
 #'
 #' @param reference_tissue Reference tissue type (used to map cell types via reference). For human data, possible choices include:
 #' * `"adipose"`
-#' * `"bone marrow"`
+#' * `"bone_marrow"`
 #' * `"cortex"`
 #' * `"fetus"`
 #' * `"heart"`
@@ -51,7 +51,7 @@ LoadReferenceSPEEDI <- function(reference_tissue, species = "human", reference_d
     if (reference_tissue == "adipose") {
       SeuratData::InstallData("adiposeref")
       reference <- "adiposeref"
-    } else if (reference_tissue == "bone marrow") {
+    } else if (reference_tissue == "bone_marrow") {
       SeuratData::InstallData("bonemarrowref")
       reference <- "bonemarrowref"
     } else if (reference_tissue == "cortex") {

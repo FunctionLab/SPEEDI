@@ -20,7 +20,7 @@
 #' * [MapCellTypes_ATAC()]: Map cell types from reference onto query data (ATAC)
 #' @param reference_tissue Reference tissue type (used to map cell types via reference). For human data, possible choices include:
 #' * `"adipose"`
-#' * `"bone marrow"`
+#' * `"bone_marrow"`
 #' * `"cortex"`
 #' * `"fetus"`
 #' * `"heart"`
