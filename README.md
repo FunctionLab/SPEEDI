@@ -26,7 +26,7 @@ library(devtools)
 devtools::install_github('FunctionLab/SPEEDI')
 ```
 
-All R-related dependencies will be installed automatically. That being said, if you are using a Unix OS, you may have to install some additional dependencies:
+All R-related dependencies will be installed automatically. That being said, if you are using a Unix OS, you may have to install some of the following additional dependencies:
 
 * [cairo](https://www.cairographics.org/)
 * [CMake](https://cmake.org/)
