@@ -12,14 +12,15 @@ RoxygenNote: 7.2.3
 LazyData: true
 biocViews:
 Depends: 
-    utils
+    utils,
+    ArchR
 Imports: 
     Azimuth,
     BiocGenerics,
     BiocManager,
     Biostrings,
     chromVAR,
-    ComplexHeatMap,
+    ComplexHeatmap,
     DESeq2,
     doParallel,
     foreach,
