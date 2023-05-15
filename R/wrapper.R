@@ -137,15 +137,21 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
                                    reference_cell_type_attribute = reference_cell_type_attribute, log_flag = TRUE)
   }
   # Write Seurat object to output directory
+  print_SPEEDI("Saving Seurat object (RNA)", log_flag = TRUE)
   save(sc_obj, file = paste0(RNA_output_dir, analysis_name, ".RNA.rds"))
   # Save ArchR project
-  ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE)
+  if(data_type != "RNA") {
+    print_SPEEDI("Saving ArchR project (ATAC)", log_flag = TRUE)
+    ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE)
+  }
   if(data_type == "true_multiome") {
     sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", log_flag = TRUE)
+    print_SPEEDI("Saving Seurat object (True Multiome)", log_flag = TRUE)
     save(sc_obj, file = paste0(RNA_output_dir, analysis_name, ".RNA.multiome.rds"))
     atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", log_flag = TRUE)
     ATAC_multiome_output_dir <- paste0(ATAC_output_dir, "ArchRMultiomeOverlap", "/")
     atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, log_flag = TRUE)
+    print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = TRUE)
     saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
   }
   # If any ATAC plots exist, copy them to the base directory so they're easier for the user to find
