@@ -76,6 +76,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   log_file_name <- gsub(":", "-", log_file_name)
   log_file_name <- paste0(output_dir, log_file_name)
   log_file <- logr::log_open(log_file_name, logdir = FALSE)
+  print_SPEEDI("Beginning SPEEDI run!", log_flag = TRUE)
   # Set analysis name
   if(is.null(analysis_name)) {
     analysis_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
@@ -160,6 +161,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     file.copy(from = atac_plot_files, to = ATAC_output_dir)
   }
   setwd(old_wd)
+  print_SPEEDI("SPEEDI Complete!", log_flag = TRUE)
   if(data_type == "RNA") {
     return(sc_obj)
   } else if(data_type == "ATAC") {
