@@ -11,9 +11,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 LazyData: true
 biocViews:
-Depends: 
-    utils,
-    ArchR
 Imports: 
     Azimuth,
     BiocGenerics,
@@ -50,6 +47,9 @@ Imports:
     SeuratDisk,
     SummarizedExperiment,
     uwot
+Depends: 
+    utils,
+    ArchR
 Remotes: 
     github::GreenleafLab/ArchR,
     github::satijalab/azimuth,

@@ -16,7 +16,7 @@ LoadReferenceSPEEDI(
 \item{reference_tissue}{Reference tissue type (used to map cell types via reference). For human data, possible choices include:
 \itemize{
 \item \code{"adipose"}
-\item \code{"bone marrow"}
+\item \code{"bone_marrow"}
 \item \code{"cortex"}
 \item \code{"fetus"}
 \item \code{"heart"}

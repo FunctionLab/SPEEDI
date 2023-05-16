@@ -38,6 +38,7 @@ ignore_unused_imports <- function() {
   BiocManager::version
   Biostrings::AAString
   chromVAR::addGCBias
+  ComplexHeatmap::add_heatmap
   DESeq2::counts
   edgeR::addPriorCount
   GenomicRanges::absoluteRanges
