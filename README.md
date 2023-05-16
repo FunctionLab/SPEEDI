@@ -19,14 +19,15 @@ We are currently developing a website where users can upload their single cell d
 
 ## Running SPEEDI Locally
 
-To install SPEEDI locally, you can use `devtools`:
+To install SPEEDI locally, you can use `devtools` and `BiocManager`:
 
 ```
-library(devtools)
-devtools::install_github('FunctionLab/SPEEDI')
+if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+devtools::install_github('FunctionLab/SPEEDI', repos = BiocManager::repositories())
 ```
 
-All R-related dependencies will be installed automatically. That being said, if you are using a Unix OS, you may have to install some of the following additional dependencies:
+All R-related dependencies should be installed automatically. That being said, if you are using a Unix OS, you may have to install some of the following additional dependencies:
 
 * [cairo](https://www.cairographics.org/)
 * [CMake](https://cmake.org/)
