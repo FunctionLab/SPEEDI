@@ -10,6 +10,9 @@ the$seuratdata_references <- c("adiposeref", "bonemarrowref", "fetusref",
                                "heartref", "humancortexref", "kidneyref",
                                "lungref", "pancreasref", "pbmcref", "tonsilref", "mousecortexref")
 
+# Fixes Rplots.pdf being unnecessarily created in working directory
+if(!interactive()) pdf(NULL)
+
 #' Get PBMC reference URL
 #' @export
 get_pbmc_reference_url <- function() {
