@@ -49,21 +49,30 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
     if(!is.null(sample_id_list)) {
       data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
     } else {
-      # Else, we are using all data files found above, but we still need to guess what the sample names are because of Cell Ranger's
-      # structure for file output.
-      # We use the following strategy: We look at the paths of all of our data files and split by "/"
-      # Then, at each index, we see if the number of UNIQUE values is equivalent to the number of data files
-      # If we find such an index, we assume that the sample names are stored there
-      sample_id_list <- strsplit(data_files, "/")
-      final_sample_id_list <- c()
-      for(i in 1:length(sample_id_list[[1]])) {
-        current_elements <- sapply(sample_id_list, "[[", i)
-        if(length(unique(current_elements)) == length(data_files)) {
-          final_sample_id_list <- current_elements
-          break
+      if(length(data_files) > 1) {
+        # Else, we are using all data files found above, but we still need to guess what the sample names are because of Cell Ranger's
+        # structure for file output.
+        # We use the following strategy: We look at the paths of all of our data files and split by "/"
+        # Then, at each index, we see if the number of UNIQUE values is equivalent to the number of data files
+        # If we find such an index, we assume that the sample names are stored there
+        sample_id_list <- strsplit(data_files, "/")
+        final_sample_id_list <- c()
+        for(i in 1:length(sample_id_list[[1]])) {
+          current_elements <- sapply(sample_id_list, "[[", i)
+          if(length(unique(current_elements)) == length(data_files)) {
+            final_sample_id_list <- current_elements
+            break
+          }
         }
+        sample_id_list <- final_sample_id_list
+      } else {
+        # We can't use this strategy if users only provide one sample ID
+        # Here, we'll just assume that the user's sample is the name of the folder right after data_path
+        sample_id_list <- strsplit(data_files, paste0(data_path, "/"))
+        sample_id_list <- sapply(sample_id_list , "[[", 2)
+        sample_id_list <- strsplit(sample_id_list, "/")
+        sample_id_list <- sapply(sample_id_list , "[[", 1)
       }
-      sample_id_list <- final_sample_id_list
     }
   } else {
     data_files <- sample_file_paths
@@ -98,6 +107,8 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
       sc_exp_matrix <- sc_matrix
     }
     # Add sample names as prefix to cell names
+    # TODO: Add fix for single samples - if not a list, treat differently
+    # Maybe need to look at data_files as well?
     if (grepl("_|\\.", i)) {
       prefix <- paste0(strsplit(sample_id_list[[i]], "_")[[1]][1], "#")
     } else {
