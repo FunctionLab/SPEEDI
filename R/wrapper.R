@@ -106,6 +106,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   # Output dirs for RNA and ATAC
   RNA_output_dir <- paste0(output_dir, "RNA", "/")
   ATAC_output_dir <- paste0(output_dir, "ATAC", "/")
+
   if(data_type != "ATAC") {
     if (!dir.exists(RNA_output_dir)) {dir.create(RNA_output_dir)}
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
@@ -119,6 +120,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = TRUE)
     sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = TRUE)
   }
+
   if(data_type != "RNA") {
     if (!dir.exists(ATAC_output_dir)) {dir.create(ATAC_output_dir)}
     setwd(ATAC_output_dir)
@@ -128,6 +130,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     atac_proj <- InitialProcessing_ATAC(proj = atac_proj, log_flag = TRUE)
     atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, log_flag = TRUE)
   }
+
   # Map cell types from reference onto query data
   if(data_type != "ATAC") {
     sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference,

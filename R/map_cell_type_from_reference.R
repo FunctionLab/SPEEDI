@@ -313,7 +313,7 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
       print_SPEEDI(paste0(possible_seuratdata_references, collapse = "\n"), log_flag)
     }
   }
-  if(inherits(reference, "character") && reference != "none") {
+  if(reference != "none") {
     print_SPEEDI("Printing final UMAPs", log_flag)
     print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Majority_Vote_Cell_Type.png",
                group_by_category = "predicted_celltype_majority_vote", output_dir = output_dir,
