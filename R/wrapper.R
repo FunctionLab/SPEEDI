@@ -167,6 +167,10 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     atac_plot_files <- list.files(path = ATAC_output_dir, pattern = "_plots\\.pdf$", recursive = TRUE, full.names = TRUE)
     file.copy(from = atac_plot_files, to = ATAC_output_dir)
   }
+  # Delete Rplots.pdf file if it exists (junk file created by R batch mode)
+  if(file.exists(paste0(output_dir, "Rplots.pdf"))) {
+    file.remove(paste0(output_dir, "Rplots.pdf"))
+  }
   setwd(old_wd)
   print_SPEEDI("SPEEDI Run Complete!", log_flag = TRUE)
   if(data_type == "RNA") {
