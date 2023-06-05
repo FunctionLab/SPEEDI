@@ -31,14 +31,11 @@
 #' reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")}
 #' @export
 LoadReferenceSPEEDI <- function(reference_tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL, log_flag = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  reference_dir <- normalize_dir_path(reference_dir)
   # Change reference_tissue to all lowercase to prevent any issues with casing
   reference_tissue <- tolower(reference_tissue)
   species <- tolower(species)
-  # Add "/" to end of reference path if not already present
-  last_char_of_reference_path <- substr(reference_dir, nchar(reference_dir), nchar(reference_dir))
-  if(last_char_of_reference_path != "/") {
-    reference_dir <- paste0(reference_dir, "/")
-  }
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI(paste0("Step 1: loading reference (and installing reference data if necessary)"), log_flag)
   print_SPEEDI(paste0("reference_tissue is: ", reference_tissue), log_flag)
@@ -272,6 +269,8 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' \dontrun{sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")}
 #' @export
 MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = "celltype.l2", data_type = "scRNA", output_dir = getwd(), log_flag = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  output_dir <- normalizePath(output_dir, "/")
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 8: Reference-based cell type mapping (RNA)", log_flag)
   if(inherits(reference, "character")) {

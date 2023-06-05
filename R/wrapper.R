@@ -61,6 +61,10 @@
 #' @export
 #' @import ArchR
 run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, record_doublets = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  data_path <- normalize_dir_path(data_path)
+  reference_dir <- normalize_dir_path(reference_dir)
+  output_dir <- normalize_dir_path(output_dir)
   # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
   # and then reset it to the original working directory once we're done running SPEEDI
   old_wd <- getwd()
@@ -71,12 +75,6 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   if(last_char_of_output_dir_path != "/") {
     output_dir <- paste0(output_dir, "/")
   }
-  # Create log file
-  log_file_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
-  log_file_name <- gsub(":", "-", log_file_name)
-  log_file_name <- paste0(output_dir, log_file_name)
-  log_file <- logr::log_open(log_file_name, logdir = FALSE)
-  print_SPEEDI("Beginning SPEEDI Run!", log_flag = TRUE)
   # Set analysis name
   if(is.null(analysis_name)) {
     analysis_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
@@ -86,6 +84,12 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   output_dir <- paste0(output_dir, analysis_name, "/")
   if (!dir.exists(output_dir)) {dir.create(output_dir)}
   setwd(output_dir)
+  # Create log file
+  log_file_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
+  log_file_name <- gsub(":", "-", log_file_name)
+  log_file_name <- paste0(output_dir, log_file_name)
+  log_file <- logr::log_open(log_file_name, logdir = FALSE)
+  print_SPEEDI("Beginning SPEEDI Run!", log_flag = TRUE)
   # Error checking
   if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full"
                                                              & tolower(reference_tissue) != "custom") & tolower(reference_tissue) != "none") {
@@ -155,7 +159,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = TRUE)
     saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
   }
-  # If any ATAC plots exist, copy them to the base directory so they're easier for the user to find
+  # If any ATAC plots exist, copy them to the ATAC base directory so they're easier for the user to find
   if(data_type != "RNA") {
     atac_plot_files <- list.files(path = ATAC_output_dir, pattern = "_plots\\.pdf$", recursive = TRUE, full.names = TRUE)
     file.copy(from = atac_plot_files, to = ATAC_output_dir)

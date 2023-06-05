@@ -16,6 +16,9 @@
 #' @importFrom foreach %dopar%
 Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_paths = NULL, log_flag = FALSE) {
   print_SPEEDI("Step 2 (RNA): Reading all samples", log_flag)
+  # Normalize paths (in case user provides relative paths)
+  data_path <- normalize_dir_path(data_path)
+  # Print user parameters
   if(!is.null(data_path)) {
     print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
   }
@@ -107,8 +110,6 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
       sc_exp_matrix <- sc_matrix
     }
     # Add sample names as prefix to cell names
-    # TODO: Add fix for single samples - if not a list, treat differently
-    # Maybe need to look at data_files as well?
     if (grepl("_|\\.", i)) {
       prefix <- paste0(strsplit(sample_id_list[[i]], "_")[[1]][1], "#")
     } else {
@@ -141,6 +142,9 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
 #' @export
 #' @importFrom foreach %dopar%
 Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list = NULL, sample_file_paths = NULL, species = "human", log_flag = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  data_path <- normalize_dir_path(data_path)
+  output_dir <- normalize_dir_path(output_dir)
   print_SPEEDI("Step 2 (ATAC): Reading all samples", log_flag)
   if(!is.null(data_path)) {
     print_SPEEDI(paste0("data_path is: ", data_path), log_flag)

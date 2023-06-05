@@ -9,6 +9,8 @@
 #' \dontrun{differential_expression_results <- RunDE_RNA(sc_obj = sc_obj, metadata_df = metadata_df)}
 #' @export
 RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  output_dir <- normalize_dir_path(output_dir)
   species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Running differential expression analysis (RNA)", log_flag)

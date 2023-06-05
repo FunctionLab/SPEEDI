@@ -8,6 +8,8 @@
 #' \dontrun{Create_QC_Output_Prefiltered_RNA(sc_obj = sc_obj, output_dir = getwd()}
 #' @export
 Create_QC_Output_Prefiltered_RNA <- function(sc_obj, output_dir = getwd(), log_flag = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  output_dir <- normalize_dir_path(output_dir)
   print_SPEEDI("Printing QC plots on pre-filtered data (RNA)", log_flag)
   p <- Seurat::VlnPlot(sc_obj, features = c("nFeature_RNA"), split.by = "sample", group.by = "sample", raster = FALSE)
   ggplot2::ggsave(paste0(output_dir, "pre-filtered_nFeature_violin_plot.png"), plot = p, device = "png", width = 10, height = 10, units = "in")

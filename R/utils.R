@@ -24,6 +24,20 @@ parse_namespace_and_function <- function(x) {
   }
 }
 
+#' Normalize directory path for processing
+#'
+#' @param path Directory path
+#' @return Normalized directory path
+normalize_dir_path <- function(path) {
+  path <- normalizePath(path, "/")
+  # Add "/" to end of path if not already present
+  last_char_of_path <- substr(path, nchar(path), nchar(path))
+  if(last_char_of_path != "/") {
+    path <- paste0(path, "/")
+  }
+  return(path)
+}
+
 #' Print to console as well as log file (if it's present)
 #' @param current_message Message to print
 #' @param log_flag boolean to indicate whether we're also printing to log file
@@ -48,6 +62,8 @@ print_SPEEDI <- function(current_message, log_flag = FALSE, silence_time = FALSE
 #' @param log_flag boolean to indicate whether we're also printing to log file
 #' @return TRUE
 print_UMAP_RNA <- function(sc_obj, file_name, group_by_category = NULL, output_dir = getwd(), log_flag = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  output_dir <- normalize_dir_path(output_dir)
   sample_count <- length(unique(sc_obj$sample))
   cell_count <- length(sc_obj$cell_name)
   current_title <- paste0("RNA Data Integration \n (", sample_count, " Samples, ", cell_count, " Cells)")
@@ -73,6 +89,8 @@ print_UMAP_RNA <- function(sc_obj, file_name, group_by_category = NULL, output_d
 #' @param log_flag boolean to indicate whether we're also printing to log file
 #' @return TRUE
 print_heatmap_cell_type_proportions_RNA <- function(sc_obj, file_name, output_dir = getwd(), log_flag = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  output_dir <- normalize_dir_path(output_dir)
   voting_cell_type_proportion <- as.matrix(table(sc_obj$sample, sc_obj$predicted_celltype_majority_vote))
   voting_cell_type_proportion <- apply(voting_cell_type_proportion, 1, function(x){x/sum(x)})
   output.plot <- pheatmap::pheatmap(voting_cell_type_proportion,  cluster_rows = FALSE, cluster_cols = FALSE, display_numbers = TRUE, number_format = "%.3f", legend = FALSE)

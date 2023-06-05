@@ -14,6 +14,8 @@
 #' @export
 #' @importFrom foreach %dopar%
 FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_doublets = FALSE, output_dir = getwd(), log_file_path = NULL, log_flag = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  output_dir <- normalize_dir_path(output_dir)
   species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 3: Filtering out bad samples (RNA)", log_flag)
