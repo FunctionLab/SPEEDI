@@ -3,12 +3,15 @@
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param metadata_df Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
+#' @param de_family Differential expression family (see [Libra::run_de()]).
+#' @param de_method Differential expression method (see [Libra::run_de()]).
+#' @param de_type Differential expression type (see [Libra::run_de()]).
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A list containing differential expression analyses
 #' @examples
 #' \dontrun{differential_expression_results <- RunDE_RNA(sc_obj = sc_obj, metadata_df = metadata_df)}
 #' @export
-RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALSE) {
+RunDE_RNA <- function(sc_obj, metadata_df, de_family = "pseudobulk", de_method = "edgeR", de_type = "LRT", output_dir = getwd(), log_flag = FALSE) {
   # Normalize paths (in case user provides relative paths)
   output_dir <- normalize_dir_path(output_dir)
   species <- tolower(species)
@@ -17,7 +20,8 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
   Seurat::DefaultAssay(sc_obj) <- "RNA"
   for(metadata_attribute in colnames(metadata_df)) {
     current_de <- Libra::run_de(sc_obj, replicate_col = "sample",
-                         cell_type_col = "predicted_celltype_majority_vote", label_col = metadata_attribute)
+                         cell_type_col = "predicted_celltype_majority_vote", label_col = metadata_attribute,
+                         de_family = de_family, de_method = de_method, de_type = de_type)
     utils::write.table(current_de, file = paste0(output_dir, metadata_attribute, ".tsv"), sep = "\t", quote = FALSE)
   }
   print_SPEEDI("Differential expression analysis complete", log_flag)
