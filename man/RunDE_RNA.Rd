@@ -4,12 +4,26 @@
 \alias{RunDE_RNA}
 \title{Perform differential expression analysis (RNA)}
 \usage{
-RunDE_RNA(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALSE)
+RunDE_RNA(
+  sc_obj,
+  metadata_df,
+  de_family = "pseudobulk",
+  de_method = "edgeR",
+  de_type = "LRT",
+  output_dir = getwd(),
+  log_flag = FALSE
+)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{metadata_df}{Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)}
+
+\item{de_family}{Differential expression family (see \code{\link[Libra:run_de]{Libra::run_de()}}).}
+
+\item{de_method}{Differential expression method (see \code{\link[Libra:run_de]{Libra::run_de()}}).}
+
+\item{de_type}{Differential expression type (see \code{\link[Libra:run_de]{Libra::run_de()}}).}
 
 \item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Directory will be created if it doesn't already exist.}
 
