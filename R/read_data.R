@@ -1,8 +1,9 @@
 #' Read in RNA data for processing
 #'
 #' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
+#' @param data_file_format Data file format (can be `"h5"` or `"tsv"`).
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
-#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If used, `sample_id_list` is required.
+#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If used, `sample_id_list` is required.
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A set of single cell expression matrices
 #' @examples
@@ -14,7 +15,7 @@
 #' "~/input_data/sample_2/filtered_feature_bc_matrix.h5"))}
 #' @export
 #' @importFrom foreach %dopar%
-Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_paths = NULL, log_flag = FALSE) {
+Read_RNA <- function(data_path = getwd(), data_file_format = "h5", sample_id_list = NULL, sample_file_paths = NULL, log_flag = FALSE) {
   print_SPEEDI("Step 2 (RNA): Reading all samples", log_flag)
   # Normalize paths (in case user provides relative paths)
   data_path <- normalize_dir_path(data_path)
@@ -47,7 +48,11 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
       data_path <- substr(data_path, 1, nchar(data_path) - 1)
     }
     # Second, look for all filtered_feature_bc_matrix .h5 files in data_path
-    data_files <- list.files(path = data_path, pattern = "filtered_feature_bc_matrix\\.h5$", recursive = TRUE, full.names = TRUE)
+    if(data_file_format == "h5") {
+      data_files <- list.files(path = data_path, pattern = "filtered_feature_bc_matrix\\.h5$", recursive = TRUE, full.names = TRUE)
+    } else if(data_file_format == "tsv") {
+      data_files <- list.files(path = data_path, pattern = "matrix.mtx", recursive = TRUE, full.names = TRUE)
+    }
     # Finally, if the user did provide a sample_id_list, pick the subset of .h5 files that have that sample ID in the path
     if(!is.null(sample_id_list)) {
       data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
@@ -102,7 +107,11 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
   ) %dopar% {
     # Read in data for current sample
     print(data_files[[i]])
-    sc_matrix <- Seurat::Read10X_h5(data_files[[i]])
+    if(data_file_format == "h5") {
+      sc_matrix <- Seurat::Read10X_h5(data_files[[i]])
+    } else if(data_file_format == "tsv") {
+      sc_matrix <- Seurat::Read10X(paste0(dirname(data_files[[i]]), "/"))
+    }
     # If our resulting data structure is a list, then we have some multiome data (we just want the gene expression)
     if (inherits(x = sc_matrix, what = 'list')) {
       sc_exp_matrix <- sc_matrix$`Gene Expression`
