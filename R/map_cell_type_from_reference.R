@@ -154,7 +154,7 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag 
 #' @examples
 #' \dontrun{sc_obj <- MajorityVote_RNA(sc_obj)}
 #' @export
-MajorityVote_RNA <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
+MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
   print_SPEEDI("Begin majority voting", log_flag)
   if(Seurat::DefaultAssay(sc_obj) == "integrated") {
     associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
@@ -162,19 +162,19 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
     associated_res_attribute <- paste0("SCT_snn_res.", current_resolution)
   }
   sc_obj <- Seurat::FindNeighbors(sc_obj, reduction = "pca", dims = 1:30)
-  sc_obj <- Seurat::FindClusters(sc_obj, algorithm = 4, method='igraph', resolution = 2, random.seed = SEED)
+  sc_obj <- Seurat::FindClusters(sc_obj, algorithm = 4, method='igraph', resolution = current_resolution, random.seed = SEED)
   sc_obj$predicted.id <- as.character(sc_obj$predicted.id)
-    
+
 
   integrated_snn_res_df <- sc_obj[[associated_res_attribute]]
   integrated_snn_res_cell_names <- rownames(integrated_snn_res_df)
   integrated_snn_res_values <- integrated_snn_res_df[,1]
 
-    
+
   votes <- c()
   cluster.dump <- as.numeric(levels(integrated_snn_res_values))
   vote_levels <- as.character(levels(sc_obj$seurat_clusters))
-  
+
   for (i in names(table(sc_obj$predicted.id)[table(sc_obj$predicted.id) > 50])) {
     print(i)
     cells <- names(sc_obj$predicted.id[sc_obj$predicted.id == i])
@@ -185,7 +185,7 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
       freq.table <- freq.table[1:30,]
     }
     p.values <- outliers::dixon.test(freq.table$diff)$p.value[[1]]
-      
+
     if (p.values < 0.01) {
       max.index <- which.max(freq.table$diff)
       clusters <- as.numeric(as.character(freq.table$Var1[1:max.index]))
@@ -201,25 +201,25 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 1, log_flag = FALSE) {
         vote_levels[vote_levels %in% as.character(i)] <- as.vector(freq.table$Var1)[which.max(freq.table$Freq)]
     }
   }
-    
+
   predicted_celltype_majority_vote <- sc_obj$seurat_clusters
   levels(predicted_celltype_majority_vote) <- vote_levels
   predicted_celltype_majority_vote <- as.character(predicted_celltype_majority_vote)
-    
+
   for (i in names(table(sc_obj$predicted.id)[table(sc_obj$predicted.id) > 50])) {
       cells <- which(sc_obj$predicted.id == i)
       freq.table <- as.data.frame(table(integrated_snn_res_df[cells,]))
       freq.table <- freq.table[order(freq.table$Freq, decreasing = TRUE),]
-      
+
       if (sum(freq.table$Freq > (sum(freq.table$Freq) * .05)) <= round(.1 * length(unique(proj$seurat_clusters)))) {
           selected.clusters <- freq.table$Var1[1:sum(freq.table$Freq > (sum(freq.table$Freq) * .05))]
           cluster.cells <- which(as.character(sc_obj$seurat_clusters) %in% selected.clusters)
           predicted_celltype_majority_vote[cluster.cells] <- i
       }
   }
-    
+
   sc_obj$predicted_celltype_majority_vote <- predicted_celltype_majority_vote
-    
+
   print_SPEEDI("Done with majority voting", log_flag)
   return(sc_obj)
 }
