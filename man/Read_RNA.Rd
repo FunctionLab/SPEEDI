@@ -16,7 +16,7 @@ Read_RNA(
 
 \item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{data_path}).}
 
-\item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{data_path}). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., \verb{"c("sample1/matrix.mtx", "sample2/matrix.mtx"}"). If used, \code{sample_id_list} is required.}
+\item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{data_path}). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., \verb{"c("sample1/matrix.mtx", "sample2/matrix.mtx"}"). If this argument is used, \code{sample_id_list} is required and should be written in the same order as the sample file paths.}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
