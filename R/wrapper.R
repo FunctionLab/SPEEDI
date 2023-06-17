@@ -46,7 +46,6 @@
 #' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
 #' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
-#' @param rna_data_file_format Data file format for RNA data (can be `"h5"` or `"tsv"`).
 #' @param metadata_df Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
 #' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `reference_tissue` should be set to `"custom"`.
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
@@ -61,7 +60,7 @@
 #' species = "human", record_doublets = TRUE)}
 #' @export
 #' @import ArchR
-run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), rna_data_file_format = "h5", metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, record_doublets = FALSE) {
+run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, record_doublets = FALSE) {
   # Normalize paths (in case user provides relative paths)
   data_path <- normalize_dir_path(data_path)
   reference_dir <- normalize_dir_path(reference_dir)
@@ -111,7 +110,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   if(data_type != "ATAC") {
     if (!dir.exists(RNA_output_dir)) {dir.create(RNA_output_dir)}
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
-    all_sc_exp_matrices <- Read_RNA(data_path = data_path, data_file_format = rna_data_file_format, sample_id_list = sample_id_list, log_flag = TRUE)
+    all_sc_exp_matrices <- Read_RNA(data_path = data_path, sample_id_list = sample_id_list, log_flag = TRUE)
     sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = species,
                                 record_doublets = record_doublets, output_dir = RNA_output_dir,
                                 log_file_path = log_file_name, log_flag = TRUE)

@@ -4,7 +4,7 @@
 \alias{MajorityVote_RNA}
 \title{In each cluster, we vote for majority cell type (RNA)}
 \usage{
-MajorityVote_RNA(sc_obj, current_resolution = 1, log_flag = FALSE)
+MajorityVote_RNA(sc_obj, current_resolution = 2, log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}

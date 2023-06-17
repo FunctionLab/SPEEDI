@@ -28,3 +28,5 @@ RunDE_RNA <- function(sc_obj, metadata_df, de_family = "pseudobulk", de_method =
   gc()
   return(TRUE)
 }
+
+
