@@ -49,7 +49,7 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
     # Second, look for all filtered_feature_bc_matrix .h5 files in data_path
     data_files <- list.files(path = data_path, pattern = "filtered_feature_bc_matrix\\.h5$", recursive = TRUE, full.names = TRUE)
     data_file_format <- "HDF5"
-    if(length(data_files == 0)) {
+    if(length(data_files) == 0) {
       data_files <- list.files(path = data_path, pattern = "matrix.mtx", recursive = TRUE, full.names = TRUE)
       data_file_format <- "MEX"
     }

@@ -10,25 +10,25 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 5: Inferring heterogeneous groups for integration", log_flag)
   # Find clusters in data (prior to batch correction)
-  if ('lsi' %in% Reductions(sc_obj)) {
+  if ('lsi' %in% SeuratObject::Reductions(sc_obj)) {
       if (is.null(sc_obj@graphs$tileMatrix_snn)) {
-          sc_obj <- FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:30)
+          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:30)
       } else {
-          print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...")
+          print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
       }
   } else {
       if (is.null(sc_obj@graphs$SCT_snn)) {
-          sc_obj <- FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
+          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
       } else {
-          print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...")
+          print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
       }
   }
-    
-  sc_obj <- FindClusters(object = sc_obj, resolution = 0.3, algorithm = 4, method='igraph', random.seed = SEED)
+
+  sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.3, algorithm = 4, method='igraph')
   if (length(unique(sc_obj$seurat_clusters)) > 30) {
-      sc_obj <- FindClusters(object = sc_obj, resolution = 0.2, algorithm = 4, method='igraph', random.seed = SEED)
+      sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.2, algorithm = 4, method='igraph')
       if (length(unique(sc_obj$seurat_clusters)) > 30) {
-          sc_obj <- FindClusters(object = sc_obj, resolution = 0.1, algorithm = 4, method='igraph', random.seed = SEED)
+          sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.1, algorithm = 4, method='igraph')
       }
   }
   # Use LISI metric to guess batch labels
@@ -60,11 +60,11 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
       lisi.res.sub <- lisi.res[lisi.res$cluster == i,]
       lisi.res.sub$batch_count <- as.numeric(as.character(table(sc_obj$sample)[lisi.res.sub$batch]))
       lisi.res.sub$scaled.score <- (lisi.res.sub$score / max(lisi.res.sub$score)) * (lisi.res.sub$freq / lisi.res.sub$batch_count)
-      
+
     if (max(lisi.res.sub$score) <= 1.01) {
       lisi.res.sub <- lisi.res.sub[order(lisi.res.sub$score, decreasing = TRUE),]
       samples.of.batch <- lisi.res.sub$batch[1]
-        
+
       if (!(list(samples.of.batch) %in% batch.assign)) {
           batch.assign <- lappend(batch.assign, samples.of.batch)
       }
@@ -76,19 +76,19 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
         lisi.res.sub <- lisi.res.sub[1:30,]
       }
       lisi.res.sub$diff.scaled.score <- abs(c(diff(lisi.res.sub$scaled.score), 0))
-        
+
       if (dim(lisi.res.sub)[1] >= 3) {
-        p.values[[i]] <- dixon.test(lisi.res.sub$diff.scaled.score)$p.value[[1]]
+        p.values[[i]] <- outliers::dixon.test(lisi.res.sub$diff.scaled.score)$p.value[[1]]
       } else {
         p.values[[i]] <- 1
       }
-      
-      if (p.values[[i]] > 0.05) {
+
+      if (p.values[[i]] > 0.05 & dim(lisi.res.sub)[1] >= 3) {
           lisi.res.sub <- lisi.res.sub[-which.max(lisi.res.sub$diff.scaled.score),]
-          p.values[[i]] <- dixon.test(lisi.res.sub$diff.scaled.score)$p.value[[1]]
+          p.values[[i]] <- outliers::dixon.test(lisi.res.sub$diff.scaled.score)$p.value[[1]]
       }
 
-      if (p.values[[i]] < 0.05) {
+      if (p.values[[i]] < 0.05 & dim(lisi.res.sub)[1] >= 3) {
         max.index <- which.max(lisi.res.sub$diff.scaled.score)
         samples.of.batch <- lisi.res.sub$batch[1:max.index]
 

@@ -5,6 +5,12 @@ the <- new.env(parent = emptyenv())
 # update the variable below (either by the setter below or by directly editing this file)
 the$pbmc_reference_url <- "https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat"
 
+# URL for checking which genes are on HumanBase (and getting associated ENTREZ IDs)
+the$gene_check_url <- 'https://hb.flatironinstitute.org/api/genes/search/multi?'
+
+# URL for submitting functional module discovery job to HumanBase
+the$fmd_submission_url <- 'https://hb.flatironinstitute.org/api/integrations/community/?integration='
+
 # List of possible SeuratData references
 the$seuratdata_references <- c("adiposeref", "bonemarrowref", "fetusref",
                                "heartref", "humancortexref", "kidneyref",
@@ -23,6 +29,18 @@ set_pbmc_reference_url <- function(new_url = "https://atlas.fredhutch.org/data/n
   old <- the$pbmc_reference_url
   the$pbmc_reference_url <- new_url
   invisible(old)
+}
+
+#' Get HumanBase gene check URL
+#' @export
+get_gene_check_url <- function() {
+  the$gene_check_url
+}
+
+#' Get FMD submission URL
+#' @export
+get_fmd_submission_url <- function() {
+  the$fmd_submission_url
 }
 
 #' Get possible SeuratData references

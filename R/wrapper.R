@@ -136,8 +136,50 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference,
                                reference_cell_type_attribute = reference_cell_type_attribute,
                                output_dir = RNA_output_dir, log_flag = TRUE)
+    # If the user provided metadata, we can perform downstream analyses (differential expression, functional module discovery)
     if(!is.null(metadata_df)) {
-      RunDE_RNA(sc_obj, metadata_df, RNA_output_dir, log_flag = TRUE)
+      # We run differential expression on each metadata attribute provided by the user
+      differential_expression_results <- RunDE_RNA(sc_obj, metadata_df, output_dir = RNA_output_dir, log_flag = TRUE)
+      # Next, we will run functional module discovery using those results (if species is human)
+      if(species == "human") {
+        for(current_de_result in differential_expression_results) {
+          # For a given DE result, we filter adjusted p-value < 0.05 and then check various log FC thresholds to find our lists of DEGs
+          filtered_de_result <- current_de_result[current_de_result$p_val_adj < 0.05,]
+          log_fc_thresholds <- c(0.1, 0.585, 1, 2)
+          for(log_fc_threshold in log_fc_thresholds) {
+            # We grab high FC genes (positive FC) for the current log FC threshold
+            # If there are at least 20 genes, we can do FMD
+            filtered_de_result_high_fc <- filtered_de_result[filtered_de_result$avg_logFC > log_fc_threshold,]
+            high_genes <- filtered_de_result_high_fc$gene
+            high_fmd_results <- NULL
+            if(length(high_genes) >= 20) {
+              # Run FMD and create output file where header line (starting with #) is a URL to see full results in web browser
+              # The table below contains enrichment results from HumanBase
+              high_fmd_results <- RunFMD_RNA(gene_list = high_genes, network = "global", output_dir = RNA_output_dir, log_flag = TRUE)
+              if(!is.null(high_fmd_results)) {
+                high_fmd_output_file <- paste0(RNA_output_dir, "FMD_high_fc_", log_fc_threshold, "_", unique(current_de_result$metadata_attribute), ".csv")
+                cat(paste0("#", high_fmd_results[[1]], "\n", file=high_fmd_output_file))
+                current_enrichment_table <- high_fmd_results[[2]]
+                current_enrichment_table <- current_enrichment_table[,!names(current_enrichment_table) %in% c("genes", "edges")]
+                utils::write.table(current_enrichment_table, file = high_fmd_output_file, append=TRUE)
+              }
+            }
+            # Perform the same analysis as above but for highly negative FC genes (opposite direction)
+            filtered_de_result_low_fc <- filtered_de_result[filtered_de_result$avg_logFC < -log_fc_threshold,]
+            low_genes <- filtered_de_result_low_fc$gene
+            if(length(low_genes) >= 20) {
+              low_fmd_results <- RunFMD_RNA(gene_list = low_genes, network = "global", output_dir = RNA_output_dir, log_flag = TRUE)
+              if(!is.null(low_fmd_results)) {
+                low_fmd_output_file <- paste0(RNA_output_dir, "FMD_low_fc_", log_fc_threshold, "_", unique(current_de_result$metadata_attribute), ".csv")
+                cat(paste0("#", low_fmd_results[[1]], "\n", file=low_fmd_output_file))
+                current_enrichment_table <- low_fmd_results[[2]]
+                current_enrichment_table <- current_enrichment_table[,!names(current_enrichment_table) %in% c("genes", "edges")]
+                utils::write.table(current_enrichment_table, file = low_fmd_output_file, append=TRUE)
+              }
+            }
+          }
+        }
+      }
     }
   }
   if(data_type != "RNA") {

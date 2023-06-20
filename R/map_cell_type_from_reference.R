@@ -162,7 +162,7 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
     associated_res_attribute <- paste0("SCT_snn_res.", current_resolution)
   }
   sc_obj <- Seurat::FindNeighbors(sc_obj, reduction = "pca", dims = 1:30)
-  sc_obj <- Seurat::FindClusters(sc_obj, algorithm = 4, method='igraph', resolution = current_resolution, random.seed = SEED)
+  sc_obj <- Seurat::FindClusters(sc_obj, algorithm = 4, method='igraph', resolution = current_resolution)
   sc_obj$predicted.id <- as.character(sc_obj$predicted.id)
 
 
@@ -211,7 +211,7 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
       freq.table <- as.data.frame(table(integrated_snn_res_df[cells,]))
       freq.table <- freq.table[order(freq.table$Freq, decreasing = TRUE),]
 
-      if (sum(freq.table$Freq > (sum(freq.table$Freq) * .05)) <= round(.1 * length(unique(proj$seurat_clusters)))) {
+      if (sum(freq.table$Freq > (sum(freq.table$Freq) * .05)) <= round(.1 * length(unique(sc_obj$seurat_clusters)))) {
           selected.clusters <- freq.table$Var1[1:sum(freq.table$Freq > (sum(freq.table$Freq) * .05))]
           cluster.cells <- which(as.character(sc_obj$seurat_clusters) %in% selected.clusters)
           predicted_celltype_majority_vote[cluster.cells] <- i

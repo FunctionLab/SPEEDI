@@ -226,7 +226,7 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", metadata_df = NULL,
   g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
   m.s.genes <-  SPEEDI::cc.gene.updated.mouse$m.s.genes
   m.g2m.genes <-  SPEEDI::cc.gene.updated.mouse$m.g2m.genes
-  if (species == "human") {
+  if(species == "human") {
     sc_obj <- Seurat::CellCycleScoring(object = sc_obj, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
   } else {
     sc_obj <- Seurat::CellCycleScoring(object = sc_obj, s.features = m.s.genes, g2m.features = m.g2m.genes, set.ident = TRUE)
