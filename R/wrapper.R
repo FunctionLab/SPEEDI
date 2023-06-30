@@ -157,7 +157,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
               if(length(high_genes) >= 20) {
                 # Run FMD and create output file where header line (starting with #) is a URL to see full results in web browser
                 # The table below contains enrichment results from HumanBase
-                high_fmd_results <- RunFMD_RNA(gene_list = high_genes, network = "global", output_dir = RNA_output_dir, log_flag = TRUE)
+                high_fmd_results <- RunFMD_RNA(gene_list = high_genes, network = "global", log_flag = TRUE)
                 if(!is.null(high_fmd_results)) {
                   high_fmd_output_file <- paste0(RNA_output_dir, "FMD_", current_cell_type, "_high_fc_", log_fc_threshold, "_", unique(current_de_result$metadata_attribute), ".csv")
                   cat(paste0("#", high_fmd_results[[1]], "\n", file=high_fmd_output_file))
@@ -170,7 +170,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
               filtered_de_result_low_fc <- filtered_de_result[filtered_de_result$avg_logFC < -log_fc_threshold,]
               low_genes <- filtered_de_result_low_fc$gene
               if(length(low_genes) >= 20) {
-                low_fmd_results <- RunFMD_RNA(gene_list = low_genes, network = "global", output_dir = RNA_output_dir, log_flag = TRUE)
+                low_fmd_results <- RunFMD_RNA(gene_list = low_genes, network = "global", log_flag = TRUE)
                 if(!is.null(low_fmd_results)) {
                   low_fmd_output_file <- paste0(RNA_output_dir, "FMD_", current_cell_type, "_low_fc_", log_fc_threshold, "_", unique(current_de_result$metadata_attribute), ".csv")
                   cat(paste0("#", low_fmd_results[[1]], "\n", file=low_fmd_output_file))
