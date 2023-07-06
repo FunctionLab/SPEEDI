@@ -416,7 +416,9 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
     print_SPEEDI("Performing majority voting", log_flag)
     # We have to perform majority voting with a different cluster attribute if Harmony was not run
     # (due to only having one batch)
+    cluster_variable_name <- NULL
     if(reducedDims_param == "Harmony") {
+      cluster_variable_name <- "Harmony_clusters"
       cM <- as.matrix(ArchR::confusionMatrix(proj$Harmony_clusters, proj$predictedGroup))
       Cell_type_voting <- proj$Harmony_clusters
       pre_cluster <- rownames(cM)
@@ -426,6 +428,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
         Cell_type_voting[idxSample] <- max_celltype[m]
       }
     } else {
+      cluster_variable_name <- "Clusters"
       cM <- as.matrix(ArchR::confusionMatrix(proj$Clusters, proj$predictedGroup))
       Cell_type_voting <- proj$Clusters
       pre_cluster <- rownames(cM)
@@ -439,7 +442,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
     print_SPEEDI("Done performing majority voting", log_flag)
     pal <- paletteDiscrete(values = proj$Cell_type_voting)
     p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
-    p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+    p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = cluster_variable_name, embedding = "UMAP", force = TRUE, keepAxis = TRUE)
     p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
     p4 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
     ArchR::plotPDF(p1,p2,p3,p4, name = "UMAP_after_Final_Cell_Type_Majority_Voting_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)

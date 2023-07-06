@@ -26,6 +26,7 @@ Imports:
     glmGamPoi,
     ggplot2,
     hdf5r,
+    hexbin,
     httr,
     jsonlite,
     kneedle,
