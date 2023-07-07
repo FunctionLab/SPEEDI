@@ -55,6 +55,7 @@ Depends:
 Remotes: 
     github::GreenleafLab/ArchR,
     github::satijalab/azimuth,
+    github::immunogenomics/harmony,
     github::etam4260/kneedle,
     github::neurorestore/Libra,
     github::immunogenomics/lisi,
