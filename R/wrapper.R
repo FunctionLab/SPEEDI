@@ -190,8 +190,10 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
                                    reference_cell_type_attribute = reference_cell_type_attribute, log_flag = TRUE)
   }
   # Write Seurat object to output directory
-  print_SPEEDI("Saving Seurat object (RNA)", log_flag = TRUE)
-  save(sc_obj, file = paste0(RNA_output_dir, analysis_name, ".RNA.rds"))
+  if(data_type != "ATAC") {
+    print_SPEEDI("Saving Seurat object (RNA)", log_flag = TRUE)
+    save(sc_obj, file = paste0(RNA_output_dir, analysis_name, ".RNA.rds"))
+  }
   # Save ArchR project
   if(data_type != "RNA") {
     print_SPEEDI("Saving ArchR project (ATAC)", log_flag = TRUE)
