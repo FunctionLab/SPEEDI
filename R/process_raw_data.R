@@ -32,25 +32,13 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
   sc_obj$sample <- as.vector(sapply(strsplit(colnames(sc_obj), "#"), "[", 1))
   cell_names <- rownames(sc_obj@meta.data)
   sc_obj <- Seurat::AddMetaData(sc_obj, metadata = cell_names, col.name = "cell_name")
-  # Set up reading of data so it's parallel (max cores == number of samples)
-  if (Sys.getenv("SLURM_NTASKS_PER_NODE") == "") {
-    n.cores <- as.numeric(parallel::detectCores())
-  } else {
-    n.cores <- as.numeric(Sys.getenv("SLURM_NTASKS_PER_NODE"))
-  }
 
-  if (n.cores > length(objects)) {
-    n.cores <- length(objects)
-  }
-
-  print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
-  doParallel::registerDoParallel(n.cores)
   # Dummy declaration to avoid check() complaining
   scDblFinder.class <- NULL
   # If requested, record doublet info in samples
   if(record_doublets) {
     print_SPEEDI("Recording doublet info", log_flag)
-    sc_obj <- Seurat::as.Seurat(scDblFinder::scDblFinder(Seurat::as.SingleCellExperiment(sc_obj), samples = "sample", BPPARAM=MulticoreParam(n.cores)))
+    sc_obj <- Seurat::as.Seurat(scDblFinder::scDblFinder(Seurat::as.SingleCellExperiment(sc_obj), samples = "sample"))
     # See distribution of doublets in each sample
     doublet_sc_obj <- subset(x = sc_obj, subset = scDblFinder.class %in% "doublet")
     print_SPEEDI("Number of doublets in each sample:", log_flag)
@@ -98,6 +86,20 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
   Create_QC_Output_Prefiltered_RNA(sc_obj, output_dir, log_flag)
   # Split up samples for individual processing
   objects <- Seurat::SplitObject(sc_obj, split.by = "sample")
+
+  # Set up reading of data so it's parallel (max cores == number of samples)
+  if (Sys.getenv("SLURM_NTASKS_PER_NODE") == "") {
+    n.cores <- as.numeric(parallel::detectCores())
+  } else {
+    n.cores <- as.numeric(Sys.getenv("SLURM_NTASKS_PER_NODE"))
+  }
+
+  if (n.cores > length(objects)) {
+    n.cores <- length(objects)
+  }
+
+  print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
+  doParallel::registerDoParallel(n.cores)
 
   print_SPEEDI("Beginning parallel processing of samples", log_flag)
   # Dummy declarations to avoid check() complaining
