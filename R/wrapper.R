@@ -140,7 +140,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     if(!is.null(metadata_df)) {
       # We run differential expression on each metadata attribute provided by the user
       differential_expression_results <- RunDE_RNA(sc_obj, metadata_df, output_dir = RNA_output_dir, log_flag = TRUE)
-      # Next, we will run functional module discovery using those results (if species is human)
+      # Next, if species is human, we will run functional module discovery using the DE results
       # TODO: Pick appropriate networks depending on cell type
       if(species == "human") {
         for(current_de_result in differential_expression_results) {

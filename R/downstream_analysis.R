@@ -1,31 +1,55 @@
 #' Perform differential expression analysis (RNA)
 #'
 #' @param sc_obj Seurat object containing cells for all samples
-#' @param metadata_df Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
+#' @param metadata_df Data frame containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
-#' @param de_family Differential expression family (see [Libra::run_de()]).
-#' @param de_method Differential expression method (see [Libra::run_de()]).
-#' @param de_type Differential expression type (see [Libra::run_de()]).
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A list containing differential expression analyses
 #' @examples
 #' \dontrun{differential_expression_results <- RunDE_RNA(sc_obj = sc_obj, metadata_df = metadata_df)}
 #' @export
-RunDE_RNA <- function(sc_obj, metadata_df, de_family = "pseudobulk", de_method = "edgeR", de_type = "LRT", output_dir = getwd(), log_flag = FALSE) {
+RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALSE) {
   de_results <- list()
   index <- 1
   # Normalize paths (in case user provides relative paths)
   output_dir <- normalize_dir_path(output_dir)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Running differential expression analysis (RNA)", log_flag)
-  Seurat::DefaultAssay(sc_obj) <- "RNA"
   for(metadata_attribute in colnames(metadata_df)) {
+    final_current_de <- data.frame(Cell_Type = character(), Gene_Name = character(), sc_pval_adj = character(), sc_log2FC = character(), pseudo_bulk_pval = character(),
+                                      pseudo_bulk_log2FC = character())
+    Seurat::DefaultAssay(sc_obj) <- "SCT"
     current_de <- Libra::run_de(sc_obj, replicate_col = "sample",
                          cell_type_col = "predicted_celltype_majority_vote", label_col = metadata_attribute,
-                         de_family = de_family, de_method = de_method, de_type = de_type)
-    current_de$metadata_attribute <- metadata_attribute
-    utils::write.table(current_de, file = paste0(output_dir, metadata_attribute, ".DE.tsv"), sep = "\t", quote = FALSE)
-    de_results[[index]] <- current_de
+                         de_family = "singlecell", de_method = "wilcox")
+    current_de$metadata_attribute <- metadata_attribute # TODO: Check that this works
+    current_de <- current_de[current_de$p_val_adj < 0.05,]
+    current_de <- current_de[abs(current_de$avg_log2FC) > 0.1,]
+    current_de <- current_de[current_de$pct.1 > 0.1 | current_de$pct.2 > 0.1,]
+    # Run DESeq2 for pseudobulk filtering
+    Seurat::DefaultAssay(sc_obj) <- "RNA"
+    pseudobulk_current_de <- run_de(sc_obj, replicate_col = "sample",
+                                    cell_type_col = "predicted_celltype_majority_vote", label_col = metadata_attribute,
+                                    de_method = "DESeq2")
+    pseudobulk_current_de <- na.omit(pseudobulk_current_de)
+    pseudobulk_current_de <- pseudobulk_current_de[pseudobulk_current_de$p_val < 0.05,]
+    pseudobulk_current_de <- pseudobulk_current_de[pseudobulk_current_de$avg_logFC < -0.3 | pseudobulk_current_de$avg_logFC > 0.3,]
+    for(cell_type in current_de$cell_type) {
+      current_de_cell_type_subset <- current_de[current_de$cell_type == cell_type,]
+      pseudobulk_current_de_cell_type_subset <- pseudobulk_current_de[pseudobulk_current_de$cell_type == cell_type,]
+      final_genes_cell_type_subset <- intersect(current_de_cell_type_subset$gene, pseudobulk_current_de_cell_type_subset$gene)
+      for(current_gene in final_genes_cell_type_subset) {
+        current_sc_pval_adj <- current_de_cell_type_subset[current_de_cell_type_subset$gene == current_gene,]$p_val_adj
+        current_sc_log2FC <- current_de_cell_type_subset[current_de_cell_type_subset$gene == current_gene,]$avg_log2FC
+        current_pseudo_bulk_pval <- pseudobulk_current_de_cell_type_subset[pseudobulk_current_de_cell_type_subset$gene == current_gene,]$p_val
+        current_pseudo_bulk_log2FC <- pseudobulk_current_de_cell_type_subset[pseudobulk_current_de_cell_type_subset$gene == current_gene,]$avg_logFC
+        current_row <- data.frame(current_cell_type, current_gene, current_sc_pval_adj, current_sc_log2FC, current_pseudo_bulk_pval, current_pseudo_bulk_log2FC)
+        names(current_row) <- c("Cell_Type", "Gene_Name", "sc_pval_adj", "sc_log2FC", "pseudo_bulk_pval", "pseudo_bulk_log2FC")
+        final_current_de <- rbind(final_current_de, current_row)
+      }
+    }
+    utils::write.table(final_current_de, file = paste0(output_dir, metadata_attribute, ".DE.tsv"), sep = "\t", quote = FALSE)
+    de_results[[index]] <- final_current_de
     index <- index + 1
   }
   print_SPEEDI("Differential expression analysis complete", log_flag)
