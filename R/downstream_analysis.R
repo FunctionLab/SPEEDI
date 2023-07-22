@@ -69,7 +69,7 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
     if(current_gene_row$num_matches > 0) {
       final_gene_list <- c(final_gene_list, current_gene_row$query)
       current_entrez_id <- current_gene_row$matches
-      final_gene_list_entrez <- c(final_gene_list_entrez, current_gene_row$matches[[1]]$entrez)
+      final_gene_list_entrez <- c(final_gene_list_entrez, current_gene_row$matches[[1]][1,]$entrez)
     }
   }
   final_gene_list_entrez <- as.character(final_gene_list_entrez)
