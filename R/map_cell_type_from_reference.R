@@ -162,7 +162,7 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
     associated_res_attribute <- paste0("SCT_snn_res.", current_resolution)
   }
   sc_obj <- Seurat::FindNeighbors(sc_obj, reduction = "pca", dims = 1:30)
-  sc_obj <- Seurat::FindClusters(sc_obj, algorithm = 4, method='igraph', resolution = current_resolution)
+  sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = current_resolution)
   sc_obj$predicted.id <- as.character(sc_obj$predicted.id)
 
 

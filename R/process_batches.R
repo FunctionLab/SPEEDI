@@ -14,21 +14,20 @@ InferBatches <- function(sc_obj, log_flag = FALSE) {
       if (is.null(sc_obj@graphs$tileMatrix_snn)) {
           sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:30)
       } else {
-          print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
+          print_SPEEDI("Neighbors exist. Skipping construction of neighborhood graph...", log_flag)
       }
   } else {
       if (is.null(sc_obj@graphs$SCT_snn)) {
           sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
       } else {
-          print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
+          print_SPEEDI("Neighbors exist. Skipping construction of neighborhood graph...", log_flag)
       }
   }
-
-  sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.3, algorithm = 4, method='igraph')
+  sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.3)
   if (length(unique(sc_obj$seurat_clusters)) > 30) {
-      sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.2, algorithm = 4, method='igraph')
+    sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.2)
       if (length(unique(sc_obj$seurat_clusters)) > 30) {
-          sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = 0.1, algorithm = 4, method='igraph')
+        sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.1)
       }
   }
   # Use LISI metric to guess batch labels

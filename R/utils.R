@@ -97,3 +97,27 @@ print_heatmap_cell_type_proportions_RNA <- function(sc_obj, file_name, output_di
   ggplot2::ggsave(filename = paste0(output_dir, file_name), plot = output.plot, device = "png", width = 8, height = 8, units = "in")
   return(TRUE)
 }
+
+#' First, try Leiden algorithm for clustering. If that doesn't work, then try Louvain
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param resolution Resolution for clustering
+#' @param log_flag boolean to indicate whether we're also printing to log file
+#' @return Seurat object with clustering complete
+find_clusters_SPEEDI <- function(sc_obj, resolution, log_flag = FALSE) {
+  sc_obj <- tryCatch(
+    {
+      print_SPEEDI("Trying to use Leiden algorithm for clustering", log_flag)
+      Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 4, method='igraph')
+    },
+    error=function(cond) {
+      print_SPEEDI("Error using Leiden algorithm for clustering", log_flag)
+      print_SPEEDI(cond, log_flag)
+      print_SPEEDI("Trying Louvain instead", log_flag)
+      return(Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 2))
+    },
+    finally={
+      print_SPEEDI("Clustering complete", log_flag)
+    }
+  )
+  return(sc_obj)
+}
