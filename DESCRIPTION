@@ -47,6 +47,7 @@ Imports:
     Seurat,
     SeuratData,
     SeuratDisk,
+    SeuratObject,
     SummarizedExperiment,
     uwot
 Depends: 

@@ -62,6 +62,7 @@ ignore_unused_imports <- function() {
   GenomicRanges::absoluteRanges
   glmGamPoi::glm_gp
   hdf5r::as_hex
+  hexbin::BTC
   Libra::calculate_delta_variance
   limma::alias2Symbol
   Matrix::Arith
@@ -69,4 +70,5 @@ ignore_unused_imports <- function() {
   RCurl::AUTH_ANY
   rhdf5::H5Aclose
   Rsamtools::applyPileups
+  SeuratObject::Assays
 }

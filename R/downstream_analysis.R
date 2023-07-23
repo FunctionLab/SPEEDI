@@ -28,10 +28,10 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
     current_de <- current_de[current_de$pct.1 > 0.1 | current_de$pct.2 > 0.1,]
     # Run DESeq2 for pseudobulk filtering
     Seurat::DefaultAssay(sc_obj) <- "RNA"
-    pseudobulk_current_de <- run_de(sc_obj, replicate_col = "sample",
+    pseudobulk_current_de <- Libra::run_de(sc_obj, replicate_col = "sample",
                                     cell_type_col = "predicted_celltype_majority_vote", label_col = metadata_attribute,
                                     de_method = "DESeq2")
-    pseudobulk_current_de <- na.omit(pseudobulk_current_de)
+    pseudobulk_current_de <- stats::na.omit(pseudobulk_current_de)
     pseudobulk_current_de <- pseudobulk_current_de[pseudobulk_current_de$p_val < 0.05,]
     pseudobulk_current_de <- pseudobulk_current_de[pseudobulk_current_de$avg_logFC < -0.3 | pseudobulk_current_de$avg_logFC > 0.3,]
     for(cell_type in current_de$cell_type) {
@@ -43,7 +43,7 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
         current_sc_log2FC <- current_de_cell_type_subset[current_de_cell_type_subset$gene == current_gene,]$avg_log2FC
         current_pseudo_bulk_pval <- pseudobulk_current_de_cell_type_subset[pseudobulk_current_de_cell_type_subset$gene == current_gene,]$p_val
         current_pseudo_bulk_log2FC <- pseudobulk_current_de_cell_type_subset[pseudobulk_current_de_cell_type_subset$gene == current_gene,]$avg_logFC
-        current_row <- data.frame(current_cell_type, current_gene, current_sc_pval_adj, current_sc_log2FC, current_pseudo_bulk_pval, current_pseudo_bulk_log2FC)
+        current_row <- data.frame(cell_type, current_gene, current_sc_pval_adj, current_sc_log2FC, current_pseudo_bulk_pval, current_pseudo_bulk_log2FC)
         names(current_row) <- c("Cell_Type", "Gene_Name", "sc_pval_adj", "sc_log2FC", "pseudo_bulk_pval", "pseudo_bulk_log2FC")
         final_current_de <- rbind(final_current_de, current_row)
       }
@@ -130,4 +130,68 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
   print_SPEEDI("Functional module discovery analysis complete", log_flag)
   gc()
   return(list(cached_url, fmd_submission_post_response))
+}
+
+#' Grab associated HumanBase networks for current cell type and reference tissue
+#'
+#' @param current_cell_type Current cell type
+#' @param reference_tissue Reference tissue
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return A vector containing a list of HumanBase networks
+#' @examples
+#' \dontrun{hb_networks <- grab_hb_networks(current_cell_type = "B naive",
+#' reference_tissue = "pbmc")}
+grab_hb_networks <- function(current_cell_type, reference_tissue, log_flag = FALSE) {
+  hb_networks <- c("global")
+  # TODO: Add cell-type granularity to PBMC networks
+  # TODO: Look into cortex (cerebral cortex tissue OK?)
+  if(reference_tissue == "pbmc" | reference_tissue == "pbmc_full") {
+    hb_networks <- c(hb_networks, "blood")
+  } else if (reference_tissue == "adipose") {
+    hb_networks <- c(hb_networks, "adipose-tissue")
+  } else if (reference_tissue == "bone_marrow") {
+    hb_networks <- c(hb_networks, "bone-marrow")
+  } else if (reference_tissue == "fetus") {
+    hb_networks <- c(hb_networks, "fetus")
+  } else if (reference_tissue == "heart") {
+    hb_networks <- c(hb_networks, "heart")
+  } else if (reference_tissue == "kidney") {
+    hb_networks <- c(hb_networks, "kidney")
+  } else if (reference_tissue == "lung") {
+    hb_networks <- c(hb_networks, "lung")
+  } else if (reference_tissue == "pancreas") {
+    hb_networks <- c(hb_networks, "pancreas")
+  }else if (reference_tissue == "tonsil") {
+    hb_networks <- c(hb_networks, "tonsil")
+  }
+  return(hb_networks)
+}
+
+#' Wrapper for running FMD job in the context of the SPEEDI wrapper function
+#'
+#' @param gene_list Input list of genes
+#' @param network Background network
+#' @param RNA_output_dir Output directory (RNA)
+#' @param cell_type Cell type
+#' @param metadata_attribute Metadata attribute
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return A list containing FMD results
+#' @examples
+#' \dontrun{hb_networks <- grab_hb_networks(current_cell_type = "B naive",
+#' reference_tissue = "pbmc")}
+run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metadata_attribute, log_flag) {
+  FMD_result <- NULL
+  if(length(gene_list) >= 20) {
+    # Run FMD and create output file where header line (starting with #) is a URL to see full results in web browser
+    # The table below contains enrichment results from HumanBase
+    FMD_result <- RunFMD_RNA(gene_list = gene_list, network = network, log_flag = TRUE)
+    if(!is.null(FMD_result)) {
+      output_file <- paste0(RNA_output_dir, "FMD_", cell_type, "_", network, "_", metadata_attribute, ".csv")
+      cat(paste0("#", FMD_result[[1]], "\n", file=output_file))
+      current_enrichment_table <- FMD_result[[2]]
+      current_enrichment_table <- current_enrichment_table[,!names(current_enrichment_table) %in% c("genes", "edges")]
+      utils::write.table(current_enrichment_table, file = output_file, append=TRUE)
+    }
+  }
+  return(FMD_result)
 }
