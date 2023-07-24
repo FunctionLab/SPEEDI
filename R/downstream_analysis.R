@@ -17,33 +17,38 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
   print_SPEEDI("Running differential expression analysis (RNA)", log_flag)
   for(metadata_attribute in colnames(metadata_df)) {
     final_current_de <- data.frame(Cell_Type = character(), Gene_Name = character(), sc_pval_adj = character(), sc_log2FC = character(), pseudo_bulk_pval = character(),
-                                      pseudo_bulk_log2FC = character())
-    Seurat::DefaultAssay(sc_obj) <- "SCT"
-    current_de <- Libra::run_de(sc_obj, replicate_col = "sample",
-                         cell_type_col = "predicted_celltype_majority_vote", label_col = metadata_attribute,
-                         de_family = "singlecell", de_method = "wilcox")
-    current_de$metadata_attribute <- metadata_attribute # TODO: Check that this works
-    current_de <- current_de[current_de$p_val_adj < 0.05,]
-    current_de <- current_de[abs(current_de$avg_log2FC) > 0.1,]
-    current_de <- current_de[current_de$pct.1 > 0.1 | current_de$pct.2 > 0.1,]
-    # Run DESeq2 for pseudobulk filtering
-    Seurat::DefaultAssay(sc_obj) <- "RNA"
-    pseudobulk_current_de <- Libra::run_de(sc_obj, replicate_col = "sample",
-                                    cell_type_col = "predicted_celltype_majority_vote", label_col = metadata_attribute,
-                                    de_method = "DESeq2")
-    pseudobulk_current_de <- stats::na.omit(pseudobulk_current_de)
-    pseudobulk_current_de <- pseudobulk_current_de[pseudobulk_current_de$p_val < 0.05,]
-    pseudobulk_current_de <- pseudobulk_current_de[pseudobulk_current_de$avg_logFC < -0.3 | pseudobulk_current_de$avg_logFC > 0.3,]
-    for(cell_type in current_de$cell_type) {
-      current_de_cell_type_subset <- current_de[current_de$cell_type == cell_type,]
-      pseudobulk_current_de_cell_type_subset <- pseudobulk_current_de[pseudobulk_current_de$cell_type == cell_type,]
-      final_genes_cell_type_subset <- intersect(current_de_cell_type_subset$gene, pseudobulk_current_de_cell_type_subset$gene)
-      for(current_gene in final_genes_cell_type_subset) {
-        current_sc_pval_adj <- current_de_cell_type_subset[current_de_cell_type_subset$gene == current_gene,]$p_val_adj
-        current_sc_log2FC <- current_de_cell_type_subset[current_de_cell_type_subset$gene == current_gene,]$avg_log2FC
-        current_pseudo_bulk_pval <- pseudobulk_current_de_cell_type_subset[pseudobulk_current_de_cell_type_subset$gene == current_gene,]$p_val
-        current_pseudo_bulk_log2FC <- pseudobulk_current_de_cell_type_subset[pseudobulk_current_de_cell_type_subset$gene == current_gene,]$avg_logFC
-        current_row <- data.frame(cell_type, current_gene, current_sc_pval_adj, current_sc_log2FC, current_pseudo_bulk_pval, current_pseudo_bulk_log2FC)
+                                   pseudo_bulk_log2FC = character())
+    for(current_cell_type in unique(sc_obj$predicted_celltype_majority_vote)) {
+      idxPass <- which(sc_obj$predicted_celltype_majority_vote %in% current_cell_type)
+      cellsPass <- names(sc_obj$orig.ident[idxPass])
+      sc_obj_cell_type_subset <- subset(x = sc_obj, subset = cell_name %in% cellsPass)
+      Seurat::DefaultAssay(sc_obj_cell_type_subset) <- "SCT"
+      Idents(sc_obj_cell_type_subset) <- metadata_attribute
+      current_de <- FindMarkers(sc_obj_cell_type_subset, ident.1 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][1], ident.2 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][2],
+                                logfc.threshold = 0.1, min.pct = 0.1, assay = "SCT", recorrect_umi = FALSE)
+      #current_de$metadata_attribute <- metadata_attribute # TODO: Check that this works
+      current_de <- current_de[current_de$p_val_adj < 0.05,]
+      # Run DESeq2 for pseudobulk filtering
+      Seurat::DefaultAssay(sc_obj_cell_type_subset) <- "RNA"
+      pseudobulk_counts <- create_pseudobulk_counts(sc_obj_cell_type_subset, log_flag)
+      pseudobulk_metadata <- metadata_df
+      pseudobulk_metadata$aliquots <- rownames(pseudobulk_metadata)
+      pseudobulk_metadata <- pseudobulk_metadata[match(colnames(pseudobulk_counts), pseudobulk_metadata$aliquots),]
+      pseudobulk_metadata <- subset(pseudobulk_metadata, select = -c(aliquots))
+      pseudobulk_analysis <- DESeqDataSetFromMatrix(countData = pseudobulk_counts, colData = pseudobulk_metadata, design = formula(paste("~",metadata_attribute)))
+      pseudobulk_analysis <- DESeq(pseudobulk_analysis)
+      pseudobulk_analysis_results_contrast <- tail(resultsNames(pseudobulk_analysis), n=1)
+      pseudobulk_analysis_results <- results(pseudobulk_analysis, name=pseudobulk_analysis_results_contrast)
+      pseudobulk_analysis_results <- na.omit(pseudobulk_analysis_results)
+      pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$pvalue < 0.05,]
+      pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$log2FoldChange < -0.3 | pseudobulk_analysis_results$log2FoldChange > 0.3,]
+      final_genes <- intersect(rownames(current_de), rownames(pseudobulk_analysis_results))
+      for(current_gene in final_genes) {
+        current_sc_pval_adj <- current_de[rownames(current_de) == current_gene,]$p_val_adj
+        current_sc_log2FC <- current_de[rownames(current_de) == current_gene,]$avg_log2FC
+        current_pseudo_bulk_pval <- pseudobulk_analysis_results[rownames(pseudobulk_analysis_results) == current_gene,]$pvalue
+        current_pseudo_bulk_log2FC <- pseudobulk_analysis_results[rownames(pseudobulk_analysis_results) == current_gene,]$log2FoldChange
+        current_row <- data.frame(current_cell_type, current_gene, current_sc_pval_adj, current_sc_log2FC, current_pseudo_bulk_pval, current_pseudo_bulk_log2FC)
         names(current_row) <- c("Cell_Type", "Gene_Name", "sc_pval_adj", "sc_log2FC", "pseudo_bulk_pval", "pseudo_bulk_log2FC")
         final_current_de <- rbind(final_current_de, current_row)
       }
@@ -195,4 +200,34 @@ run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metad
     }
   }
   return(FMD_result)
+}
+
+#' Create pseudobulk counts
+#' idxMatch <- which(str_detect(as.character(sc_obj_cell_type_subset$sample), "355c0b7887ae4f9f"))
+#' @param sc_obj Seurat object Input list of genes
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @examples
+#' \dontrun{pseudobulk_counts <- create_pseudobulk_counts(sc_obj)}
+create_pseudobulk_counts <- function(sc_obj, log_flag) {
+  #print_SPEEDI("Computing pseudobulk counts", log_flag)
+  cells_pseudobulk <- list()
+  for (sample_name in unique(sc_obj$sample)) {
+    idxMatch <- which(str_detect(as.character(sc_obj$sample), sample_name))
+    if(length(idxMatch)>=1) {
+      samples_subset <- subset(x = sc_obj, subset = sample %in% sample_name)
+      samples_data <- samples_subset@assays$RNA@counts
+      samples_data <- rowSums(as.matrix(samples_data))
+      cells_pseudobulk[[sample_name]] <- samples_data
+    } else {
+      cells_pseudobulk[[sample_name]] <- numeric(nrow(sc_obj@assays$RNA))
+    }
+  }
+  final_cells_pseudobulk_df <- dplyr::bind_cols(cells_pseudobulk[1])
+  for (idx in 2:length(unique(sc_obj$sample))) {
+    final_cells_pseudobulk_df <- dplyr::bind_cols(final_cells_pseudobulk_df, cells_pseudobulk[idx])
+  }
+  final_cells_pseudobulk_df <- as.data.frame(final_cells_pseudobulk_df)
+  rownames(final_cells_pseudobulk_df) <- names(cells_pseudobulk[[1]])
+  #colnames(final_cells_pseudobulk_df) <- paste0("Sample_", unique(sc_obj$sample))
+  return(final_cells_pseudobulk_df)
 }
