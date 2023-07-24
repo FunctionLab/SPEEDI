@@ -24,8 +24,8 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       cellsPass <- names(sc_obj$orig.ident[idxPass])
       sc_obj_cell_type_subset <- subset(x = sc_obj, subset = cell_name %in% cellsPass)
       Seurat::DefaultAssay(sc_obj_cell_type_subset) <- "SCT"
-      Idents(sc_obj_cell_type_subset) <- metadata_attribute
-      current_de <- FindMarkers(sc_obj_cell_type_subset, ident.1 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][1], ident.2 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][2],
+      Seurat::Idents(sc_obj_cell_type_subset) <- metadata_attribute
+      current_de <- Seurat::FindMarkers(sc_obj_cell_type_subset, ident.1 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][1], ident.2 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][2],
                                 logfc.threshold = 0.1, min.pct = 0.1, assay = "SCT", recorrect_umi = FALSE)
       current_de <- current_de[current_de$p_val_adj < 0.05,]
       # Run DESeq2 for pseudobulk filtering
@@ -35,11 +35,11 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       pseudobulk_metadata$aliquots <- rownames(pseudobulk_metadata)
       pseudobulk_metadata <- pseudobulk_metadata[match(colnames(pseudobulk_counts), pseudobulk_metadata$aliquots),]
       pseudobulk_metadata <- subset(pseudobulk_metadata, select = -c(aliquots))
-      pseudobulk_analysis <- DESeqDataSetFromMatrix(countData = pseudobulk_counts, colData = pseudobulk_metadata, design = formula(paste("~",metadata_attribute)))
-      pseudobulk_analysis <- DESeq(pseudobulk_analysis)
-      pseudobulk_analysis_results_contrast <- tail(resultsNames(pseudobulk_analysis), n=1)
-      pseudobulk_analysis_results <- results(pseudobulk_analysis, name=pseudobulk_analysis_results_contrast)
-      pseudobulk_analysis_results <- na.omit(pseudobulk_analysis_results)
+      pseudobulk_analysis <- DESeq2::DESeqDataSetFromMatrix(countData = pseudobulk_counts, colData = pseudobulk_metadata, design = formula(paste("~",metadata_attribute)))
+      pseudobulk_analysis <- DESeq2::DESeq(pseudobulk_analysis)
+      pseudobulk_analysis_results_contrast <- tail(DESeq2::resultsNames(pseudobulk_analysis), n=1)
+      pseudobulk_analysis_results <- DESeq2::results(pseudobulk_analysis, name=pseudobulk_analysis_results_contrast)
+      pseudobulk_analysis_results <- pseudobulk_analysis_results[rowSums(is.na(pseudobulk_analysis_results)) == 0, ] # Remove NAs
       pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$pvalue < 0.05,]
       pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$log2FoldChange < -0.3 | pseudobulk_analysis_results$log2FoldChange > 0.3,]
       # Filter genes from single cell based on DESeq2 pseudobulk results

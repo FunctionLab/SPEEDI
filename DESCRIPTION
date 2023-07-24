@@ -30,7 +30,6 @@ Imports:
     httr,
     jsonlite,
     kneedle,
-    Libra,
     limma,
     lisi,
     logr,
