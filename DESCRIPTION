@@ -20,6 +20,7 @@ Imports:
     DESeq2,
     doParallel,
     digest,
+    dplyr,
     foreach,
     edgeR,
     GenomicRanges,
@@ -47,6 +48,7 @@ Imports:
     SeuratData,
     SeuratDisk,
     SeuratObject,
+    stringr,
     SummarizedExperiment,
     uwot
 Depends: 

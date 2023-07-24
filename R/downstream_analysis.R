@@ -22,6 +22,8 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       # Run FindMarkers to find DEGs
       idxPass <- which(sc_obj$predicted_celltype_majority_vote %in% current_cell_type)
       cellsPass <- names(sc_obj$orig.ident[idxPass])
+      # Dummy declaration to avoid check() complaining
+      cell_name <- NULL
       sc_obj_cell_type_subset <- subset(x = sc_obj, subset = cell_name %in% cellsPass)
       Seurat::DefaultAssay(sc_obj_cell_type_subset) <- "SCT"
       Seurat::Idents(sc_obj_cell_type_subset) <- metadata_attribute
@@ -34,10 +36,12 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       pseudobulk_metadata <- metadata_df
       pseudobulk_metadata$aliquots <- rownames(pseudobulk_metadata)
       pseudobulk_metadata <- pseudobulk_metadata[match(colnames(pseudobulk_counts), pseudobulk_metadata$aliquots),]
+      # Dummy declaration to avoid check() complaining
+      aliquots <- NULL
       pseudobulk_metadata <- subset(pseudobulk_metadata, select = -c(aliquots))
-      pseudobulk_analysis <- DESeq2::DESeqDataSetFromMatrix(countData = pseudobulk_counts, colData = pseudobulk_metadata, design = formula(paste("~",metadata_attribute)))
+      pseudobulk_analysis <- DESeq2::DESeqDataSetFromMatrix(countData = pseudobulk_counts, colData = pseudobulk_metadata, design = stats::formula(paste("~",metadata_attribute)))
       pseudobulk_analysis <- DESeq2::DESeq(pseudobulk_analysis)
-      pseudobulk_analysis_results_contrast <- tail(DESeq2::resultsNames(pseudobulk_analysis), n=1)
+      pseudobulk_analysis_results_contrast <- utils::tail(DESeq2::resultsNames(pseudobulk_analysis), n=1)
       pseudobulk_analysis_results <- DESeq2::results(pseudobulk_analysis, name=pseudobulk_analysis_results_contrast)
       pseudobulk_analysis_results <- pseudobulk_analysis_results[rowSums(is.na(pseudobulk_analysis_results)) == 0, ] # Remove NAs
       pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$pvalue < 0.05,]
@@ -206,7 +210,6 @@ run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metad
 }
 
 #' Create pseudobulk counts
-#' idxMatch <- which(str_detect(as.character(sc_obj_cell_type_subset$sample), "355c0b7887ae4f9f"))
 #' @param sc_obj Seurat object Input list of genes
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @examples
@@ -215,7 +218,7 @@ create_pseudobulk_counts <- function(sc_obj, log_flag) {
   #print_SPEEDI("Computing pseudobulk counts", log_flag)
   cells_pseudobulk <- list()
   for (sample_name in unique(sc_obj$sample)) {
-    idxMatch <- which(str_detect(as.character(sc_obj$sample), sample_name))
+    idxMatch <- which(stringr::str_detect(as.character(sc_obj$sample), sample_name))
     if(length(idxMatch)>=1) {
       samples_subset <- subset(x = sc_obj, subset = sample %in% sample_name)
       samples_data <- samples_subset@assays$RNA@counts

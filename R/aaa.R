@@ -58,12 +58,12 @@ ignore_unused_imports <- function() {
   chromVAR::addGCBias
   ComplexHeatmap::add_heatmap
   DESeq2::counts
+  dplyr::across
   edgeR::addPriorCount
   GenomicRanges::absoluteRanges
   glmGamPoi::glm_gp
   hdf5r::as_hex
   hexbin::BTC
-  Libra::calculate_delta_variance
   limma::alias2Symbol
   Matrix::Arith
   motifmatchr::match_motifs
