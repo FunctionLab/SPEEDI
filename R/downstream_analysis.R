@@ -19,6 +19,7 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
     final_current_de <- data.frame(Cell_Type = character(), Gene_Name = character(), sc_pval_adj = character(), sc_log2FC = character(), pseudo_bulk_pval = character(),
                                    pseudo_bulk_log2FC = character())
     for(current_cell_type in unique(sc_obj$predicted_celltype_majority_vote)) {
+      # Run FindMarkers to find DEGs
       idxPass <- which(sc_obj$predicted_celltype_majority_vote %in% current_cell_type)
       cellsPass <- names(sc_obj$orig.ident[idxPass])
       sc_obj_cell_type_subset <- subset(x = sc_obj, subset = cell_name %in% cellsPass)
@@ -26,7 +27,6 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       Idents(sc_obj_cell_type_subset) <- metadata_attribute
       current_de <- FindMarkers(sc_obj_cell_type_subset, ident.1 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][1], ident.2 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][2],
                                 logfc.threshold = 0.1, min.pct = 0.1, assay = "SCT", recorrect_umi = FALSE)
-      #current_de$metadata_attribute <- metadata_attribute # TODO: Check that this works
       current_de <- current_de[current_de$p_val_adj < 0.05,]
       # Run DESeq2 for pseudobulk filtering
       Seurat::DefaultAssay(sc_obj_cell_type_subset) <- "RNA"
@@ -42,7 +42,9 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       pseudobulk_analysis_results <- na.omit(pseudobulk_analysis_results)
       pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$pvalue < 0.05,]
       pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$log2FoldChange < -0.3 | pseudobulk_analysis_results$log2FoldChange > 0.3,]
+      # Filter genes from single cell based on DESeq2 pseudobulk results
       final_genes <- intersect(rownames(current_de), rownames(pseudobulk_analysis_results))
+      # Record information about remaining genes in final_current_de
       for(current_gene in final_genes) {
         current_sc_pval_adj <- current_de[rownames(current_de) == current_gene,]$p_val_adj
         current_sc_log2FC <- current_de[rownames(current_de) == current_gene,]$avg_log2FC
@@ -54,6 +56,7 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       }
     }
     utils::write.table(final_current_de, file = paste0(output_dir, metadata_attribute, ".DE.tsv"), sep = "\t", quote = FALSE)
+    final_current_de$metadata_attribute <- metadata_attribute
     de_results[[index]] <- final_current_de
     index <- index + 1
   }
