@@ -231,6 +231,5 @@ create_pseudobulk_counts <- function(sc_obj, log_flag) {
   }
   final_cells_pseudobulk_df <- as.data.frame(final_cells_pseudobulk_df)
   rownames(final_cells_pseudobulk_df) <- names(cells_pseudobulk[[1]])
-  #colnames(final_cells_pseudobulk_df) <- paste0("Sample_", unique(sc_obj$sample))
   return(final_cells_pseudobulk_df)
 }
