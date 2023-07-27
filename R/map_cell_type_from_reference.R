@@ -155,73 +155,127 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag 
 #' \dontrun{sc_obj <- MajorityVote_RNA(sc_obj)}
 #' @export
 MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
-  print_SPEEDI("Begin majority voting", log_flag)
-  if(Seurat::DefaultAssay(sc_obj) == "integrated") {
-    associated_res_attribute <- paste0("integrated_snn_res.", current_resolution)
+  print_SPEEDI("Begin majority voting for RNA-seq...", log_flag)
+  # TODO: Make this work when we have just one batch
+  DefaultAssay(sc_obj) <- "integrated"
+  if (is.null(sc_obj@graphs$integrated_snn)) {
+    sc_obj <- FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
   } else {
-    associated_res_attribute <- paste0("SCT_snn_res.", current_resolution)
+    print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
   }
-  sc_obj <- Seurat::FindNeighbors(sc_obj, reduction = "pca", dims = 1:30)
-  sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = current_resolution)
+  sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = current_resolution, log_flag)
   sc_obj$predicted.id <- as.character(sc_obj$predicted.id)
-
-
-  integrated_snn_res_df <- sc_obj[[associated_res_attribute]]
-  integrated_snn_res_cell_names <- rownames(integrated_snn_res_df)
-  integrated_snn_res_values <- integrated_snn_res_df[,1]
-
-
   votes <- c()
-  cluster.dump <- as.numeric(levels(integrated_snn_res_values))
-  vote_levels <- as.character(levels(sc_obj$seurat_clusters))
+  vote_levels_fix <- as.character(levels(sc_obj$seurat_clusters))
+  vote_levels_mod <- as.character(levels(sc_obj$seurat_clusters))
 
-  for (i in names(table(sc_obj$predicted.id)[table(sc_obj$predicted.id) > 50])) {
-    print(i)
-    cells <- names(sc_obj$predicted.id[sc_obj$predicted.id == i])
-    freq.table <- as.data.frame(table(integrated_snn_res_df[cells,]))
-    freq.table <- freq.table[order(freq.table$Freq, decreasing = TRUE),]
-    freq.table$diff <- abs(c(diff(freq.table$Freq), 0))
-    if(nrow(freq.table) > 30) {
-      freq.table <- freq.table[1:30,]
+  Idents(sc_obj) <- "seurat_clusters"
+  for (i in vote_levels_fix) {
+    sub_sc_obj <- subset(sc_obj, idents = i)
+
+    gmeans <- c()
+    cell_types <- c()
+
+    for (j in names(prop.table(table(sub_sc_obj$predicted.id))[prop.table(table(sub_sc_obj$predicted.id)) > 0.25])) {
+      cell_types <- c(cell_types, j)
+      scores <- sub_sc_obj$predicted.id.score[which(sub_sc_obj$predicted.id == j)]
+      gmeans <- c(gmeans, exp(mean(log(scores))))
     }
-    p.values <- outliers::dixon.test(freq.table$diff)$p.value[[1]]
 
-    if (p.values < 0.01) {
-      max.index <- which.max(freq.table$diff)
-      clusters <- as.numeric(as.character(freq.table$Var1[1:max.index]))
-      vote_levels[vote_levels %in% as.character(clusters)] <- i
-      cluster.dump <- cluster.dump[!cluster.dump %in% clusters]
+    if(!is.null(cell_types)) {
+      vote_levels[vote_levels %in% as.character(i)] <- cell_types[which.max(gmeans)]
+    } else {
+      vote_levels[vote_levels %in% as.character(i)] <- "Undetermined"
     }
   }
 
-  if (length(cluster.dump) > 0) {
-    for (i in cluster.dump) {
-        cells <- rownames(subset(integrated_snn_res_df, integrated_snn_res_df[,1] == i,))
-        freq.table <- as.data.frame(table(sc_obj$predicted.id[cells]))
-        vote_levels[vote_levels %in% as.character(i)] <- as.vector(freq.table$Var1)[which.max(freq.table$Freq)]
+  rare_ct <- names(which(prop.table(table(sc_obj$predicted.id)) < 0.05))
+  for (i in vote_levels_fix) {
+    sub_sc_obj <- subset(sc_obj, idents = i)
+    for (j in rare_ct) {
+      if (j %in% sub_sc_obj$predicted.id &
+          prop.table(table(sub_sc_obj$predicted.id))[j] > 0.25) {
+        vote_levels_mod[which(vote_levels_fix == i)] <- j
+      }
     }
   }
 
   predicted_celltype_majority_vote <- sc_obj$seurat_clusters
-  levels(predicted_celltype_majority_vote) <- vote_levels
+  levels(predicted_celltype_majority_vote) <- vote_levels_mod
   predicted_celltype_majority_vote <- as.character(predicted_celltype_majority_vote)
-
-  for (i in names(table(sc_obj$predicted.id)[table(sc_obj$predicted.id) > 50])) {
-      cells <- which(sc_obj$predicted.id == i)
-      freq.table <- as.data.frame(table(integrated_snn_res_df[cells,]))
-      freq.table <- freq.table[order(freq.table$Freq, decreasing = TRUE),]
-
-      if (sum(freq.table$Freq > (sum(freq.table$Freq) * .05)) <= round(.1 * length(unique(sc_obj$seurat_clusters)))) {
-          selected.clusters <- freq.table$Var1[1:sum(freq.table$Freq > (sum(freq.table$Freq) * .05))]
-          cluster.cells <- which(as.character(sc_obj$seurat_clusters) %in% selected.clusters)
-          predicted_celltype_majority_vote[cluster.cells] <- i
-      }
-  }
-
   sc_obj$predicted_celltype_majority_vote <- predicted_celltype_majority_vote
 
-  print_SPEEDI("Done with majority voting", log_flag)
+  print_SPEEDI("...End majority voting for RNA-seq", log_flag)
   return(sc_obj)
+}
+
+#' In each cluster, we vote for majority cell type (ATAC)
+#'
+#' @param proj ArchR object containing cells for all samples
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return An ArchR object which contains majority vote labels
+#' @examples
+#' \dontrun{proj <- MajorityVote_ATAC(proj)}
+#' @export
+MajorityVote_ATAC <- function(proj) {
+  # TODO: Make this work when we have just one batch
+  print_SPEEDI("Begin majority voting for ATAC-seq data...", log_flag)
+  tile_reduc <- getReducedDims(ArchRProj = proj, reducedDims = "Harmony", returnMatrix = TRUE)
+  tmp <- matrix(rnorm(nrow(tile_reduc) * 3, 10), ncol = nrow(tile_reduc), nrow = 3)
+  colnames(tmp) <- rownames(tile_reduc)
+  rownames(tmp) <- paste0("t",seq_len(nrow(tmp)))
+  obj <- Seurat::CreateSeuratObject(tmp, project='scATAC', min.cells=0, min.features=0)
+  obj[['Harmony']] <- Seurat::CreateDimReducObject(embeddings=tile_reduc, key='Harmony_', assay='RNA')
+  obj <- FindNeighbors(obj, reduction = "Harmony", dims = 1:29)
+  obj <- find_clusters_SPEEDI(obj, resolution = 2, log_flag)
+  obj <- RunUMAP(obj, reduction = "Harmony", dims = 1:29)
+  proj <- addCellColData(
+    ArchRProj = proj,
+    cells = names(obj$seurat_clusters),
+    data = as.character(obj$seurat_clusters),
+    name = "seurat_clusters",
+    force = TRUE)
+
+  rm(obj)
+
+  Harmony_clusters <- as.factor(proj$seurat_clusters)
+  predictedGroup <- proj$predictedGroup
+  predictedScore <- proj$predictedScore
+
+  votes <- c()
+  vote_levels <- as.character(levels(Harmony_clusters))
+
+  for (i in vote_levels) {
+    cluster_cells <- which(proj$seurat_clusters == i)
+    sub_predictedGroup <- predictedGroup[cluster_cells]
+    sub_predictedScore <- predictedScore[cluster_cells]
+
+    gmeans <- c()
+    cell_types <- c()
+
+    for (j in names(prop.table(table(sub_predictedGroup))[prop.table(table(sub_predictedGroup)) > 0.25])) {
+      cell_types <- c(cell_types, j)
+      cell_type_cells <- which(sub_predictedGroup == j)
+      gmeans <- c(gmeans, exp(mean(log(sub_predictedScore[cell_type_cells]))))
+    }
+
+    if(!is.null(cell_types)) {
+      vote_levels[vote_levels %in% as.character(i)] <- cell_types[which.max(gmeans)]
+    } else {
+      vote_levels[vote_levels %in% as.character(i)] <- "Undetermined"
+    }
+
+  }
+  cell_type_voting <- Harmony_clusters
+  levels(cell_type_voting) <- vote_levels
+  cell_type_voting <- as.character(cell_type_voting)
+
+  proj <- addCellColData(ArchRProj = proj, data = cell_type_voting,
+                         cells = proj$cellNames,
+                         name = "Cell_type_voting", force = TRUE)
+
+  print_SPEEDI("...End majority voting for ATAC-seq", log_flag)
+  return(proj)
 }
 
 #' Choose assay based on whether there are multiple batches (integrated) or only one batch (SCT)
