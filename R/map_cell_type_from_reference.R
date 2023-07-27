@@ -467,33 +467,9 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
     pal <- paletteDiscrete(values = proj$predictedGroup)
     p1 <- plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "predictedGroup", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
     ArchR::plotPDF(p1, name = "UMAP_after_Initial_Cell_Type_Reference_Mapping_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
-    print_SPEEDI("Performing majority voting", log_flag)
     # We have to perform majority voting with a different cluster attribute if Harmony was not run
     # (due to only having one batch)
-    cluster_variable_name <- NULL
-    if(reducedDims_param == "Harmony") {
-      cluster_variable_name <- "Harmony_clusters"
-      cM <- as.matrix(ArchR::confusionMatrix(proj$Harmony_clusters, proj$predictedGroup))
-      Cell_type_voting <- proj$Harmony_clusters
-      pre_cluster <- rownames(cM)
-      max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
-      for (m in c(1:length(pre_cluster))){
-        idxSample <- which(proj$Harmony_clusters == pre_cluster[m])
-        Cell_type_voting[idxSample] <- max_celltype[m]
-      }
-    } else {
-      cluster_variable_name <- "Clusters"
-      cM <- as.matrix(ArchR::confusionMatrix(proj$Clusters, proj$predictedGroup))
-      Cell_type_voting <- proj$Clusters
-      pre_cluster <- rownames(cM)
-      max_celltype <- colnames(cM)[apply(cM, 1 , which.max)]
-      for (m in c(1:length(pre_cluster))){
-        idxSample <- which(proj$Clusters == pre_cluster[m])
-        Cell_type_voting[idxSample] <- max_celltype[m]
-      }
-    }
-    proj <- ArchR::addCellColData(ArchRProj = proj, data = Cell_type_voting, cells = proj$cellNames, name = "Cell_type_voting", force = TRUE)
-    print_SPEEDI("Done performing majority voting", log_flag)
+    proj <- MajorityVote_ATAC(proj, log_flag)
     pal <- paletteDiscrete(values = proj$Cell_type_voting)
     p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
     p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = cluster_variable_name, embedding = "UMAP", force = TRUE, keepAxis = TRUE)
