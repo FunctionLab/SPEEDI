@@ -157,9 +157,9 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag 
 MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
   print_SPEEDI("Begin majority voting for RNA-seq...", log_flag)
   # TODO: Make this work when we have just one batch
-  DefaultAssay(sc_obj) <- "integrated"
+  Seurat::DefaultAssay(sc_obj) <- "integrated"
   if (is.null(sc_obj@graphs$integrated_snn)) {
-    sc_obj <- FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
+    sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
   } else {
     print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
   }
@@ -169,7 +169,7 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
   vote_levels_fix <- as.character(levels(sc_obj$seurat_clusters))
   vote_levels_mod <- as.character(levels(sc_obj$seurat_clusters))
 
-  Idents(sc_obj) <- "seurat_clusters"
+  Seurat::Idents(sc_obj) <- "seurat_clusters"
   for (i in vote_levels_fix) {
     sub_sc_obj <- subset(sc_obj, idents = i)
 
@@ -217,19 +217,19 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
 #' @examples
 #' \dontrun{proj <- MajorityVote_ATAC(proj)}
 #' @export
-MajorityVote_ATAC <- function(proj) {
+MajorityVote_ATAC <- function(proj, log_flag = FALSE) {
   # TODO: Make this work when we have just one batch
   print_SPEEDI("Begin majority voting for ATAC-seq data...", log_flag)
-  tile_reduc <- getReducedDims(ArchRProj = proj, reducedDims = "Harmony", returnMatrix = TRUE)
-  tmp <- matrix(rnorm(nrow(tile_reduc) * 3, 10), ncol = nrow(tile_reduc), nrow = 3)
+  tile_reduc <- ArchR::getReducedDims(ArchRProj = proj, reducedDims = "Harmony", returnMatrix = TRUE)
+  tmp <- matrix(stats::rnorm(nrow(tile_reduc) * 3, 10), ncol = nrow(tile_reduc), nrow = 3)
   colnames(tmp) <- rownames(tile_reduc)
   rownames(tmp) <- paste0("t",seq_len(nrow(tmp)))
   obj <- Seurat::CreateSeuratObject(tmp, project='scATAC', min.cells=0, min.features=0)
   obj[['Harmony']] <- Seurat::CreateDimReducObject(embeddings=tile_reduc, key='Harmony_', assay='RNA')
-  obj <- FindNeighbors(obj, reduction = "Harmony", dims = 1:29)
+  obj <- Seurat::FindNeighbors(obj, reduction = "Harmony", dims = 1:29)
   obj <- find_clusters_SPEEDI(obj, resolution = 2, log_flag)
-  obj <- RunUMAP(obj, reduction = "Harmony", dims = 1:29)
-  proj <- addCellColData(
+  obj <- Seurat::RunUMAP(obj, reduction = "Harmony", dims = 1:29)
+  proj <- ArchR::addCellColData(
     ArchRProj = proj,
     cells = names(obj$seurat_clusters),
     data = as.character(obj$seurat_clusters),
@@ -270,7 +270,7 @@ MajorityVote_ATAC <- function(proj) {
   levels(cell_type_voting) <- vote_levels
   cell_type_voting <- as.character(cell_type_voting)
 
-  proj <- addCellColData(ArchRProj = proj, data = cell_type_voting,
+  proj <- ArchR::addCellColData(ArchRProj = proj, data = cell_type_voting,
                          cells = proj$cellNames,
                          name = "Cell_type_voting", force = TRUE)
 
