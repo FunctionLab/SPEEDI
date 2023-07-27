@@ -472,7 +472,7 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
     proj <- MajorityVote_ATAC(proj, log_flag)
     pal <- paletteDiscrete(values = proj$Cell_type_voting)
     p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
-    p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = cluster_variable_name, embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+    p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
     p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
     p4 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
     ArchR::plotPDF(p1,p2,p3,p4, name = "UMAP_after_Final_Cell_Type_Majority_Voting_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
