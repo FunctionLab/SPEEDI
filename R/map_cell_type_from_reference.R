@@ -157,8 +157,8 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag 
 MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
   print_SPEEDI("Begin majority voting for RNA-seq...", log_flag)
   # TODO: Make this work when we have just one batch
-  Seurat::DefaultAssay(sc_obj) <- "integrated"
-  if (is.null(sc_obj@graphs$integrated_snn)) {
+  sc_obj <- SetDefaultAssay(sc_obj)
+  if(is.null(sc_obj@graphs$integrated_snn) & is.null(sc_obj@graphs$SCT_nn)) {
     sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
   } else {
     print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
@@ -183,9 +183,9 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
     }
 
     if(!is.null(cell_types)) {
-      vote_levels[vote_levels %in% as.character(i)] <- cell_types[which.max(gmeans)]
+      vote_levels_mod[vote_levels_mod %in% as.character(i)] <- cell_types[which.max(gmeans)]
     } else {
-      vote_levels[vote_levels %in% as.character(i)] <- "Undetermined"
+      vote_levels_mod[vote_levels_mod %in% as.character(i)] <- "Undetermined"
     }
   }
 
@@ -307,26 +307,37 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
   print_SPEEDI("Choosing appropriate annotation level from reference", log_flag)
   if(reference == "adiposeref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+    sc_obj$predicted.id.score <- sc_obj$predicted.celltype.l2.score
   } else if(reference == "bonemarrowref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+    sc_obj$predicted.id.score <- sc_obj$predicted.celltype.l2.score
   } else if (reference == "fetusref") {
     sc_obj$predicted.id <- sc_obj$predicted.annotation.l2
+    sc_obj$predicted.id.score <- sc_obj$predicted.annotation.l2.score
   } else if (reference == "heartref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+    sc_obj$predicted.id.score <- sc_obj$predicted.celltype.l2.score
   } else if (reference == "humancortexref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+    sc_obj$predicted.id.score <- sc_obj$predicted.celltype.l2.score
   } else if (reference == "kidneyref") {
     sc_obj$predicted.id <- sc_obj$predicted.annotation.l2
+    sc_obj$predicted.id.score <- sc_obj$predicted.annotation.l2.score
   } else if (reference == "lungref") {
     sc_obj$predicted.id <- sc_obj$predicted.ann_level_3
+    sc_obj$predicted.id.score <- sc_obj$predicted.ann_level_3.score
   } else if (reference == "pancreasref") {
     sc_obj$predicted.id <- sc_obj$predicted.annotation.l1
+    sc_obj$predicted.id.score <- sc_obj$predicted.annotation.l1.score
   } else if (reference == "pbmcref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+    sc_obj$predicted.id.score <- sc_obj$predicted.celltype.l2.score
   } else if (reference == "tonsilref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l1
+    sc_obj$predicted.id.score <- sc_obj$predicted.celltype.l1.score
   } else if(reference == "mousecortexref") {
     sc_obj$predicted.id <- sc_obj$predicted.celltype.l2
+    sc_obj$predicted.id.score <- sc_obj$predicted.celltype.l2.score
   } else {
     print_SPEEDI("Invalid reference", log_flag)
   }
