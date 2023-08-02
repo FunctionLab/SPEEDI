@@ -123,7 +123,7 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
   if(length(final_gene_list) < 20) {
     print_SPEEDI("Fewer than 20 input genes were present in HumanBase, so we cannot run FMD", log_flag)
     gc()
-    return(FALSE)
+    return(NULL)
   }
 
   # Each FMD job has an associated cache key (generated via SHA1) in the URL so we can refer to the results later
@@ -148,7 +148,7 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
   if(length(fmd_submission_post_response$enrichment) == 0) {
     print_SPEEDI("No enrichment found for input genes", log_flag)
     gc()
-    return(FALSE)
+    return(NULL)
   }
   cached_url = paste0("https://hb.flatironinstitute.org/module/overview/?body_tag=", fmd_hash)
   print_SPEEDI(paste0("Done submitting FMD job! Associated URL is: ", cached_url), log_flag)
@@ -217,7 +217,7 @@ run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metad
     # Run FMD and create output file where header line (starting with #) is a URL to see full results in web browser
     # The table below contains enrichment results from HumanBase
     FMD_result <- RunFMD_RNA(gene_list = gene_list, network = network, log_flag = log_flag)
-    if(FMD_result != FALSE) {
+    if(!is.null(FMD_result)) {
       print_SPEEDI("Writing FMD results to file", log_flag)
       cell_type <- sub(" ", "_", cell_type) # Remove spaces for file name
       output_file <- paste0(RNA_output_dir, "FMD_", fc_flag, "_", cell_type, "_", network, "_", metadata_attribute, ".csv")

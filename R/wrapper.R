@@ -65,6 +65,9 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   data_path <- normalize_dir_path(data_path)
   reference_dir <- normalize_dir_path(reference_dir)
   output_dir <- normalize_dir_path(output_dir)
+  # Change reference_tissue and species to all lowercase to prevent any issues with casing
+  reference_tissue <- tolower(reference_tissue)
+  species <- tolower(species)
   # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
   # and then reset it to the original working directory once we're done running SPEEDI
   old_wd <- getwd()
