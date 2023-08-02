@@ -18,7 +18,7 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
   for(metadata_attribute in colnames(metadata_df)) {
     print_SPEEDI(paste0("Currently analyzing metadata attribute: ", metadata_attribute), log_flag)
     print_SPEEDI(paste0("First metadata attribute value: ", unique(sc_obj[[metadata_attribute]])[,1][1]), log_flag)
-    print_SPEEDI(paste0("Second metadata attribute value: ", unique(sc_obj[[metadata_attribute]])[,1][2]), log_flag)
+    print_SPEEDI(paste0("Second metadata attribute (base level) value: ", unique(sc_obj[[metadata_attribute]])[,1][2]), log_flag)
     final_current_de <- data.frame(Cell_Type = character(), Gene_Name = character(), sc_pval_adj = character(), sc_log2FC = character(), pseudo_bulk_pval = character(),
                                    pseudo_bulk_log2FC = character())
     for(current_cell_type in unique(sc_obj$predicted_celltype_majority_vote)) {

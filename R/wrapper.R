@@ -159,13 +159,13 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
             # Run FMD for each network
             for(network in hb_networks) {
               # Run FMD for high genes
-              FMD_result_high <- run_fmd_wrapper(high_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "high", log_flag)
+              FMD_result_high <- run_fmd_wrapper(high_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "high", log_flag = TRUE)
               if(!is.null(FMD_result_high)) {
                  FMD_results[[index]] <- FMD_result_high
                  index <- index + 1
               }
               # Run FMD for low genes
-              FMD_result_low <- run_fmd_wrapper(low_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "low", log_flag)
+              FMD_result_low <- run_fmd_wrapper(low_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "low", log_flag = TRUE)
               if(!is.null(FMD_result_low)) {
                 FMD_results[[index]] <- FMD_result_low
                 index <- index + 1
