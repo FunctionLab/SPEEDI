@@ -14,11 +14,15 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
   # Normalize paths (in case user provides relative paths)
   output_dir <- normalize_dir_path(output_dir)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Running differential expression analysis (RNA)", log_flag)
+  print_SPEEDI("Running cell-type level differential expression analysis (RNA)", log_flag)
   for(metadata_attribute in colnames(metadata_df)) {
+    print_SPEEDI(paste0("Currently analyzing metadata attribute: ", metadata_attribute), log_flag)
+    print_SPEEDI(paste0("First metadata attribute value: ", unique(sc_obj[[metadata_attribute]])[,1][1]), log_flag)
+    print_SPEEDI(paste0("Second metadata attribute value: ", unique(sc_obj[[metadata_attribute]])[,1][2]), log_flag)
     final_current_de <- data.frame(Cell_Type = character(), Gene_Name = character(), sc_pval_adj = character(), sc_log2FC = character(), pseudo_bulk_pval = character(),
                                    pseudo_bulk_log2FC = character())
     for(current_cell_type in unique(sc_obj$predicted_celltype_majority_vote)) {
+      print_SPEEDI(paste0("Currently analyzing cell type: ", current_cell_type), log_flag)
       # Run FindMarkers to find DEGs
       idxPass <- which(sc_obj$predicted_celltype_majority_vote %in% current_cell_type)
       cellsPass <- names(sc_obj$orig.ident[idxPass])
@@ -54,11 +58,13 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
         current_sc_log2FC <- current_de[rownames(current_de) == current_gene,]$avg_log2FC
         current_pseudo_bulk_pval <- pseudobulk_analysis_results[rownames(pseudobulk_analysis_results) == current_gene,]$pvalue
         current_pseudo_bulk_log2FC <- pseudobulk_analysis_results[rownames(pseudobulk_analysis_results) == current_gene,]$log2FoldChange
+        current_pseudo_bulk_log2FC <- current_pseudo_bulk_log2FC * -1 # Pseudobulk test has condition 1 / condition 2 flipped relative to single cell test, so we just multiply by -1 so FC is in consistent direction
         current_row <- data.frame(current_cell_type, current_gene, current_sc_pval_adj, current_sc_log2FC, current_pseudo_bulk_pval, current_pseudo_bulk_log2FC)
         names(current_row) <- c("Cell_Type", "Gene_Name", "sc_pval_adj", "sc_log2FC", "pseudo_bulk_pval", "pseudo_bulk_log2FC")
         final_current_de <- rbind(final_current_de, current_row)
       }
     }
+    print_SPEEDI(paste0("Writing results for metadata attribute ", metadata_attribute, "to file"), log_flag)
     utils::write.table(final_current_de, file = paste0(output_dir, metadata_attribute, ".DE.tsv"), sep = "\t", quote = FALSE)
     final_current_de$metadata_attribute <- metadata_attribute
     de_results[[index]] <- final_current_de
@@ -154,7 +160,9 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
 #' @examples
 #' \dontrun{hb_networks <- grab_hb_networks(current_cell_type = "B naive",
 #' reference_tissue = "pbmc")}
+#' @export
 grab_hb_networks <- function(current_cell_type, reference_tissue, log_flag = FALSE) {
+  print_SPEEDI(paste0("Grabbing HumanBase networks associated with cell type ", current_cell_type, " and reference tissue ", reference_tissue), log_flag)
   hb_networks <- c("global")
   # TODO: Add cell-type granularity to PBMC networks
   # TODO: Look into cortex (cerebral cortex tissue OK?)
@@ -187,24 +195,30 @@ grab_hb_networks <- function(current_cell_type, reference_tissue, log_flag = FAL
 #' @param RNA_output_dir Output directory (RNA)
 #' @param cell_type Cell type
 #' @param metadata_attribute Metadata attribute
+#' @param fc_flag Flag to indicate direction of fold change ("high" or "low")
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A list containing FMD results
 #' @examples
 #' \dontrun{hb_networks <- grab_hb_networks(current_cell_type = "B naive",
 #' reference_tissue = "pbmc")}
-run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metadata_attribute, log_flag) {
+#' @export
+run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metadata_attribute, fc_flag, log_flag = FALSE) {
+  print_SPEEDI(paste0("Running FMD for ", fc_flag, " genes in cell type ", cell_type, " for metadata attribute ", metadata_attribute), log_flag)
   FMD_result <- NULL
   if(length(gene_list) >= 20) {
     # Run FMD and create output file where header line (starting with #) is a URL to see full results in web browser
     # The table below contains enrichment results from HumanBase
-    FMD_result <- RunFMD_RNA(gene_list = gene_list, network = network, log_flag = TRUE)
+    FMD_result <- RunFMD_RNA(gene_list = gene_list, network = network, log_flag = log_flag)
     if(!is.null(FMD_result)) {
-      output_file <- paste0(RNA_output_dir, "FMD_", cell_type, "_", network, "_", metadata_attribute, ".csv")
-      cat(paste0("#", FMD_result[[1]], "\n", file=output_file))
-      current_enrichment_table <- FMD_result[[2]]
+      print_SPEEDI("Writing FMD results to file", log_flag)
+      output_file <- paste0(RNA_output_dir, "FMD_", fc_flag, "_", cell_type, "_", network, "_", metadata_attribute, ".csv")
+      cat(paste0("# ", FMD_result[[1]], "\n"), file=output_file)
+      current_enrichment_table <- FMD_result[[2]]$enrichment
       current_enrichment_table <- current_enrichment_table[,!names(current_enrichment_table) %in% c("genes", "edges")]
-      utils::write.table(current_enrichment_table, file = output_file, append=TRUE)
+      utils::write.table(current_enrichment_table, file = output_file, append=TRUE, sep = ",", quote = FALSE)
     }
+  } else {
+    print_SPEEDI("Not enough genes in gene list for FMD", log_flag)
   }
   return(FMD_result)
 }
@@ -214,8 +228,9 @@ run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metad
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @examples
 #' \dontrun{pseudobulk_counts <- create_pseudobulk_counts(sc_obj)}
+#' @export
 create_pseudobulk_counts <- function(sc_obj, log_flag) {
-  #print_SPEEDI("Computing pseudobulk counts", log_flag)
+  print_SPEEDI("Computing pseudobulk counts", log_flag)
   cells_pseudobulk <- list()
   for (sample_name in unique(sc_obj$sample)) {
     idxMatch <- which(stringr::str_detect(as.character(sc_obj$sample), sample_name))

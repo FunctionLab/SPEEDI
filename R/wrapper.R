@@ -149,7 +149,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
         for(current_de_result in differential_expression_results) {
           for(current_cell_type in unique(current_de_result$Cell_Type)) {
             # Subset to DE results for our current cell type
-            cell_specific_de_result <- current_de_result[current_de_result$Cell_type == current_cell_type,]
+            cell_specific_de_result <- current_de_result[current_de_result$Cell_Type == current_cell_type,]
             # Grab HB networks associated with cell type and reference tissue
             hb_networks <- grab_hb_networks(current_cell_type, reference_tissue)
             # We grab high FC genes (positive FC) - if there are at least 20 genes, we can do FMD
@@ -159,13 +159,13 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
             # Run FMD for each network
             for(network in hb_networks) {
               # Run FMD for high genes
-              FMD_result_high <- run_fmd_wrapper(high_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute))
+              FMD_result_high <- run_fmd_wrapper(high_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "high", log_flag)
               if(!is.null(FMD_result_high)) {
                  FMD_results[[index]] <- FMD_result_high
                  index <- index + 1
               }
               # Run FMD for low genes
-              FMD_result_low <- run_fmd_wrapper(low_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute))
+              FMD_result_low <- run_fmd_wrapper(low_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "low", log_flag)
               if(!is.null(FMD_result_low)) {
                 FMD_results[[index]] <- FMD_result_low
                 index <- index + 1
