@@ -65,7 +65,8 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       }
     }
     print_SPEEDI(paste0("Writing results for metadata attribute ", metadata_attribute, "to file"), log_flag)
-    utils::write.table(final_current_de, file = paste0(output_dir, metadata_attribute, ".DE.tsv"), sep = "\t", quote = FALSE)
+    metadata_attribute_no_spaces <- sub(" ", "_", metadata_attribute) # Remove spaces for file name
+    utils::write.table(final_current_de, file = paste0(output_dir, metadata_attribute_no_spaces, ".DE.tsv"), sep = "\t", quote = FALSE)
     final_current_de$metadata_attribute <- metadata_attribute
     de_results[[index]] <- final_current_de
     index <- index + 1
@@ -144,6 +145,11 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
   # Submit FMD POST request (payload is our sorted list of entrez IDs)
   fmd_submission_post_request <- httr::POST(current_fmd_url, body = fmd_payload, encode = "json", httr::verbose())
   fmd_submission_post_response <- jsonlite::fromJSON(httr::content(fmd_submission_post_request, as = "text"))
+  if(length(fmd_submission_post_response$enrichment) == 0) {
+    print_SPEEDI("No enrichment found for input genes", log_flag)
+    gc()
+    return(FALSE)
+  }
   cached_url = paste0("https://hb.flatironinstitute.org/module/overview/?body_tag=", fmd_hash)
   print_SPEEDI(paste0("Done submitting FMD job! Associated URL is: ", cached_url), log_flag)
   print_SPEEDI("Functional module discovery analysis complete", log_flag)
@@ -164,6 +170,8 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
 grab_hb_networks <- function(current_cell_type, reference_tissue, log_flag = FALSE) {
   print_SPEEDI(paste0("Grabbing HumanBase networks associated with cell type ", current_cell_type, " and reference tissue ", reference_tissue), log_flag)
   hb_networks <- c("global")
+  # Change reference_tissue to all lowercase to prevent any issues with casing
+  reference_tissue <- tolower(reference_tissue)
   # TODO: Add cell-type granularity to PBMC networks
   # TODO: Look into cortex (cerebral cortex tissue OK?)
   if(reference_tissue == "pbmc" | reference_tissue == "pbmc_full") {
@@ -209,8 +217,9 @@ run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metad
     # Run FMD and create output file where header line (starting with #) is a URL to see full results in web browser
     # The table below contains enrichment results from HumanBase
     FMD_result <- RunFMD_RNA(gene_list = gene_list, network = network, log_flag = log_flag)
-    if(!is.null(FMD_result)) {
+    if(FMD_result != FALSE) {
       print_SPEEDI("Writing FMD results to file", log_flag)
+      cell_type <- sub(" ", "_", cell_type) # Remove spaces for file name
       output_file <- paste0(RNA_output_dir, "FMD_", fc_flag, "_", cell_type, "_", network, "_", metadata_attribute, ".csv")
       cat(paste0("# ", FMD_result[[1]], "\n"), file=output_file)
       current_enrichment_table <- FMD_result[[2]]$enrichment
