@@ -10,7 +10,8 @@ run_fmd_wrapper(
   RNA_output_dir,
   cell_type,
   metadata_attribute,
-  log_flag
+  fc_flag,
+  log_flag = FALSE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ run_fmd_wrapper(
 \item{cell_type}{Cell type}
 
 \item{metadata_attribute}{Metadata attribute}
+
+\item{fc_flag}{Flag to indicate direction of fold change ("high" or "low")}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
