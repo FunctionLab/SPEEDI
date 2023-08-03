@@ -51,6 +51,7 @@
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param analysis_name Name used to create subdirectory in `output_dir` for current analysis run. Directory will be created if it doesn't already exist.
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
+#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If this argument is used, `sample_id_list` is required and should be written in the same order as the sample file paths.
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
 #' @return A Seurat object that has been processed through the SPEEDI pipeline
 #' @examples
@@ -60,8 +61,8 @@
 #' species = "human", record_doublets = TRUE)}
 #' @export
 #' @import ArchR
-run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, record_doublets = FALSE) {
-  SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, data_path, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, record_doublets)
+run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE) {
+  SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, data_path, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, sample_file_paths, record_doublets)
   log_flag <- TRUE
   print_SPEEDI("Beginning SPEEDI Run!", log_flag = log_flag)
   # Load reference
@@ -69,7 +70,8 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
                                    reference_file_name = SPEEDI_variables$reference_file_name, log_flag = log_flag)
   if(data_type != "ATAC") {
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
-    all_sc_exp_matrices <- Read_RNA(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list, log_flag = log_flag)
+    all_sc_exp_matrices <- Read_RNA(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list,
+                                    sample_file_paths = SPEEDI_variables$sample_file_paths, log_flag = log_flag)
     sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = SPEEDI_variables$species,
                                 record_doublets = SPEEDI_variables$record_doublets, output_dir = SPEEDI_variables$RNA_output_dir,
                                 log_file_path = SPEEDI_variables$log_file_name, log_flag = log_flag)
@@ -81,7 +83,9 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   }
   if(data_type != "RNA") {
     # Read in ATAC data, filter data, perform initial processing, infer batches, and integrate by batch
-    atac_proj <- Read_ATAC(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list, species = SPEEDI_variables$species, log_flag = log_flag)
+    atac_proj <- Read_ATAC(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list,
+                           sample_file_paths = SPEEDI_variables$sample_file_paths, species = SPEEDI_variables$species,
+                           log_flag = log_flag)
     atac_proj <- FilterRawData_ATAC(proj = atac_proj, log_flag = log_flag)
     atac_proj <- InitialProcessing_ATAC(proj = atac_proj, log_flag = log_flag)
     atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, log_flag = log_flag)

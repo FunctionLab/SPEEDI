@@ -35,10 +35,11 @@
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param analysis_name Name used to create subdirectory in `output_dir` for current analysis run. Directory will be created if it doesn't already exist.
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
+#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If this argument is used, `sample_id_list` is required and should be written in the same order as the sample file paths.
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
 #' @return List containing initialized SPEEDI variables
 #' @export
-initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, record_doublets = FALSE) {
+initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE) {
   # Normalize paths (in case user provides relative paths)
   data_path <- normalize_dir_path(data_path)
   reference_dir <- normalize_dir_path(reference_dir)
@@ -93,9 +94,9 @@ initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "hu
   SPEEDI_variables <- list(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path,
                            reference_dir = reference_dir, output_dir = output_dir, metadata_df = metadata_df,
                            reference_file_name = reference_file_name, reference_cell_type_attribute = reference_cell_type_attribute,
-                           analysis_name = analysis_name, sample_id_list = sample_id_list, record_doublets = record_doublets,
-                           RNA_output_dir = RNA_output_dir, ATAC_output_dir = ATAC_output_dir, log_file_name = log_file_name,
-                           old_wd = old_wd)
+                           analysis_name = analysis_name, sample_id_list = sample_id_list, sample_file_paths = sample_file_paths,
+                           record_doublets = record_doublets, RNA_output_dir = RNA_output_dir, ATAC_output_dir = ATAC_output_dir,
+                           log_file_name = log_file_name, old_wd = old_wd)
   print_SPEEDI("Updated SPEEDI variables are: ", log_flag)
   for(index in 1:length(SPEEDI_variables)) {
     print_SPEEDI(paste0(names(SPEEDI_variables)[index], ": ", SPEEDI_variables[index]), log_flag)
