@@ -69,63 +69,73 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
   output_dir <- normalize_dir_path(output_dir)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Running cell-type level differential expression analysis (RNA)", log_flag)
-  for(metadata_attribute in colnames(metadata_df)) {
-    print_SPEEDI(paste0("Currently analyzing metadata attribute: ", metadata_attribute), log_flag)
-    print_SPEEDI(paste0("First metadata attribute value: ", unique(sc_obj[[metadata_attribute]])[,1][1]), log_flag)
-    print_SPEEDI(paste0("Second metadata attribute (base level) value: ", unique(sc_obj[[metadata_attribute]])[,1][2]), log_flag)
-    final_current_de <- data.frame(Cell_Type = character(), Gene_Name = character(), sc_pval_adj = character(), sc_log2FC = character(), pseudo_bulk_pval = character(),
-                                   pseudo_bulk_log2FC = character())
-    for(current_cell_type in unique(sc_obj$predicted_celltype_majority_vote)) {
-      print_SPEEDI(paste0("Currently analyzing cell type: ", current_cell_type), log_flag)
-      # Run FindMarkers to find DEGs
-      idxPass <- which(sc_obj$predicted_celltype_majority_vote %in% current_cell_type)
-      cellsPass <- names(sc_obj$orig.ident[idxPass])
-      # Dummy declaration to avoid check() complaining
-      cell_name <- NULL
-      sc_obj_cell_type_subset <- subset(x = sc_obj, subset = cell_name %in% cellsPass)
-      Seurat::DefaultAssay(sc_obj_cell_type_subset) <- "SCT"
-      Seurat::Idents(sc_obj_cell_type_subset) <- metadata_attribute
-      current_de <- Seurat::FindMarkers(sc_obj_cell_type_subset, ident.1 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][1], ident.2 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][2],
-                                logfc.threshold = 0.1, min.pct = 0.1, assay = "SCT", recorrect_umi = FALSE)
-      current_de <- current_de[current_de$p_val_adj < 0.05,]
-      # Run DESeq2 for pseudobulk filtering
-      Seurat::DefaultAssay(sc_obj_cell_type_subset) <- "RNA"
-      pseudobulk_counts <- create_pseudobulk_counts(sc_obj_cell_type_subset, log_flag)
-      pseudobulk_metadata <- metadata_df
-      pseudobulk_metadata$aliquots <- rownames(pseudobulk_metadata)
-      pseudobulk_metadata <- pseudobulk_metadata[match(colnames(pseudobulk_counts), pseudobulk_metadata$aliquots),]
-      # Dummy declaration to avoid check() complaining
-      aliquots <- NULL
-      pseudobulk_metadata <- subset(pseudobulk_metadata, select = -c(aliquots))
-      pseudobulk_analysis <- DESeq2::DESeqDataSetFromMatrix(countData = pseudobulk_counts, colData = pseudobulk_metadata, design = stats::formula(paste("~",metadata_attribute)))
-      pseudobulk_analysis <- DESeq2::DESeq(pseudobulk_analysis)
-      pseudobulk_analysis_results_contrast <- utils::tail(DESeq2::resultsNames(pseudobulk_analysis), n=1)
-      pseudobulk_analysis_results <- DESeq2::results(pseudobulk_analysis, name=pseudobulk_analysis_results_contrast)
-      pseudobulk_analysis_results <- pseudobulk_analysis_results[rowSums(is.na(pseudobulk_analysis_results)) == 0, ] # Remove NAs
-      pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$pvalue < 0.05,]
-      pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$log2FoldChange < -0.3 | pseudobulk_analysis_results$log2FoldChange > 0.3,]
-      # Filter genes from single cell based on DESeq2 pseudobulk results
-      final_genes <- intersect(rownames(current_de), rownames(pseudobulk_analysis_results))
-      # Record information about remaining genes in final_current_de
-      for(current_gene in final_genes) {
-        current_sc_pval_adj <- current_de[rownames(current_de) == current_gene,]$p_val_adj
-        current_sc_log2FC <- current_de[rownames(current_de) == current_gene,]$avg_log2FC
-        current_pseudo_bulk_pval <- pseudobulk_analysis_results[rownames(pseudobulk_analysis_results) == current_gene,]$pvalue
-        current_pseudo_bulk_log2FC <- pseudobulk_analysis_results[rownames(pseudobulk_analysis_results) == current_gene,]$log2FoldChange
-        current_pseudo_bulk_log2FC <- current_pseudo_bulk_log2FC * -1 # Pseudobulk test has condition 1 / condition 2 flipped relative to single cell test, so we just multiply by -1 so FC is in consistent direction
-        current_row <- data.frame(current_cell_type, current_gene, current_sc_pval_adj, current_sc_log2FC, current_pseudo_bulk_pval, current_pseudo_bulk_log2FC)
-        names(current_row) <- c("Cell_Type", "Gene_Name", "sc_pval_adj", "sc_log2FC", "pseudo_bulk_pval", "pseudo_bulk_log2FC")
-        final_current_de <- rbind(final_current_de, current_row)
+  if(nrow(metadata_df) <= 2) {
+    print_SPEEDI("Warning: Insufficient number of samples found for differential expression analysis", log_flag)
+    print_SPEEDI("Skipping all differential expression analysis", log_flag)
+  } else {
+    for(metadata_attribute in colnames(metadata_df)) {
+      print_SPEEDI(paste0("Currently analyzing metadata attribute: ", metadata_attribute), log_flag)
+      if(length(unique(sc_obj[[metadata_attribute]])[,1]) != 2) {
+        print_SPEEDI("Warning: Incorrect number of labels found for metadata attribute. Exactly two labels are required.", log_flag)
+        print_SPEEDI("Skippingdifferential expression analysis for metadata attribute", log_flag)
+      } else {
+        print_SPEEDI(paste0("First metadata attribute value: ", unique(sc_obj[[metadata_attribute]])[,1][1]), log_flag)
+        print_SPEEDI(paste0("Second metadata attribute (base level) value: ", unique(sc_obj[[metadata_attribute]])[,1][2]), log_flag)
+        final_current_de <- data.frame(Cell_Type = character(), Gene_Name = character(), sc_pval_adj = character(), sc_log2FC = character(), pseudo_bulk_pval = character(),
+                                       pseudo_bulk_log2FC = character())
+        for(current_cell_type in unique(sc_obj$predicted_celltype_majority_vote)) {
+          print_SPEEDI(paste0("Currently analyzing cell type: ", current_cell_type), log_flag)
+          # Run FindMarkers to find DEGs
+          idxPass <- which(sc_obj$predicted_celltype_majority_vote %in% current_cell_type)
+          cellsPass <- names(sc_obj$orig.ident[idxPass])
+          # Dummy declaration to avoid check() complaining
+          cell_name <- NULL
+          sc_obj_cell_type_subset <- subset(x = sc_obj, subset = cell_name %in% cellsPass)
+          Seurat::DefaultAssay(sc_obj_cell_type_subset) <- "SCT"
+          Seurat::Idents(sc_obj_cell_type_subset) <- metadata_attribute
+          current_de <- Seurat::FindMarkers(sc_obj_cell_type_subset, ident.1 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][1], ident.2 = unique(sc_obj_cell_type_subset[[metadata_attribute]])[,1][2],
+                                            logfc.threshold = 0.1, min.pct = 0.1, assay = "SCT", recorrect_umi = FALSE)
+          current_de <- current_de[current_de$p_val_adj < 0.05,]
+          # Run DESeq2 for pseudobulk filtering
+          Seurat::DefaultAssay(sc_obj_cell_type_subset) <- "RNA"
+          pseudobulk_counts <- create_pseudobulk_counts(sc_obj_cell_type_subset, log_flag)
+          pseudobulk_metadata <- metadata_df
+          pseudobulk_metadata$aliquots <- rownames(pseudobulk_metadata)
+          pseudobulk_metadata <- pseudobulk_metadata[match(colnames(pseudobulk_counts), pseudobulk_metadata$aliquots),]
+          # Dummy declaration to avoid check() complaining
+          aliquots <- NULL
+          pseudobulk_metadata <- subset(pseudobulk_metadata, select = -c(aliquots))
+          pseudobulk_analysis <- DESeq2::DESeqDataSetFromMatrix(countData = pseudobulk_counts, colData = pseudobulk_metadata, design = stats::formula(paste("~",metadata_attribute)))
+          pseudobulk_analysis <- DESeq2::DESeq(pseudobulk_analysis)
+          pseudobulk_analysis_results_contrast <- utils::tail(DESeq2::resultsNames(pseudobulk_analysis), n=1)
+          pseudobulk_analysis_results <- DESeq2::results(pseudobulk_analysis, name=pseudobulk_analysis_results_contrast)
+          pseudobulk_analysis_results <- pseudobulk_analysis_results[rowSums(is.na(pseudobulk_analysis_results)) == 0, ] # Remove NAs
+          pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$pvalue < 0.05,]
+          pseudobulk_analysis_results <- pseudobulk_analysis_results[pseudobulk_analysis_results$log2FoldChange < -0.3 | pseudobulk_analysis_results$log2FoldChange > 0.3,]
+          # Filter genes from single cell based on DESeq2 pseudobulk results
+          final_genes <- intersect(rownames(current_de), rownames(pseudobulk_analysis_results))
+          # Record information about remaining genes in final_current_de
+          for(current_gene in final_genes) {
+            current_sc_pval_adj <- current_de[rownames(current_de) == current_gene,]$p_val_adj
+            current_sc_log2FC <- current_de[rownames(current_de) == current_gene,]$avg_log2FC
+            current_pseudo_bulk_pval <- pseudobulk_analysis_results[rownames(pseudobulk_analysis_results) == current_gene,]$pvalue
+            current_pseudo_bulk_log2FC <- pseudobulk_analysis_results[rownames(pseudobulk_analysis_results) == current_gene,]$log2FoldChange
+            current_pseudo_bulk_log2FC <- current_pseudo_bulk_log2FC * -1 # Pseudobulk test has condition 1 / condition 2 flipped relative to single cell test, so we just multiply by -1 so FC is in consistent direction
+            current_row <- data.frame(current_cell_type, current_gene, current_sc_pval_adj, current_sc_log2FC, current_pseudo_bulk_pval, current_pseudo_bulk_log2FC)
+            names(current_row) <- c("Cell_Type", "Gene_Name", "sc_pval_adj", "sc_log2FC", "pseudo_bulk_pval", "pseudo_bulk_log2FC")
+            final_current_de <- rbind(final_current_de, current_row)
+          }
+        }
+        print_SPEEDI(paste0("Writing results for metadata attribute ", metadata_attribute, "to file"), log_flag)
+        metadata_attribute_no_spaces <- sub(" ", "_", metadata_attribute) # Remove spaces for file name
+        utils::write.table(final_current_de, file = paste0(output_dir, metadata_attribute_no_spaces, ".DE.tsv"), sep = "\t", quote = FALSE)
+        final_current_de$metadata_attribute <- metadata_attribute
+        de_results[[index]] <- final_current_de
+        index <- index + 1
       }
     }
-    print_SPEEDI(paste0("Writing results for metadata attribute ", metadata_attribute, "to file"), log_flag)
-    metadata_attribute_no_spaces <- sub(" ", "_", metadata_attribute) # Remove spaces for file name
-    utils::write.table(final_current_de, file = paste0(output_dir, metadata_attribute_no_spaces, ".DE.tsv"), sep = "\t", quote = FALSE)
-    final_current_de$metadata_attribute <- metadata_attribute
-    de_results[[index]] <- final_current_de
-    index <- index + 1
   }
-  Seurat::DefaultAssay(sc_obj) <- "SCT"
+  Seurat::DefaultAssay(sc_obj) <- "integrated"
   print_SPEEDI("Differential expression analysis complete", log_flag)
   gc()
   return(de_results)
