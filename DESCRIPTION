@@ -63,3 +63,8 @@ Remotes:
     github::immunogenomics/lisi,
     github::satijalab/seurat-data,
     github::mojaveazure/seurat-disk
+Suggests: 
+    knitr,
+    rmarkdown,
+    BiocStyle
+VignetteBuilder: knitr

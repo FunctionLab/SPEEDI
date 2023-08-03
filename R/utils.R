@@ -28,6 +28,7 @@ parse_namespace_and_function <- function(x) {
 #'
 #' @param path Directory path
 #' @return Normalized directory path
+#' @export
 normalize_dir_path <- function(path) {
   path <- normalizePath(path, "/")
   # Add "/" to end of path if not already present
@@ -38,11 +39,45 @@ normalize_dir_path <- function(path) {
   return(path)
 }
 
+#' Creates log file for SPEEDI
+#' @param output_dir Output directory
+#' @param log_file_name Log file name
+#' @return Open log file
+#' @export
+create_SPEEDI_log_file <- function(output_dir = getwd(), log_file_name = NULL) {
+  # Create log file name based on timestamp
+  if(is.null(log_file_name)) {
+    log_file_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
+    log_file_name <- gsub(":", "-", log_file_name)
+    log_file_name <- paste0(output_dir, log_file_name)
+  }
+  log_file <- logr::log_open(log_file_name, logdir = FALSE)
+  return(list(log_file, log_file_name))
+}
+
+#' Preliminary check for SPEEDI errors
+#' @param data_type Data type
+#' @param reference_tissue Reference tissue
+#' @param log_flag boolean to indicate whether we're also printing to log file
+#' @return exit code indicating error
+#' @export
+preliminary_check_for_SPEEDI_errors <- function(data_type, reference_tissue, log_flag = FALSE) {
+  exit_code <- 0
+  # First check
+  if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full"
+                                                             & tolower(reference_tissue) != "custom") & tolower(reference_tissue) != "none") {
+    print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", log_flag)
+    exit_code <- 1
+  }
+  return(exit_code)
+}
+
 #' Print to console as well as log file (if it's present)
 #' @param current_message Message to print
 #' @param log_flag boolean to indicate whether we're also printing to log file
 #' @param silence_time don't print time in line
 #' @return TRUE
+#' @export
 print_SPEEDI <- function(current_message, log_flag = FALSE, silence_time = FALSE) {
   if(!silence_time) {
     current_message <- paste0(Sys.time(), ": ", current_message)
@@ -103,6 +138,7 @@ print_heatmap_cell_type_proportions_RNA <- function(sc_obj, file_name, output_di
 #' @param resolution Resolution for clustering
 #' @param log_flag boolean to indicate whether we're also printing to log file
 #' @return Seurat object with clustering complete
+#' @export
 find_clusters_SPEEDI <- function(sc_obj, resolution, log_flag = FALSE) {
   sc_obj <- tryCatch(
     {

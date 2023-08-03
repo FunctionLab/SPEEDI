@@ -61,159 +61,76 @@
 #' @export
 #' @import ArchR
 run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, record_doublets = FALSE) {
-  # Normalize paths (in case user provides relative paths)
-  data_path <- normalize_dir_path(data_path)
-  reference_dir <- normalize_dir_path(reference_dir)
-  output_dir <- normalize_dir_path(output_dir)
-  # Change reference_tissue and species to all lowercase to prevent any issues with casing
-  reference_tissue <- tolower(reference_tissue)
-  species <- tolower(species)
-  # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
-  # and then reset it to the original working directory once we're done running SPEEDI
-  old_wd <- getwd()
-  # Create output_dir if it doesn't already exist
-  if (!dir.exists(output_dir)) {dir.create(output_dir)}
-  # Add "/" to end of output_dir if not already present
-  last_char_of_output_dir_path <- substr(output_dir, nchar(output_dir), nchar(output_dir))
-  if(last_char_of_output_dir_path != "/") {
-    output_dir <- paste0(output_dir, "/")
-  }
-  # Set analysis name
-  if(is.null(analysis_name)) {
-    analysis_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
-    analysis_name <- gsub(":", "-", analysis_name)
-  }
-  # Update our output dir to be the specific analysis directory
-  output_dir <- paste0(output_dir, analysis_name, "/")
-  if (!dir.exists(output_dir)) {dir.create(output_dir)}
-  setwd(output_dir)
-  # Create log file
-  log_file_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
-  log_file_name <- gsub(":", "-", log_file_name)
-  log_file_name <- paste0(output_dir, log_file_name)
-  log_file <- logr::log_open(log_file_name, logdir = FALSE)
-  print_SPEEDI("Beginning SPEEDI Run!", log_flag = TRUE)
-  # Error checking
-  if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full"
-                                                             & tolower(reference_tissue) != "custom") & tolower(reference_tissue) != "none") {
-    print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", TRUE)
-    stop()
-  }
+  SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, data_path, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, record_doublets)
+  log_flag <- TRUE
+  print_SPEEDI("Beginning SPEEDI Run!", log_flag = log_flag)
   # Load reference
-  reference <- LoadReferenceSPEEDI(reference_tissue = reference_tissue, species = species, reference_dir = reference_dir,
-                                   reference_file_name = reference_file_name, log_flag = TRUE)
-  # If metadata_df is not null, set sample_id_list according to rownames of metadata_df
-  if(!is.null(metadata_df)) {
-    sample_id_list <- rownames(metadata_df)
-  }
-  # Output dirs for RNA and ATAC
-  RNA_output_dir <- paste0(output_dir, "RNA", "/")
-  ATAC_output_dir <- paste0(output_dir, "ATAC", "/")
-
+  reference <- LoadReferenceSPEEDI(reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, reference_dir = SPEEDI_variables$reference_dir,
+                                   reference_file_name = SPEEDI_variables$reference_file_name, log_flag = log_flag)
   if(data_type != "ATAC") {
-    if (!dir.exists(RNA_output_dir)) {dir.create(RNA_output_dir)}
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
-    all_sc_exp_matrices <- Read_RNA(data_path = data_path, sample_id_list = sample_id_list, log_flag = TRUE)
-    sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = species,
-                                record_doublets = record_doublets, output_dir = RNA_output_dir,
-                                log_file_path = log_file_name, log_flag = TRUE)
+    all_sc_exp_matrices <- Read_RNA(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list, log_flag = log_flag)
+    sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = SPEEDI_variables$species,
+                                record_doublets = SPEEDI_variables$record_doublets, output_dir = SPEEDI_variables$RNA_output_dir,
+                                log_file_path = SPEEDI_variables$log_file_name, log_flag = log_flag)
     rm(all_sc_exp_matrices)
-    sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = species, metadata_df = metadata_df, log_flag = TRUE)
-    sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
-    sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = TRUE)
-    sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = TRUE)
+    sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = SPEEDI_variables$species, metadata_df = SPEEDI_variables$metadata_df, log_flag = log_flag)
+    sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = log_flag)
+    sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = log_flag)
+    sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = log_flag)
   }
-
   if(data_type != "RNA") {
-    if (!dir.exists(ATAC_output_dir)) {dir.create(ATAC_output_dir)}
-    setwd(ATAC_output_dir)
     # Read in ATAC data, filter data, perform initial processing, infer batches, and integrate by batch
-    atac_proj <- Read_ATAC(data_path = data_path, sample_id_list = sample_id_list, species = species, log_flag = TRUE)
-    atac_proj <- FilterRawData_ATAC(proj = atac_proj, log_flag = TRUE)
-    atac_proj <- InitialProcessing_ATAC(proj = atac_proj, log_flag = TRUE)
-    atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, log_flag = TRUE)
+    atac_proj <- Read_ATAC(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list, species = SPEEDI_variables$species, log_flag = log_flag)
+    atac_proj <- FilterRawData_ATAC(proj = atac_proj, log_flag = log_flag)
+    atac_proj <- InitialProcessing_ATAC(proj = atac_proj, log_flag = log_flag)
+    atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, log_flag = log_flag)
   }
-
   # Map cell types from reference onto query data
   if(data_type != "ATAC") {
     sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference,
-                               reference_cell_type_attribute = reference_cell_type_attribute,
-                               output_dir = RNA_output_dir, log_flag = TRUE)
+                               reference_cell_type_attribute = SPEEDI_variables$reference_cell_type_attribute,
+                               output_dir = SPEEDI_variables$RNA_output_dir, log_flag = log_flag)
     # If the user provided metadata, we can perform downstream analyses (differential expression, functional module discovery)
     if(!is.null(metadata_df)) {
-      # We run differential expression on each metadata attribute provided by the user
-      differential_expression_results <- RunDE_RNA(sc_obj, metadata_df, output_dir = RNA_output_dir, log_flag = TRUE)
-      # Next, if species is human, we will run functional module discovery using the DE results
-      # TODO: Pick appropriate networks depending on cell type
-      if(species == "human") {
-        # TODO: Provide this list to user in return statement?
-        FMD_results <- list()
-        index <- 1
-        for(current_de_result in differential_expression_results) {
-          for(current_cell_type in unique(current_de_result$Cell_Type)) {
-            # Subset to DE results for our current cell type
-            cell_specific_de_result <- current_de_result[current_de_result$Cell_Type == current_cell_type,]
-            # Grab HB networks associated with cell type and reference tissue
-            hb_networks <- grab_hb_networks(current_cell_type, reference_tissue)
-            # We grab high FC genes (positive FC) - if there are at least 20 genes, we can do FMD
-            high_genes <- cell_specific_de_result[cell_specific_de_result$sc_log2FC > 0.1,]$Gene_Name
-            # We also grab highly negative FC genes (opposite direction) - if there are at least 20 genes, we can do FMD
-            low_genes <- cell_specific_de_result[cell_specific_de_result$sc_log2FC < -0.1,]$Gene_Name
-            # Run FMD for each network
-            for(network in hb_networks) {
-              # Run FMD for high genes
-              FMD_result_high <- run_fmd_wrapper(high_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "high", log_flag = TRUE)
-              if(!is.null(FMD_result_high)) {
-                 FMD_results[[index]] <- FMD_result_high
-                 index <- index + 1
-              }
-              # Run FMD for low genes
-              FMD_result_low <- run_fmd_wrapper(low_genes, network, RNA_output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "low", log_flag = TRUE)
-              if(!is.null(FMD_result_low)) {
-                FMD_results[[index]] <- FMD_result_low
-                index <- index + 1
-              }
-            }
-          }
-        }
-      }
+      run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, metadata_df = SPEEDI_variables$metadata_df, output_dir = SPEEDI_variables$RNA_output_dir, log_flag = log_flag)
     }
   }
   if(data_type != "RNA") {
     atac_proj <- MapCellTypes_ATAC(proj = atac_proj, reference = reference,
-                                   reference_cell_type_attribute = reference_cell_type_attribute, log_flag = TRUE)
+                                   reference_cell_type_attribute = SPEEDI_variables$reference_cell_type_attribute, log_flag = log_flag)
   }
   # Write Seurat object to output directory
   if(data_type != "ATAC") {
-    print_SPEEDI("Saving Seurat object (RNA)", log_flag = TRUE)
-    save(sc_obj, file = paste0(RNA_output_dir, analysis_name, ".RNA.rds"))
+    print_SPEEDI("Saving Seurat object (RNA)", log_flag = log_flag)
+    save(sc_obj, file = paste0(SPEEDI_variables$RNA_output_dir, SPEEDI_variables$analysis_name, ".RNA.rds"))
   }
   # Save ArchR project
   if(data_type != "RNA") {
-    print_SPEEDI("Saving ArchR project (ATAC)", log_flag = TRUE)
+    print_SPEEDI("Saving ArchR project (ATAC)", log_flag = log_flag)
     ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE)
   }
   if(data_type == "true_multiome") {
-    sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", log_flag = TRUE)
-    print_SPEEDI("Saving Seurat object (True Multiome)", log_flag = TRUE)
-    save(sc_obj, file = paste0(RNA_output_dir, analysis_name, ".RNA.multiome.rds"))
-    atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", log_flag = TRUE)
-    ATAC_multiome_output_dir <- paste0(ATAC_output_dir, "ArchRMultiomeOutput", "/")
-    atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, log_flag = TRUE)
-    print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = TRUE)
+    sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", log_flag = log_flag)
+    print_SPEEDI("Saving Seurat object (True Multiome)", log_flag = log_flag)
+    save(sc_obj, file = paste0(SPEEDI_variables$RNA_output_dir, SPEEDI_variables$analysis_name, ".RNA.multiome.rds"))
+    atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", log_flag = log_flag)
+    ATAC_multiome_output_dir <- paste0(SPEEDI_variables$ATAC_output_dir, "ArchRMultiomeOutput", "/")
+    atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, log_flag = log_flag)
+    print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = log_flag)
     saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
   }
   # If any ATAC plots exist, copy them to the ATAC base directory so they're easier for the user to find
   if(data_type != "RNA") {
-    atac_plot_files <- list.files(path = ATAC_output_dir, pattern = "_plots\\.pdf$", recursive = TRUE, full.names = TRUE)
-    file.copy(from = atac_plot_files, to = ATAC_output_dir)
+    atac_plot_files <- list.files(path = SPEEDI_variables$ATAC_output_dir, pattern = "_plots\\.pdf$", recursive = TRUE, full.names = TRUE)
+    file.copy(from = atac_plot_files, to = SPEEDI_variables$ATAC_output_dir)
   }
   # Delete Rplots.pdf file if it exists (junk file created by R batch mode)
-  if(file.exists(paste0(output_dir, "Rplots.pdf"))) {
-    file.remove(paste0(output_dir, "Rplots.pdf"))
+  if(file.exists(paste0(SPEEDI_variables$output_dir, "Rplots.pdf"))) {
+    file.remove(paste0(SPEEDI_variables$output_dir, "Rplots.pdf"))
   }
-  setwd(old_wd)
-  print_SPEEDI("SPEEDI Run Complete!", log_flag = TRUE)
+  setwd(SPEEDI_variables$old_wd)
+  print_SPEEDI("SPEEDI Run Complete!", log_flag = log_flag)
   if(data_type == "RNA") {
     return(sc_obj)
   } else if(data_type == "ATAC") {

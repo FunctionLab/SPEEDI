@@ -1,3 +1,57 @@
+
+#' Perform downstream analyses (RNA)
+#'
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param reference_tissue Reference tissue
+#' @param species Species (human or mouse)
+#' @param metadata_df Data frame containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return A list containing differential expression analyses
+#' @examples
+#' \dontrun{differential_expression_results <- RunDE_RNA(sc_obj = sc_obj, metadata_df = metadata_df)}
+#' @export
+run_downstream_analyses_RNA <- function(sc_obj, reference_tissue, species, metadata_df, output_dir = getwd(), log_flag = log_flag) {
+  # We run differential expression on each metadata attribute provided by the user
+  differential_expression_results <- RunDE_RNA(sc_obj, metadata_df = metadata_df, output_dir = output_dir, log_flag = log_flag)
+  # Next, if species is human, we will run functional module discovery using the DE results
+  # TODO: Pick appropriate networks depending on cell type
+  FMD_results <- list()
+  if(species == "human") {
+    index <- 1
+    for(current_de_result in differential_expression_results) {
+      for(current_cell_type in unique(current_de_result$Cell_Type)) {
+        # Subset to DE results for our current cell type
+        cell_specific_de_result <- current_de_result[current_de_result$Cell_Type == current_cell_type,]
+        # Grab HB networks associated with cell type and reference tissue
+        hb_networks <- grab_hb_networks(current_cell_type, reference_tissue)
+        # We grab high FC genes (positive FC) - if there are at least 20 genes, we can do FMD
+        high_genes <- cell_specific_de_result[cell_specific_de_result$sc_log2FC > 0.1,]$Gene_Name
+        # We also grab highly negative FC genes (opposite direction) - if there are at least 20 genes, we can do FMD
+        low_genes <- cell_specific_de_result[cell_specific_de_result$sc_log2FC < -0.1,]$Gene_Name
+        # Run FMD for each network
+        for(network in hb_networks) {
+          # Run FMD for high genes
+          FMD_result_high <- run_fmd_wrapper(high_genes, network, output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "high", log_flag = log_flag)
+          if(!is.null(FMD_result_high)) {
+            FMD_results[[index]] <- FMD_result_high
+            index <- index + 1
+          }
+          # Run FMD for low genes
+          FMD_result_low <- run_fmd_wrapper(low_genes, network, output_dir, current_cell_type, unique(current_de_result$metadata_attribute), "low", log_flag = log_flag)
+          if(!is.null(FMD_result_low)) {
+            FMD_results[[index]] <- FMD_result_low
+            index <- index + 1
+          }
+        }
+      }
+    }
+  }
+  return(list(differential_expression_results, FMD_results))
+}
+
+
+
 #' Perform differential expression analysis (RNA)
 #'
 #' @param sc_obj Seurat object containing cells for all samples
