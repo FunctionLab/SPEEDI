@@ -319,7 +319,6 @@ VisualizeIntegration <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("Running PCA and UMAP on integrated data", log_flag)
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, return.model = T)
-  Seurat::DefaultAssay(sc_obj) <- "SCT"
   print_SPEEDI("Preparing integrated data for FindMarkers", log_flag)
   sc_obj <- Seurat::PrepSCTFindMarkers(sc_obj)
   print_SPEEDI("Step 7: Complete", log_flag)

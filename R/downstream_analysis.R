@@ -135,7 +135,7 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       }
     }
   }
-  Seurat::DefaultAssay(sc_obj) <- "integrated"
+  sc_obj <- SetDefaultAssay(sc_obj)
   print_SPEEDI("Differential expression analysis complete", log_flag)
   gc()
   return(de_results)
