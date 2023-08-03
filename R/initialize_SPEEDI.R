@@ -96,6 +96,9 @@ initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "hu
                            analysis_name = analysis_name, sample_id_list = sample_id_list, record_doublets = record_doublets,
                            RNA_output_dir = RNA_output_dir, ATAC_output_dir = ATAC_output_dir, log_file_name = log_file_name,
                            old_wd = old_wd)
-  print_SPEEDI(paste0("Updated SPEEDI variables are: ", SPEEDI_variables), log_flag)
+  print_SPEEDI("Updated SPEEDI variables are: ", log_flag)
+  for(index in 1:length(SPEEDI_variables)) {
+    print_SPEEDI(paste0(names(SPEEDI_variables)[index], ": ", SPEEDI_variables[index]), log_flag)
+  }
   return(SPEEDI_variables)
 }
