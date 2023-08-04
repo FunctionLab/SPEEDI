@@ -319,7 +319,10 @@ Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper
 Below, we show example output for CD16 monocytes that were upregulated in our COVID patients:
 
 ```{r show_fmd, fig.show='hide'}
-FMD_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "FMD_high_CD16_Mono_blood_disease.csv"), header = TRUE, sep = ",")
+FMD_file <- paste0(SPEEDI_variables$RNA_output_dir, "FMD_high_CD16_Mono_blood_disease.tsv")
+FMD_URL <- readLines(FMD_file, n = 1)
+FMD_table <- utils::read.table(FMD_file, header = TRUE, sep = "\t")
+print(FMD_URL)
 print(head(FMD_table, n = 20))
 ```
 
