@@ -251,6 +251,9 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", metadata_df = NULL,
   print_SPEEDI("Running PCA and UMAP on normalized data", log_flag)
   sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
   sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30)
+  print_UMAP_RNA(sc_obj, file_name = "Before_Batch_Correction_RNA_UMAP_by_Sample.png",
+                 group_by_category = "sample", output_dir = output_dir,
+                 log_flag = log_flag)
   # Add metadata to samples
   if(!is.null(metadata_df)) {
     print_SPEEDI("Adding user metadata to samples", log_flag)
