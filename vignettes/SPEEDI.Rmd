@@ -52,7 +52,7 @@ library(SPEEDI)
 
 After loading SPEEDI, the fastest way to begin using the pipeline is through the `run_SPEEDI()` function. In the provided code snippet, we show a brief illustration with some example inputs, but you should read the documentation for the function (i.e., `?run_SPEEDI`) and look at our complete example analysis below to learn more.
 
-```{r quick_start}
+```{r quick_start, eval = FALSE}
 # Example parameters for run_SPEEDI - note that some optional parameters were not used
 # To see other options for reference_tissue, data_type, and species, look at ?run_SPEEDI
 reference_tissue <- "PBMC"
@@ -65,10 +65,9 @@ data_path <- "~/test_input"
 # output_dir points to where output data will be stored
 output_dir <- "~/test_output"
 # Run SPEEDI pipeline (not run)
-#run_SPEEDI(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path,  
-#           output_dir = output_dir)
+run_SPEEDI(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path,  
+           output_dir = output_dir)
 ```
-
 
 # Example Analysis for scRNA-seq (PBMC, COVID)
 
@@ -298,13 +297,46 @@ Now that we have a uniformly cell-type annotated and integrated dataset, we will
 sc_obj <- run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, metadata_df = SPEEDI_variables$metadata_df, output_dir = SPEEDI_variables$RNA_output_dir, log_flag = log_flag)
 ```
 
-In our metadata data frame, we provided one metadata category ("disease") with each sample being assigned a value of "COVID" or "healthy". The `run_downstream_analyses_RNA()` wrapper function finds differentially expressed genes (DEGs) for each cell type (COVID vs. healthy) using SPEEDI's `RunDE_RNA()` function. SPEEDI first uses the `Seurat` function `FindMarkers()` to find DEGs on a single cell sample level and then uses `DESeq2` to further curate this list using pseudobulk level filtering.
+In our metadata data frame, we provided one metadata category ("disease") with each sample being assigned a value of "COVID" or "healthy". The `run_downstream_analyses_RNA()` wrapper function finds differentially expressed genes (DEGs) for each cell type (COVID vs. healthy) using SPEEDI's `RunDE_RNA()` function. SPEEDI first uses the `Seurat` function `FindMarkers()` to find DEGs on a single cell sample level (adjusted p-value threshold of 0.05, log fold change threshold of 0.1, and min.pct threshold of 0.1) and then uses `DESeq2` to further curate this list using pseudobulk level filtering (p-value of 0.05 and log fold change threshold of 0.3). 
 
+The final output is a table containing DEGs for each cell type:
 
+```{r show_degs, fig.show='hide'}
+DEGs_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "disease.DE.tsv"), header = TRUE, sep = "\t")
+print(nrow(DEGs_table))
+print(rbind(DEGs[200:210,], DEGs[400:410,]))
+```
+
+In total, there were XX DEGs found. We show a subset of the DEGs found for CD4 TCM and CD8 Naive.
+
+Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper function will also run [functional module discovery](https://humanbase.readthedocs.io/en/latest/modules.html) (FMD) using SPEEDI's `run_fmd_wrapper()` function. As input, SPEEDI uses the cell-type specific DEGs found above. First, each list of cell-type DEGs is divided into separate lists of positive and negative fold change. For each separate list, if at least 20 genes are found in HumanBase, an FMD job is launched. Results are provided in a CSV file and include a HumanBase URL to the user's full results as well as a complete list of associated gene ontology (GO) enrichment terms.
+
+Below, we show example output for CD16 monocytes that were upregulated in our COVID patients:
+
+```{r show_fmd, fig.show='hide'}
+FMD_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "FMD_high_CD16_Mono_blood_disease.csv"), header = TRUE, sep = "\t")
+print(head(FMD_table, n = 20))
+```
+
+If we go to the URL listed at the top of the table, we will see a network visualization of our results:
+
+```{r, echo=FALSE, fig.cap="HumanBase network visualization for CD16 monocytes upregulated in COVID patients (background network of blood)."}
+knitr::include_graphics(paste0(SPEEDI_variables$old_wd, "FMD_example.png"))
+```
+
+Note that HumanBase has multiple background networks for FMD. In our case, because our reference tissue was `PBMC_full`, we analyzed each list of DEGs using the `global` network as well as the `blood` network.
 
 ## Reminder: Use the SPEEDI Wrapper!
 
+Above, we went through the SPEEDI pipeline step-by-step. However, the easiest way to run SPEEDI is with the `run_SPEEDI()` wrapper function. This function will complete all of the above steps automatically and will even save your `Seurat` object in the `RNA_output_dir`. For our example, we would simply write:
 
+```{r run_speedi_wrapper_function, eval = FALSE}
+sc_obj <- run_SPEEDI(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path, output_dir = output_dir, metadata_df = metadata_df)
+```
+
+# Other Types of Data Analysis
+
+In addition to scRNA-seq analyses, SPEEDI can also run scATAC-seq, paired scRNA-seq / scATAC-seq, and same-cell multiome snRNA-seq / snRNA-seq analyses. To learn more, read the documentation for `run_SPEEDI()`!
 
 # Session info {.unnumbered}
 
