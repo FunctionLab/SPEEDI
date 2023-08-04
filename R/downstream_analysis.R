@@ -284,7 +284,7 @@ run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metad
     if(!is.null(FMD_result)) {
       print_SPEEDI("Writing FMD results to file", log_flag)
       cell_type <- sub(" ", "_", cell_type) # Remove spaces for file name
-      output_file <- paste0(RNA_output_dir, "FMD_", fc_flag, "_", cell_type, "_", network, "_", metadata_attribute, ".csv")
+      output_file <- paste0(RNA_output_dir, "FMD_", fc_flag, "_", cell_type, "_", network, "_", metadata_attribute, ".tsv")
       cat(paste0("# ", FMD_result[[1]], "\n"), file=output_file)
       current_enrichment_table <- FMD_result[[2]]$enrichment
       current_enrichment_table <- current_enrichment_table[,!names(current_enrichment_table) %in% c("genes", "edges")]
