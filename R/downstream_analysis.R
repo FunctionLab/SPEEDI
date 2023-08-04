@@ -128,7 +128,7 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
         }
         print_SPEEDI(paste0("Writing results for metadata attribute ", metadata_attribute, "to file"), log_flag)
         metadata_attribute_no_spaces <- sub(" ", "_", metadata_attribute) # Remove spaces for file name
-        utils::write.table(final_current_de, file = paste0(output_dir, metadata_attribute_no_spaces, ".DE.tsv"), sep = "\t", quote = FALSE)
+        utils::write.table(final_current_de, file = paste0(output_dir, metadata_attribute_no_spaces, ".DE.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
         final_current_de$metadata_attribute <- metadata_attribute
         de_results[[index]] <- final_current_de
         index <- index + 1

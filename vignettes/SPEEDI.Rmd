@@ -208,7 +208,7 @@ While our input data have been previously filtered by Cell Ranger, we still need
 ```{r filter_data_rna, fig.show='hide'}
 sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = SPEEDI_variables$species,
                            record_doublets = SPEEDI_variables$record_doublets, output_dir = SPEEDI_variables$RNA_output_dir, 
-                           log_file_path = SPEEDI_variables$RNA_output_dir$log_file_path, log_flag = FALSE)
+                           log_file_path = SPEEDI_variables$RNA_output_dir$log_file_path, log_flag = TRUE)
 # We can delete all_sc_exp_matrices because we're done with it
 rm(all_sc_exp_matrices)
 ```
@@ -223,27 +223,83 @@ knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "pre-filtered_nF
 
 Now that the data have been filtered, we will normalize the data using `SCTransform()` (from `Seurat`). We regress against mitochondrial percentage (`percent.mt`), ribosomal percentage (`percent.rps` and `percent.rpl`), and hemoglobin percentage (`percent.hb`). We also calculate cell cycle scores and regress against the differences between S score and G2M score  (`CC.Difference`). Finally, we add metadata from `metadata_df` into our Seurat object.
 
-```{r process_data_rna, fig.show='hide'}
-sc_obj <- InitialProcessing_RNA(sc_obj, SPEEDI_variables$species, SPEEDI_variables$metadata_df)
+```{r process_data_rna, message=FALSE, fig.show='hide'}
+# We suppress output here because the progress bars for SCTransform and UMAP create a huge amount of output
+sc_obj <- InitialProcessing_RNA(sc_obj, SPEEDI_variables$species, SPEEDI_variables$metadata_df, log_flag = TRUE)
+```
+
+Looking at the UMAP generated from `InitialProcessing_RNA()`, we can see that the samples are not yet integrated:
+
+```{r, echo=FALSE, fig.cap="UMAP of sample data before batch correction and integration."}
+knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "Before_Batch_Correction_RNA_UMAP_by_Sample.png"))
 ```
 
 ## Step 5: Inferring Data-Derived Batches
 
-sc_obj <- InferBatches(sc_obj)
+Next, we will use SPEEDI's data-derived batch inference method to determine sample batches in our data:
+
+```{r infer_batches_rna, fig.show='hide'}
+sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
+```
+
+Above, we see that SPEEDI found X batches for our 9 samples. Note that SPEEDI will first attempt to use the Leiden algorithm (via Python) for community detection (due to [better performance](https://arxiv.org/abs/1810.08473)) but will fall back on the Louvain algorithm if the Leiden algorithm is not available.
 
 ## Step 6: Integrate Batches
 
-sc_obj <- IntegrateByBatch_RNA(sc_obj)
+After we grouped our samples according to batch, we are ready to integrate our samples by batch. We first normalize counts within each batch using `SCTransform()` and then use a selection of methods from `Seurat` (`SelectIntegrationFeatures()`, `PrepSCTIntegration()`, `FindIntegrationAnchors()`, and `IntegrateData()`) to integrate our data.
+
+```{r integrate_batches_rna, fig.show='hide'}
+sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = TRUE)
+```
+
+Note that we will now use the `integrated` assay for visualization (as opposed to the `SCT` assay) unless only one batch was found above.
 
 ## Step 7: Final Processing
 
-sc_obj <- VisualizeIntegration(sc_obj)
+We perform some final processing of our integrated data (scaling and preparing for differential expression) using the `VisualizeIntegration()` function.
+
+```{r visualize_integration_rna, fig.show='hide'}
+sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = TRUE)
+```
 
 ## Step 8: Map Cell Types
 
-sc_obj <- MapCellTypes_RNA(sc_obj, reference)
+We are now ready to use our PBMC reference to map cell types onto our data. In this case, because we have a full `Seurat` reference object, our `MapCellTypes_RNA()` function uses the `Seurat` functions `FindMappingAnchors()` and `MapQuery()` to map cell types. For other built-in references, SPEEDI will use the `Azimuth` function `RunAzimuth()` to map cell types. Finally, SPEEDI runs a majority vote algorithm (`MajorityVote_RNA()`) to finalize cell types within each cluster.
 
-## Step 9: Downstream analyses
+```{r map_cell_types_rna, fig.show='hide'}
+sc_obj <- MapCellTypes_RNA(sc_obj, reference, log_flag = TRUE)
+```
+
+The `MapCellTypes_RNA()` function prints UMAPs of our integrated sample data broken down by majority vote cell type, raw predicted cell type, cluster, and sample. Below, we print the sample UMAP and the majority vote cell type UMAP.
+
+```{r, echo=FALSE, fig.cap="UMAP of sample data after batch correction and integration."}
+knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "Final_RNA_UMAP_by_Sample.png"))
+```
+
+Note that the samples are much better integrated versus our previous UMAP.
+
+```{r, echo=FALSE, fig.cap="UMAP of cell types determined by majority vote."}
+knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "Final_RNA_UMAP_by_Majority_Vote_Cell_Type.png"))
+```
+
+Importantly, if the cells in a given cluster have an even mix of assigned cell types, the majority vote algorithm may not be able to determine an overall cell type for the cluster. We mark these clusters as "Undetermined". To better understand these Undetermined clusters, we recommend that users visualize the expression of canonical markers for different cell types (e.g., by using the `Seurat` function `FeaturePlot()`).
+
+In addition to the UMAPs described above, SPEEDI also prints a heatmap showing cell type proportions for each sample:
+
+```{r, echo=FALSE, fig.cap="Heatmap of cell type proportions."}
+knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "Final_RNA_Cell_Type_Proportion_Heatmap.png"))
+```
+
+## Step 9: Downstream Analyses
+
+Now that we have a uniformly cell-type annotated and integrated dataset, we will use SPEEDI to perform two downstream analyses: differential expression analysis and functional module discovery. We use the `run_downstream_analyses_RNA()` function to run both analyses.
+
+```{r downstream_analyses_rna, fig.show='hide'}
+sc_obj <- run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, metadata_df = SPEEDI_variables$metadata_df, output_dir = SPEEDI_variables$RNA_output_dir, log_flag = log_flag)
+```
+
+In our metadata data frame, we provided one metadata category ("disease") with each sample being assigned a value of "COVID" or "healthy". The `run_downstream_analyses_RNA()` wrapper function finds differentially expressed genes (DEGs) for each cell type (COVID vs. healthy) using SPEEDI's `RunDE_RNA()` function. SPEEDI first uses the `Seurat` function `FindMarkers()` to find DEGs on a single cell sample level and then uses `DESeq2` to further curate this list using pseudobulk level filtering.
+
 
 
 ## Reminder: Use the SPEEDI Wrapper!
