@@ -202,7 +202,7 @@ While our input data have been previously filtered by Cell Ranger, we still need
 
 * Creates pre-filtered QC plots for each category above (see below)
 * Transforms the expression matrix into a `Seurat` object for easier downstream processing
-* Records information about doublets in the `Seurat` object (Because we set `record_doublets` to `TRUE`)
+* If `record_doublets` is set to `TRUE`, records information about doublets in the `Seurat` object
 
 ```{r filter_data_rna, fig.show='hide'}
 sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = SPEEDI_variables$species,
@@ -243,11 +243,11 @@ Next, we will use SPEEDI's data-derived batch inference method to determine samp
 sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
 ```
 
-Above, we see that SPEEDI found X batches for our 9 samples. Note that SPEEDI will first attempt to use the Leiden algorithm (via Python) for community detection (due to [better performance](https://arxiv.org/abs/1810.08473)) but will fall back on the Louvain algorithm if the Leiden algorithm is not available.
+Above, we see that SPEEDI found X batches for our 9 samples. Note that SPEEDI will first attempt to use the Leiden algorithm (via Python) for community detection (due to [better performance](https://arxiv.org/abs/1810.08473)) but will fall back on the Louvain algorithm if the Python package for the Leiden algorithm is not found.
 
 ## Step 6: Integrate Batches
 
-After we grouped our samples according to batch, we are ready to integrate our samples by batch. We first normalize counts within each batch using `SCTransform()` and then use a selection of methods from `Seurat` (`SelectIntegrationFeatures()`, `PrepSCTIntegration()`, `FindIntegrationAnchors()`, and `IntegrateData()`) to integrate our data.
+After we have grouped our samples according to batch, we are ready to integrate by batch. We first normalize counts within each batch using `SCTransform()` and then use a selection of methods from `Seurat` (`SelectIntegrationFeatures()`, `PrepSCTIntegration()`, `FindIntegrationAnchors()`, and `IntegrateData()`) to integrate our data.
 
 ```{r integrate_batches_rna, fig.show='hide'}
 sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = TRUE)
@@ -312,9 +312,9 @@ print(nrow(DEGs_table))
 print(rbind(DEGs_table[200:210,], DEGs_table[400:410,]))
 ```
 
-In total, there were XX DEGs found. We show a subset of the DEGs found for CD4 TCM and CD8 Naive.
+In total, there were 4090 DEGs found. We show a subset of the DEGs found for CD4 TCM and CD8 Naive.
 
-Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper function will also run [functional module discovery](https://humanbase.readthedocs.io/en/latest/modules.html) (FMD) using SPEEDI's `run_fmd_wrapper()` function. As input, SPEEDI uses the cell-type specific DEGs found above. First, each list of cell-type DEGs is divided into separate lists of positive and negative fold change. For each separate list, if at least 20 genes are found in HumanBase, an FMD job is launched. Results are provided in a CSV file and include a HumanBase URL to the user's full results as well as a complete list of associated gene ontology (GO) enrichment terms.
+Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper function will also run [functional module discovery](https://humanbase.readthedocs.io/en/latest/modules.html) (FMD) using SPEEDI's `run_fmd_wrapper()` function. As input, SPEEDI uses the cell-type specific DEGs found above. First, each list of cell-type DEGs is divided into separate lists of positive and negative fold change. For each separate list, if at least 20 genes are found in HumanBase, an FMD job is launched. Results are provided in a TSV file and include a HumanBase URL to the user's full results as well as a complete list of associated gene ontology (GO) enrichment terms.
 
 Below, we show example output for CD16 monocytes that were upregulated in our COVID patients:
 
@@ -332,7 +332,7 @@ If we go to the URL listed at the top of the table, we will see a network visual
 knitr::include_graphics(paste0(SPEEDI_variables$old_wd, "FMD_example.png"))
 ```
 
-Note that HumanBase has multiple background networks for FMD. In our case, because our reference tissue was `PBMC_full`, we analyzed each list of DEGs using the `global` network as well as the `blood` network.
+Note that HumanBase has multiple background networks for FMD. In our case, because our reference tissue was `PBMC_full`, SPEEDI automatically analyzed each list of DEGs using the `global` network as well as the `blood` network.
 
 ## Reminder: Use the SPEEDI Wrapper!
 
@@ -344,7 +344,7 @@ sc_obj <- run_SPEEDI(reference_tissue = reference_tissue, data_type = data_type,
                      output_dir = output_dir, metadata_df = metadata_df)
 ```
 
-# Other Types of Data Analysis
+# Other Types of Data Analyses
 
 In addition to scRNA-seq analyses, SPEEDI can also run scATAC-seq, paired scRNA-seq / scATAC-seq, and same-cell multiome snRNA-seq / snRNA-seq analyses. To learn more, read the documentation for `run_SPEEDI()`!
 
