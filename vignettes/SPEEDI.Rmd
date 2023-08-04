@@ -155,7 +155,7 @@ After running `initialize_SPEEDI()`, all of the corrected variable values will b
 
 * `RNA_output_dir`: Output directory for RNA analyses (will contain all analysis output for this example)
 * `ATAC_output_dir`: Output directory for ATAC analyses (not relevant for this example)
-* `log_file_name`: File name associated with log file
+* `log_file_path`: File name associated with log file
 * `old_wd`: ATAC analyses require our working directory be updated to `ATAC_output_dir`, so we save the previous working directory in `old_wd` (not relevant for this example)
 
 To refer to a given variable, use list notation (e.g., the corrected `data_path` is stored in `SPEEDI_variables$data_path`).
@@ -224,7 +224,9 @@ Now that the data have been filtered, we will normalize the data using `SCTransf
 
 ```{r process_data_rna, message=FALSE, fig.show='hide'}
 # We suppress output here because the progress bars for SCTransform and UMAP create a huge amount of output
-sc_obj <- InitialProcessing_RNA(sc_obj, SPEEDI_variables$species, SPEEDI_variables$metadata_df, log_flag = TRUE)
+sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = SPEEDI_variables$species, 
+                                output_dir = SPEEDI_variables$RNA_output_dir, metadata_df = SPEEDI_variables$metadata_df, 
+                                log_flag = TRUE)
 ```
 
 Looking at the UMAP generated from `InitialProcessing_RNA()`, we can see that the samples are not yet integrated:
@@ -266,7 +268,8 @@ sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = TRUE)
 We are now ready to use our PBMC reference to map cell types onto our data. In this case, because we have a full `Seurat` reference object, our `MapCellTypes_RNA()` function uses the `Seurat` functions `FindMappingAnchors()` and `MapQuery()` to map cell types. For other built-in references, SPEEDI will use the `Azimuth` function `RunAzimuth()` to map cell types. Finally, SPEEDI runs a majority vote algorithm (`MajorityVote_RNA()`) to finalize cell types within each cluster.
 
 ```{r map_cell_types_rna, fig.show='hide'}
-sc_obj <- MapCellTypes_RNA(sc_obj, reference, log_flag = TRUE)
+sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference, output_dir = SPEEDI_variables$RNA_output_dir,
+                           log_flag = TRUE)
 ```
 
 The `MapCellTypes_RNA()` function prints UMAPs of our integrated sample data broken down by majority vote cell type, raw predicted cell type, cluster, and sample. Below, we print the sample UMAP and the majority vote cell type UMAP.
@@ -294,7 +297,9 @@ knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "Final_RNA_Cell_
 Now that we have a uniformly cell-type annotated and integrated dataset, we will use SPEEDI to perform two downstream analyses: differential expression analysis and functional module discovery. We use the `run_downstream_analyses_RNA()` function to run both analyses.
 
 ```{r downstream_analyses_rna, fig.show='hide'}
-sc_obj <- run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, metadata_df = SPEEDI_variables$metadata_df, output_dir = SPEEDI_variables$RNA_output_dir, log_flag = log_flag)
+sc_obj <- run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SPEEDI_variables$reference_tissue, 
+                                      species = SPEEDI_variables$species, metadata_df = SPEEDI_variables$metadata_df, 
+                                      output_dir = SPEEDI_variables$RNA_output_dir, log_flag = TRUE)
 ```
 
 In our metadata data frame, we provided one metadata category ("disease") with each sample being assigned a value of "COVID" or "healthy". The `run_downstream_analyses_RNA()` wrapper function finds differentially expressed genes (DEGs) for each cell type (COVID vs. healthy) using SPEEDI's `RunDE_RNA()` function. SPEEDI first uses the `Seurat` function `FindMarkers()` to find DEGs on a single cell sample level (adjusted p-value threshold of 0.05, log fold change threshold of 0.1, and min.pct threshold of 0.1) and then uses `DESeq2` to further curate this list using pseudobulk level filtering (p-value of 0.05 and log fold change threshold of 0.3). 
@@ -304,7 +309,7 @@ The final output is a table containing DEGs for each cell type:
 ```{r show_degs, fig.show='hide'}
 DEGs_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "disease.DE.tsv"), header = TRUE, sep = "\t")
 print(nrow(DEGs_table))
-print(rbind(DEGs[200:210,], DEGs[400:410,]))
+print(rbind(DEGs_table[200:210,], DEGs_table[400:410,]))
 ```
 
 In total, there were XX DEGs found. We show a subset of the DEGs found for CD4 TCM and CD8 Naive.
@@ -314,7 +319,7 @@ Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper
 Below, we show example output for CD16 monocytes that were upregulated in our COVID patients:
 
 ```{r show_fmd, fig.show='hide'}
-FMD_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "FMD_high_CD16_Mono_blood_disease.csv"), header = TRUE, sep = "\t")
+FMD_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "FMD_high_CD16_Mono_blood_disease.csv"), header = TRUE, sep = ",")
 print(head(FMD_table, n = 20))
 ```
 
@@ -331,7 +336,8 @@ Note that HumanBase has multiple background networks for FMD. In our case, becau
 Above, we went through the SPEEDI pipeline step-by-step. However, the easiest way to run SPEEDI is with the `run_SPEEDI()` wrapper function. This function will complete all of the above steps automatically and will even save your `Seurat` object in the `RNA_output_dir`. For our example, we would simply write:
 
 ```{r run_speedi_wrapper_function, eval = FALSE}
-sc_obj <- run_SPEEDI(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path, output_dir = output_dir, metadata_df = metadata_df)
+sc_obj <- run_SPEEDI(reference_tissue = reference_tissue, data_type = data_type, species = species, 
+                     data_path = data_path, output_dir = output_dir, metadata_df = metadata_df)
 ```
 
 # Other Types of Data Analysis
