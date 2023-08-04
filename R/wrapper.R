@@ -76,7 +76,8 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
                                 record_doublets = SPEEDI_variables$record_doublets, output_dir = SPEEDI_variables$RNA_output_dir,
                                 log_file_path = SPEEDI_variables$log_file_name, log_flag = log_flag)
     rm(all_sc_exp_matrices)
-    sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = SPEEDI_variables$species, metadata_df = SPEEDI_variables$metadata_df, log_flag = log_flag)
+    sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = SPEEDI_variables$species, output_dir = SPEEDI_variables$RNA_output_dir,
+                                    metadata_df = SPEEDI_variables$metadata_df, log_flag = log_flag)
     sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = log_flag)
     sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = log_flag)
     sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = log_flag)

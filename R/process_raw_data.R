@@ -210,6 +210,7 @@ FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
 #' @param metadata_df Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains processed data
@@ -217,7 +218,7 @@ FilterRawData_ATAC <- function(proj, log_flag = FALSE) {
 #' \dontrun{sc_obj <- InitialProcessing_RNA(sc_obj)}
 #' \dontrun{sc_obj <- InitialProcessing_RNA(sc_obj, species = "human")}
 #' @export
-InitialProcessing_RNA <- function(sc_obj, species = "human", metadata_df = NULL, log_flag = FALSE) {
+InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(), metadata_df = NULL, log_flag = FALSE) {
   species <- tolower(species)
   print_SPEEDI("\n", log_flag, silence_time = TRUE)
   print_SPEEDI("Step 4: Processing raw data (RNA)", log_flag)
