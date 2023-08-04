@@ -336,11 +336,12 @@ Note that HumanBase has multiple background networks for FMD. In our case, becau
 
 ## Reminder: Use the SPEEDI Wrapper!
 
-Above, we went through the SPEEDI pipeline step-by-step. However, the easiest way to run SPEEDI is with the `run_SPEEDI()` wrapper function. This function will complete all of the above steps automatically and will even save your `Seurat` object in the `RNA_output_dir`. For our example, we would simply write:
+Above, we went through the SPEEDI pipeline step-by-step. However, the easiest way to run SPEEDI is with the `run_SPEEDI()` wrapper function. This function will complete all of the above steps automatically and will even save your `Seurat` object in `RNA_output_dir`. For our example, we would simply write:
 
 ```{r run_speedi_wrapper_function, eval = FALSE}
 sc_obj <- run_SPEEDI(reference_tissue = reference_tissue, data_type = data_type, species = species, 
-                     data_path = data_path, output_dir = output_dir, metadata_df = metadata_df)
+                     data_path = data_path, reference_dir = reference_dir, 
+                     output_dir = output_dir, metadata_df = metadata_df)
 ```
 
 # Other Types of Data Analysis
