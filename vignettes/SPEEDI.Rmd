@@ -206,8 +206,8 @@ While our input data have been previously filtered by Cell Ranger, we still need
 
 ```{r filter_data_rna, fig.show='hide'}
 sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = SPEEDI_variables$species,
-                           record_doublets = SPEEDI_variables$record_doublets, output_dir = SPEEDI_variables$RNA_output_dir, 
-                           log_file_path = SPEEDI_variables$RNA_output_dir$log_file_path, log_flag = TRUE)
+                           output_dir = SPEEDI_variables$RNA_output_dir, log_file_path = SPEEDI_variables$log_file_path, 
+                           log_flag = TRUE)
 # We can delete all_sc_exp_matrices because we're done with it
 rm(all_sc_exp_matrices)
 ```

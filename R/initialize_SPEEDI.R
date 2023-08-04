@@ -69,7 +69,7 @@ initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "hu
   # Create log file
   log_file_info <- create_SPEEDI_log_file(output_dir)
   log_file <- log_file_info[[1]]
-  log_file_name <- log_file_info[[2]]
+  log_file_path <- log_file_info[[2]]
   log_flag <- TRUE
   print_SPEEDI("Log file successfully created", log_flag)
   # If metadata_df is not null, set sample_id_list according to rownames of metadata_df
@@ -96,7 +96,7 @@ initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "hu
                            reference_file_name = reference_file_name, reference_cell_type_attribute = reference_cell_type_attribute,
                            analysis_name = analysis_name, sample_id_list = sample_id_list, sample_file_paths = sample_file_paths,
                            record_doublets = record_doublets, RNA_output_dir = RNA_output_dir, ATAC_output_dir = ATAC_output_dir,
-                           log_file_name = log_file_name, old_wd = old_wd)
+                           log_file_path = log_file_path, old_wd = old_wd)
   print_SPEEDI("Updated SPEEDI variables are: ", log_flag)
   for(index in 1:length(SPEEDI_variables)) {
     print_SPEEDI(paste0(names(SPEEDI_variables)[index], ": ", SPEEDI_variables[index]), log_flag)
