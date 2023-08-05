@@ -199,9 +199,11 @@ Next, we will read in the input data (scRNA-seq) for processing using the `Read_
 
 ```{r read_data_rna}
 all_sc_exp_matrices <- Read_RNA(data_path = SPEEDI_variables$data_path, log_flag = TRUE)
+nrow(all_sc_exp_matrices)
+ncol(all_sc_exp_matrices)
 ```
 
-We see above that our matrix contains 124692 barcodes and 32738 transcripts in total.
+Our matrix contains 124692 barcodes and 32738 transcripts in total.
 
 ## Step 3: Filter Input Data
 
@@ -217,6 +219,7 @@ sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species =
                            log_flag = TRUE)
 # We can delete all_sc_exp_matrices because we're done with it
 rm(all_sc_exp_matrices)
+sc_obj
 ```
 
 After QC filtering is complete, we see that 88870 barcodes and 21693 transcripts remain. You can always see the automatically chosen QC thresholds by looking at the log file (they may also be displayed in your standard R output depending on your environment). In addition, if you're interested in the quality of your samples before filtering, you can look at the automatically generated pre-filtering QC plots (found in `RNA_output_dir`). One example (for number of genes) is displayed below:
@@ -247,7 +250,7 @@ Next, we will use SPEEDI's data-derived batch inference method to determine samp
 
 ```{r infer_batches_rna, fig.show='hide'}
 sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
-print(length(unique(sc_obj$batch)))
+length(unique(sc_obj$batch))
 ```
 
 Above, we see that SPEEDI found 6 batches for our 9 samples. Note that SPEEDI will first attempt to use the Leiden algorithm (via Python) for community detection (due to [better performance](https://arxiv.org/abs/1810.08473)) but will fall back on the Louvain algorithm if the Python package for the Leiden algorithm is not found.
@@ -279,7 +282,7 @@ We are now ready to use our PBMC reference to map cell types onto our data. In t
 sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference, output_dir = SPEEDI_variables$RNA_output_dir,
                            log_flag = TRUE)
 # Table of final cell type predictions
-table(sc_obj$predicted_celltype_majority_vote)
+kable(table(sc_obj$predicted_celltype_majority_vote))
 ```
 
 The `MapCellTypes_RNA()` function prints UMAPs of our integrated sample data broken down by majority vote cell type, raw predicted cell type, cluster, and sample. Below, we print the sample UMAP and the majority vote cell type UMAP.
@@ -322,7 +325,7 @@ print(nrow(DEGs_table))
 kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,]), "simple")
 ```
 
-In total, there were 4090 DEGs found. We show a subset of the DEGs found for CD4 TCM and CD8 Naive.
+In total, there were 1940 DEGs found. We show a subset of the DEGs found for CD4 TCM and NK.
 
 Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper function will also run [functional module discovery](https://humanbase.readthedocs.io/en/latest/modules.html) (FMD) using SPEEDI's `run_fmd_wrapper()` function. As input, SPEEDI uses the cell-type specific DEGs found above. First, each list of cell-type DEGs is divided into separate lists of positive and negative fold change. For each separate list, if at least 20 genes are found in HumanBase, an FMD job is launched. Results are provided in a TSV file and include a HumanBase URL linking to the user's full results as well as a complete list of associated gene ontology (GO) enrichment terms.
 

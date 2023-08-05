@@ -53,7 +53,7 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
       data_files <- list.files(path = data_path, pattern = "matrix.mtx", recursive = TRUE, full.names = TRUE)
       data_file_format <- "MEX"
     }
-    # Finally, if the user did provide a sample_id_list, pick the subset of .h5 files that have that sample ID in the path
+    # Finally, if the user did provide a sample_id_list, pick the subset of data files that have that sample ID in the path
     if(!is.null(sample_id_list)) {
       data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
     } else {

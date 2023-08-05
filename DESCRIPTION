@@ -30,7 +30,6 @@ Imports:
     hexbin,
     httr,
     jsonlite,
-    kableExtra,
     kneedle,
     limma,
     lisi,
