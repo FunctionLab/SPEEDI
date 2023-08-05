@@ -229,8 +229,7 @@ knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "pre-filtered_nF
 
 Now that the data have been filtered, we will normalize the data using `SCTransform()` (from `Seurat`). We regress against mitochondrial percentage (`percent.mt`), ribosomal percentage (`percent.rps` and `percent.rpl`), and hemoglobin percentage (`percent.hb`). We also calculate cell cycle scores and regress against the differences between S score and G2M score  (`CC.Difference`). Finally, we add metadata from `metadata_df` into our Seurat object.
 
-```{r process_data_rna, fig.show='hide'}
-# We suppress output here because the progress bars for SCTransform and UMAP create a huge amount of output
+```{r process_data_rna, results='hide', fig.show='hide'}
 sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = SPEEDI_variables$species, 
                                 output_dir = SPEEDI_variables$RNA_output_dir, metadata_df = SPEEDI_variables$metadata_df, 
                                 log_flag = TRUE)
@@ -248,6 +247,7 @@ Next, we will use SPEEDI's data-derived batch inference method to determine samp
 
 ```{r infer_batches_rna, fig.show='hide'}
 sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
+print(length(unique(sc_obj$batch)))
 ```
 
 Above, we see that SPEEDI found 6 batches for our 9 samples. Note that SPEEDI will first attempt to use the Leiden algorithm (via Python) for community detection (due to [better performance](https://arxiv.org/abs/1810.08473)) but will fall back on the Louvain algorithm if the Python package for the Leiden algorithm is not found.
@@ -258,6 +258,7 @@ After we have grouped our samples according to batch, we are ready to integrate 
 
 ```{r integrate_batches_rna, fig.show='hide'}
 sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = TRUE)
+sc_obj
 ```
 
 Note that we will now use the `integrated` assay for visualization (as opposed to the `SCT` assay) unless only one batch was found above.
@@ -277,6 +278,8 @@ We are now ready to use our PBMC reference to map cell types onto our data. In t
 ```{r map_cell_types_rna, fig.show='hide'}
 sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference, output_dir = SPEEDI_variables$RNA_output_dir,
                            log_flag = TRUE)
+# Table of final cell type predictions
+table(sc_obj$predicted_celltype_majority_vote)
 ```
 
 The `MapCellTypes_RNA()` function prints UMAPs of our integrated sample data broken down by majority vote cell type, raw predicted cell type, cluster, and sample. Below, we print the sample UMAP and the majority vote cell type UMAP.
@@ -304,7 +307,7 @@ knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "Final_RNA_Cell_
 Now that we have a uniformly cell-type annotated and integrated dataset, we will use SPEEDI to perform two downstream analyses: differential expression analysis and functional module discovery. We use the `run_downstream_analyses_RNA()` function to run both analyses.
 
 ```{r downstream_analyses_rna, fig.show='hide'}
-sc_obj <- run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SPEEDI_variables$reference_tissue, 
+de_results <- run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SPEEDI_variables$reference_tissue, 
                                       species = SPEEDI_variables$species, metadata_df = SPEEDI_variables$metadata_df, 
                                       output_dir = SPEEDI_variables$RNA_output_dir, log_flag = TRUE)
 ```
@@ -316,14 +319,7 @@ The final output is a table containing DEGs for each cell type:
 ```{r show_degs, fig.show='hide'}
 DEGs_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "disease.DE.tsv"), header = TRUE, sep = "\t")
 print(nrow(DEGs_table))
-kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,])) %>%
-  kableExtra::kable_styling(font_size = 8)
-kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,])) %>%
-  kableExtra::kable_styling(font_size = 10)
-kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,])) %>%
-  kableExtra::kable_styling(font_size = 12)
-kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,])) %>%
-  kableExtra::kable_styling(font_size = 14)
+kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,]), "simple")
 ```
 
 In total, there were 4090 DEGs found. We show a subset of the DEGs found for CD4 TCM and CD8 Naive.
@@ -338,10 +334,7 @@ FMD_URL <- readLines(FMD_file, n = 1)
 FMD_table <- utils::read.table(FMD_file, header = TRUE, sep = "\t")
 print(FMD_URL)
 
-kable(head(FMD_table, 20), "pipe")
 kable(head(FMD_table, 20), "simple")
-kable(head(FMD_table, 20)) %>%
-  kableExtra::kable_styling(font_size = 8)
 ```
 
 If we go to the URL listed at the top of the table, we will see a network visualization of our results:
