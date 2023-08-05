@@ -318,6 +318,12 @@ DEGs_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "disease
 print(nrow(DEGs_table))
 kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,])) %>%
   kable_styling(font_size = 8)
+kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,])) %>%
+  kable_styling(font_size = 10)
+kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,])) %>%
+  kable_styling(font_size = 12)
+kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,])) %>%
+  kable_styling(font_size = 14)
 ```
 
 In total, there were 4090 DEGs found. We show a subset of the DEGs found for CD4 TCM and CD8 Naive.
@@ -332,6 +338,8 @@ FMD_URL <- readLines(FMD_file, n = 1)
 FMD_table <- utils::read.table(FMD_file, header = TRUE, sep = "\t")
 print(FMD_URL)
 
+kable(head(FMD_table, 20), "pipe")
+kable(head(FMD_table, 20), "simple")
 kable(head(FMD_table, 20)) %>%
   kable_styling(font_size = 8)
 ```
