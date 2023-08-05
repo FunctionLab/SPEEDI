@@ -64,7 +64,8 @@ Remotes:
     github::satijalab/seurat-data,
     github::mojaveazure/seurat-disk
 Suggests: 
+    BiocStyle,
+    kableExtra,
     knitr,
-    rmarkdown,
-    BiocStyle
+    rmarkdown
 VignetteBuilder: knitr

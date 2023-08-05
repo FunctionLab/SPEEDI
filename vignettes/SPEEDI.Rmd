@@ -25,6 +25,13 @@ vignette: |
 }
 </style>
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE
+)
+```
+
 
 # Citation
 
@@ -34,7 +41,7 @@ The SPEEDI manuscript is currently under preparation.
 
 To begin, we install the SPEEDI package and its dependencies.
 
-```{r installing, eval=FALSE}
+```{r installation, eval=FALSE}
 # Install necessary packages
 if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
@@ -146,7 +153,7 @@ rownames(metadata_df) <- c("scRNA_34-7", "scRNA_39-7", "scRNA_41-7", "scRNA_145-
 
 To complete our setup, we use the `initialize_SPEEDI()` function. While this step isn't strictly necessary for using SPEEDI, it will help make sure that all variables are set properly and will create a log file for SPEEDI.
 
-```{r initialize_speedi_rna, message = FALSE}
+```{r initialize_speedi_rna}
 SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, 
                                       data_path, reference_dir, output_dir, metadata_df)
 ```
@@ -174,7 +181,7 @@ SPEEDI_variables$RNA_output_dir
 
 Before we begin processing the input data, we first load our `PBMC` reference. Because we're using `PBMC_full` as our `reference_tissue` value, SPEEDI will automatically download the reference object (`pbmc_multimodal.h5seurat`) and save it in `reference_dir`. Note that we set `log_flag` to `TRUE` so that any messages are automatically recorded in our log file.
 
-```{r load_reference_rna, message = FALSE}
+```{r load_reference_rna}
 reference <- LoadReferenceSPEEDI(reference_tissue = SPEEDI_variables$reference_tissue, 
                                  reference_dir = SPEEDI_variables$reference_dir,
                                  species = SPEEDI_variables$species, log_flag = TRUE)
@@ -212,9 +219,9 @@ sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species =
 rm(all_sc_exp_matrices)
 ```
 
-After QC filtering is complete, we see that 88870 barcodes and 21693 transcripts remain. You can always see the automatically chosen QC thresholds by looking at the log file (they may also be displayed in your standard R output depending on your environment). In addition, if you're interested in the quality of your samples before filtering, you can look at the automatically generated pre-filtering QC plots (found in `RNA_output_dir`). One example (for number of features) is displayed below:
+After QC filtering is complete, we see that 88870 barcodes and 21693 transcripts remain. You can always see the automatically chosen QC thresholds by looking at the log file (they may also be displayed in your standard R output depending on your environment). In addition, if you're interested in the quality of your samples before filtering, you can look at the automatically generated pre-filtering QC plots (found in `RNA_output_dir`). One example (for number of genes) is displayed below:
 
-```{r, echo=FALSE, fig.cap="Pre-filtered QC plot for number of features."}
+```{r, echo=FALSE, fig.cap="Pre-filtered QC plot for number of genes."}
 knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "pre-filtered_nFeature_violin_plot.png"))
 ```
 
@@ -222,7 +229,7 @@ knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "pre-filtered_nF
 
 Now that the data have been filtered, we will normalize the data using `SCTransform()` (from `Seurat`). We regress against mitochondrial percentage (`percent.mt`), ribosomal percentage (`percent.rps` and `percent.rpl`), and hemoglobin percentage (`percent.hb`). We also calculate cell cycle scores and regress against the differences between S score and G2M score  (`CC.Difference`). Finally, we add metadata from `metadata_df` into our Seurat object.
 
-```{r process_data_rna, message=FALSE, fig.show='hide'}
+```{r process_data_rna, fig.show='hide'}
 # We suppress output here because the progress bars for SCTransform and UMAP create a huge amount of output
 sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = SPEEDI_variables$species, 
                                 output_dir = SPEEDI_variables$RNA_output_dir, metadata_df = SPEEDI_variables$metadata_df, 
@@ -243,7 +250,7 @@ Next, we will use SPEEDI's data-derived batch inference method to determine samp
 sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
 ```
 
-Above, we see that SPEEDI found X batches for our 9 samples. Note that SPEEDI will first attempt to use the Leiden algorithm (via Python) for community detection (due to [better performance](https://arxiv.org/abs/1810.08473)) but will fall back on the Louvain algorithm if the Python package for the Leiden algorithm is not found.
+Above, we see that SPEEDI found 6 batches for our 9 samples. Note that SPEEDI will first attempt to use the Leiden algorithm (via Python) for community detection (due to [better performance](https://arxiv.org/abs/1810.08473)) but will fall back on the Louvain algorithm if the Python package for the Leiden algorithm is not found.
 
 ## Step 6: Integrate Batches
 
@@ -309,12 +316,13 @@ The final output is a table containing DEGs for each cell type:
 ```{r show_degs, fig.show='hide'}
 DEGs_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "disease.DE.tsv"), header = TRUE, sep = "\t")
 print(nrow(DEGs_table))
-print(rbind(DEGs_table[200:210,], DEGs_table[400:410,]))
+kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,])) %>%
+  kable_styling(font_size = 8)
 ```
 
 In total, there were 4090 DEGs found. We show a subset of the DEGs found for CD4 TCM and CD8 Naive.
 
-Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper function will also run [functional module discovery](https://humanbase.readthedocs.io/en/latest/modules.html) (FMD) using SPEEDI's `run_fmd_wrapper()` function. As input, SPEEDI uses the cell-type specific DEGs found above. First, each list of cell-type DEGs is divided into separate lists of positive and negative fold change. For each separate list, if at least 20 genes are found in HumanBase, an FMD job is launched. Results are provided in a TSV file and include a HumanBase URL to the user's full results as well as a complete list of associated gene ontology (GO) enrichment terms.
+Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper function will also run [functional module discovery](https://humanbase.readthedocs.io/en/latest/modules.html) (FMD) using SPEEDI's `run_fmd_wrapper()` function. As input, SPEEDI uses the cell-type specific DEGs found above. First, each list of cell-type DEGs is divided into separate lists of positive and negative fold change. For each separate list, if at least 20 genes are found in HumanBase, an FMD job is launched. Results are provided in a TSV file and include a HumanBase URL linking to the user's full results as well as a complete list of associated gene ontology (GO) enrichment terms.
 
 Below, we show example output for CD16 monocytes that were upregulated in our COVID patients:
 
@@ -323,7 +331,9 @@ FMD_file <- paste0(SPEEDI_variables$RNA_output_dir, "FMD_high_CD16_Mono_blood_di
 FMD_URL <- readLines(FMD_file, n = 1)
 FMD_table <- utils::read.table(FMD_file, header = TRUE, sep = "\t")
 print(FMD_URL)
-print(head(FMD_table, n = 20))
+
+kable(head(FMD_table, 20)) %>%
+  kable_styling(font_size = 8)
 ```
 
 If we go to the URL listed at the top of the table, we will see a network visualization of our results:

@@ -288,7 +288,7 @@ run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metad
       cat(paste0("# ", FMD_result[[1]], "\n"), file=output_file)
       current_enrichment_table <- FMD_result[[2]]$enrichment
       current_enrichment_table <- current_enrichment_table[,!names(current_enrichment_table) %in% c("genes", "edges")]
-      utils::write.table(current_enrichment_table, file = output_file, append=TRUE, sep = "\t", quote = FALSE)
+      utils::write.table(current_enrichment_table, file = output_file, append=TRUE, sep = "\t", quote = FALSE, row.names = FALSE)
     }
   } else {
     print_SPEEDI("Not enough genes in gene list for FMD", log_flag)
