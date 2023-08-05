@@ -30,6 +30,7 @@ Imports:
     hexbin,
     httr,
     jsonlite,
+    kableExtra,
     kneedle,
     limma,
     lisi,
@@ -65,7 +66,6 @@ Remotes:
     github::mojaveazure/seurat-disk
 Suggests: 
     BiocStyle,
-    kableExtra,
     knitr,
     rmarkdown
 VignetteBuilder: knitr
