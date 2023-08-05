@@ -56,6 +56,8 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
     # Finally, if the user did provide a sample_id_list, pick the subset of data files that have that sample ID in the path
     if(!is.null(sample_id_list)) {
       data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
+      positions <- sapply(sample_id_list, function(pattern) grep(pattern, data_files))
+      sample_id_list <- sample_id_list[order(positions)]
     } else {
       if(length(data_files) > 1) {
         # Else, we are using all data files found above, but we still need to guess what the sample names are because of Cell Ranger's
