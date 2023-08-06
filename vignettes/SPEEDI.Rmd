@@ -323,7 +323,7 @@ The final output is a table containing DEGs for each cell type:
 DEGs_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "disease.DE.tsv"), header = TRUE, sep = "\t")
 print(nrow(DEGs_table))
 subset_DEGs_table <- rbind(DEGs_table[200:210,], DEGs_table[400:410,])
-subset_DEGs_table$sc_pval_adj <- format(subset_DEGs_table$sc_pval_adj, digits = 7)
+subset_DEGs_table$sc_pval_adj <- format(subset_DEGs_table$sc_pval_adj, digits = 5)
 kable(subset_DEGs_table, "simple")
 ```
 
