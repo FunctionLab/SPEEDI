@@ -282,7 +282,7 @@ We are now ready to use our PBMC reference to map cell types onto our data. In t
 sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference, output_dir = SPEEDI_variables$RNA_output_dir,
                            log_flag = TRUE)
 # Table of final cell type predictions
-kable(table(sc_obj$predicted_celltype_majority_vote))
+kable(table(sc_obj$predicted_celltype_majority_vote), col.names = c("Cell Type", "Cell Count"))
 ```
 
 The `MapCellTypes_RNA()` function prints UMAPs of our integrated sample data broken down by majority vote cell type, raw predicted cell type, cluster, and sample. Below, we print the sample UMAP and the majority vote cell type UMAP.
@@ -322,7 +322,9 @@ The final output is a table containing DEGs for each cell type:
 ```{r show_degs, fig.show='hide'}
 DEGs_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "disease.DE.tsv"), header = TRUE, sep = "\t")
 print(nrow(DEGs_table))
-kable(rbind(DEGs_table[200:210,], DEGs_table[400:410,]), "simple")
+subset_DEGs_table <- rbind(DEGs_table[200:210,], DEGs_table[400:410,])
+subset_DEGs_table$sc_pval_adj <- format(subset_DEGs_table$sc_pval_adj, digits = 7)
+kable(subset_DEGs_table, "simple")
 ```
 
 In total, there were 1940 DEGs found. We show a subset of the DEGs found for CD4 TCM and NK.

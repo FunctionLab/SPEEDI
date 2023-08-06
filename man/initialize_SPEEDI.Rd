@@ -18,6 +18,7 @@ initialize_SPEEDI(
   reference_cell_type_attribute = "celltype.l2",
   analysis_name = NULL,
   sample_id_list = NULL,
+  sample_file_paths = NULL,
   record_doublets = FALSE
 )
 }
@@ -71,6 +72,8 @@ For mouse data, possible choices include:
 \item{analysis_name}{Name used to create subdirectory in \code{output_dir} for current analysis run. Directory will be created if it doesn't already exist.}
 
 \item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{data_path}).}
+
+\item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{data_path}). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., \verb{"c("sample1/matrix.mtx", "sample2/matrix.mtx"}"). If this argument is used, \code{sample_id_list} is required and should be written in the same order as the sample file paths.}
 
 \item{record_doublets}{Boolean flag to indicate whether we will record doublets in the data (using the \link{scDblFinder} package). Possible choices are \code{TRUE} or \code{FALSE}.}
 }

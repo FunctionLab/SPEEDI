@@ -7,6 +7,7 @@
 InitialProcessing_RNA(
   sc_obj,
   species = "human",
+  output_dir = getwd(),
   metadata_df = NULL,
   log_flag = FALSE
 )
@@ -15,6 +16,8 @@ InitialProcessing_RNA(
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
+
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Directory will be created if it doesn't already exist.}
 
 \item{metadata_df}{Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)}
 
