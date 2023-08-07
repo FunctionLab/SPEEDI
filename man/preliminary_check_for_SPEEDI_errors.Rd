@@ -5,20 +5,84 @@
 \title{Preliminary check for SPEEDI errors}
 \usage{
 preliminary_check_for_SPEEDI_errors(
-  data_type,
   reference_tissue,
+  data_type = "RNA",
+  species = "human",
+  data_path = getwd(),
+  reference_dir = getwd(),
+  output_dir = getwd(),
+  metadata_df = NULL,
+  reference_file_name = NULL,
+  reference_cell_type_attribute = "celltype.l2",
+  analysis_name = NULL,
+  sample_id_list = NULL,
+  sample_file_paths = NULL,
+  record_doublets = FALSE,
+  exit_with_code = FALSE,
   log_flag = FALSE
 )
 }
 \arguments{
-\item{data_type}{Data type}
+\item{reference_tissue}{Reference tissue type (used to map cell types via reference). For human data, possible choices include:
+\itemize{
+\item \code{"adipose"}
+\item \code{"bone_marrow"}
+\item \code{"cortex"}
+\item \code{"fetus"}
+\item \code{"heart"}
+\item \code{"kidney"}
+\item \code{"lung"}
+\item \code{"pancreas"}
+\item \code{"pbmc"} (uses \link{Azimuth} reference)
+\item \code{"pbmc_full"} (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
+\item \code{"tonsil"}
+\item \code{"custom"} (\code{reference_file_name} must be provided)
+\item \code{"none"} (cell mapping from reference will not be performed)
+}
 
-\item{reference_tissue}{Reference tissue}
+For mouse data, possible choices include:
+\itemize{
+\item \code{"cortex"}
+\item \code{"custom"} (\code{reference_file_name} must be provided)
+\item \code{"none"} (cell mapping from reference will not be performed)
+}}
 
-\item{log_flag}{boolean to indicate whether we're also printing to log file}
+\item{data_type}{Type of data being processed. Possible choices include:
+\itemize{
+\item \code{"RNA"}
+\item \code{"ATAC"} (\code{reference_tissue} must be set to \code{"pbmc_full"}, \code{"custom"}, or \code{"none"})
+\item \code{"sample_paired"} (reference mapping for ATAC will not be performed if an Azimuth reference is selected)
+\item \code{"true_multiome"} (reference mapping for full ATAC will not be performed if an Azimuth reference is selected, but RNA cell types will be mapped over to ATAC for overlapping cells that pass QC)
+}}
+
+\item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
+
+\item{data_path}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
+
+\item{reference_dir}{Path to directory where reference is either already located (see \code{reference_file_name}) or will be downloaded by \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}} if necessary. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Note that Azimuth references from \link{SeuratData} do not require use of \code{reference_dir}.}
+
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Directory will be created if it doesn't already exist.}
+
+\item{metadata_df}{Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)}
+
+\item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{reference_tissue} should be set to \code{"custom"}.}
+
+\item{reference_cell_type_attribute}{If using a Seurat reference object, this parameter captures where the cell type information is stored}
+
+\item{analysis_name}{Name used to create subdirectory in \code{output_dir} for current analysis run. Directory will be created if it doesn't already exist.}
+
+\item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{data_path}).}
+
+\item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{data_path}). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., \verb{"c("sample1/matrix.mtx", "sample2/matrix.mtx"}"). If this argument is used, \code{sample_id_list} is required and should be written in the same order as the sample file paths.}
+
+\item{record_doublets}{Boolean flag to indicate whether we will record doublets in the data (using the \link{scDblFinder} package). Possible choices are \code{TRUE} or \code{FALSE}.}
+
+\item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
+
+\item{log_flag}{Boolean flag to indicate whether we're also printing to log file}
 }
 \value{
-exit code indicating error
+TRUE
 }
 \description{
 Preliminary check for SPEEDI errors

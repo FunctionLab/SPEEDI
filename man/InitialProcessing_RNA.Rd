@@ -9,6 +9,7 @@ InitialProcessing_RNA(
   species = "human",
   output_dir = getwd(),
   metadata_df = NULL,
+  exit_with_code = FALSE,
   log_flag = FALSE
 )
 }
@@ -20,6 +21,8 @@ InitialProcessing_RNA(
 \item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Directory will be created if it doesn't already exist.}
 
 \item{metadata_df}{Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)}
+
+\item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }

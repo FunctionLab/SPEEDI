@@ -10,6 +10,7 @@ Read_ATAC(
   sample_id_list = NULL,
   sample_file_paths = NULL,
   species = "human",
+  exit_with_code = FALSE,
   log_flag = FALSE
 )
 }
@@ -23,6 +24,8 @@ Read_ATAC(
 \item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{data_path}). If used, \code{sample_id_list} is required.}
 
 \item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
+
+\item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }

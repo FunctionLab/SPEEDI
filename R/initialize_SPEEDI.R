@@ -41,75 +41,95 @@
 #' @return List containing initialized SPEEDI variables
 #' @export
 initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE) {
-  if(!is.null(data_path) && !dir.exists(data_path)) {
-    print_SPEEDI("Error: Input directory doesn't exist.", log_flag)
-    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 1, log_flag = FALSE)
-  }
-  if(!is.null(output_dir)) {
-    print_SPEEDI("Error: You must provide an output directory (cannot be NULL).", log_flag)
-    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 2, log_flag = FALSE)
-  }
-  # Normalize paths (in case user provides relative paths)
-  if(!is.null(data_path)) {
-    data_path <- normalize_dir_path(data_path)
-  }
-  if(!is.null(reference_dir)) {
-    reference_dir <- normalize_dir_path(reference_dir)
-  }
-  output_dir <- normalize_dir_path(output_dir)
-  # Change reference_tissue and species to all lowercase to prevent any issues with casing
-  reference_tissue <- tolower(reference_tissue)
-  species <- tolower(species)
-  # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
-  # and then reset it to the original working directory once we're done running SPEEDI
-  old_wd <- getwd()
-  # Create output_dir if it doesn't already exist
-  if (!dir.exists(output_dir)) {dir.create(output_dir)}
-  # Add "/" to end of output_dir if not already present
-  last_char_of_output_dir_path <- substr(output_dir, nchar(output_dir), nchar(output_dir))
-  if(last_char_of_output_dir_path != "/") {
-    output_dir <- paste0(output_dir, "/")
-  }
-  # Set analysis name
-  if(is.null(analysis_name)) {
-    analysis_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
-    analysis_name <- gsub(":", "-", analysis_name)
-  }
-  # Update our output dir to be the specific analysis directory
-  output_dir <- paste0(output_dir, analysis_name, "/")
-  if (!dir.exists(output_dir)) {dir.create(output_dir)}
-  setwd(output_dir)
-  # Create log file
-  log_file_info <- create_SPEEDI_log_file(output_dir)
-  log_file <- log_file_info[[1]]
-  log_file_path <- log_file_info[[2]]
-  log_flag <- TRUE
-  print_SPEEDI("Log file successfully created", log_flag)
-  # If metadata_df is not null, set sample_id_list according to rownames of metadata_df
-  if(!is.null(metadata_df)) {
-    sample_id_list <- rownames(metadata_df)
-  }
-  # Output dirs for RNA and ATAC
-  RNA_output_dir <- paste0(output_dir, "RNA", "/")
-  ATAC_output_dir <- paste0(output_dir, "ATAC", "/")
-  if(data_type != "ATAC") {
-    if (!dir.exists(RNA_output_dir)) {dir.create(RNA_output_dir)}
-  } else if (data_type != "RNA") {
-    if (!dir.exists(ATAC_output_dir)) {dir.create(ATAC_output_dir)}
-    setwd(ATAC_output_dir)
-  }
-  # Check user parameters for immediate errors
-  preliminary_check_for_SPEEDI_errors(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path, reference_dir = reference_dir, output_dir = output_dir, metadata_df = metadata_df, reference_file_name = reference_file_name, reference_cell_type_attribute = reference_cell_type_attribute, analysis_name = analysis_name, sample_id_list = sample_id_list, sample_file_paths = sample_file_paths, record_doublets = record_doublets, exit_with_code = exit_with_code, log_flag = log_flag)
-  # Return all updated variables in SPEEDI_variables list
-  SPEEDI_variables <- list(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path,
-                           reference_dir = reference_dir, output_dir = output_dir, metadata_df = metadata_df,
-                           reference_file_name = reference_file_name, reference_cell_type_attribute = reference_cell_type_attribute,
-                           analysis_name = analysis_name, sample_id_list = sample_id_list, sample_file_paths = sample_file_paths,
-                           record_doublets = record_doublets, RNA_output_dir = RNA_output_dir, ATAC_output_dir = ATAC_output_dir,
-                           log_file_path = log_file_path, old_wd = old_wd)
-  print_SPEEDI("Updated SPEEDI variables are: ", log_flag)
-  for(index in 1:length(SPEEDI_variables)) {
-    print_SPEEDI(paste0(names(SPEEDI_variables)[index], ": ", SPEEDI_variables[index]), log_flag)
-  }
+  exit_code <- -1
+  SPEEDI_variables <- tryCatch(
+    {
+      if(!is.null(data_path) && !dir.exists(data_path)) {
+        print_SPEEDI("Error: Input directory doesn't exist.", log_flag = FALSE)
+        exit_code <- 1
+        stop()
+      }
+      if(is.null(output_dir)) {
+        print_SPEEDI("Error: You must provide an output directory (cannot be NULL).", log_flag = FALSE)
+        exit_code <- 2
+        stop()
+      }
+      # Normalize paths (in case user provides relative paths)
+      if(!is.null(data_path)) {
+        data_path <- normalize_dir_path(data_path)
+      }
+      if(!is.null(reference_dir)) {
+        reference_dir <- normalize_dir_path(reference_dir)
+      }
+      output_dir <- normalize_dir_path(output_dir)
+      # Change reference_tissue and species to all lowercase to prevent any issues with casing
+      reference_tissue <- tolower(reference_tissue)
+      species <- tolower(species)
+      # ArchR likes to write some files to the working directory, so we'll set our working directory to output_dir
+      # and then reset it to the original working directory once we're done running SPEEDI
+      old_wd <- getwd()
+      # Create output_dir if it doesn't already exist
+      if (!dir.exists(output_dir)) {dir.create(output_dir)}
+      # Add "/" to end of output_dir if not already present
+      last_char_of_output_dir_path <- substr(output_dir, nchar(output_dir), nchar(output_dir))
+      if(last_char_of_output_dir_path != "/") {
+        output_dir <- paste0(output_dir, "/")
+      }
+      # Set analysis name
+      if(is.null(analysis_name)) {
+        analysis_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
+        analysis_name <- gsub(":", "-", analysis_name)
+      }
+      # Update our output dir to be the specific analysis directory
+      output_dir <- paste0(output_dir, analysis_name, "/")
+      if (!dir.exists(output_dir)) {dir.create(output_dir)}
+      setwd(output_dir)
+      # Create log file
+      log_file_info <- create_SPEEDI_log_file(output_dir)
+      log_file <- log_file_info[[1]]
+      log_file_path <- log_file_info[[2]]
+      log_flag <- TRUE
+      print_SPEEDI("Log file successfully created", log_flag)
+      # If metadata_df is not null, set sample_id_list according to rownames of metadata_df
+      if(!is.null(metadata_df)) {
+        sample_id_list <- rownames(metadata_df)
+      }
+      # Output dirs for RNA and ATAC
+      RNA_output_dir <- paste0(output_dir, "RNA", "/")
+      ATAC_output_dir <- paste0(output_dir, "ATAC", "/")
+      if(data_type != "ATAC") {
+        if (!dir.exists(RNA_output_dir)) {dir.create(RNA_output_dir)}
+      } else if (data_type != "RNA") {
+        if (!dir.exists(ATAC_output_dir)) {dir.create(ATAC_output_dir)}
+        setwd(ATAC_output_dir)
+      }
+      # Check user parameters for immediate errors
+      exit_code <- preliminary_check_for_SPEEDI_errors(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path, reference_dir = reference_dir, output_dir = output_dir, metadata_df = metadata_df, reference_file_name = reference_file_name, reference_cell_type_attribute = reference_cell_type_attribute, analysis_name = analysis_name, sample_id_list = sample_id_list, sample_file_paths = sample_file_paths, record_doublets = record_doublets, exit_with_code = exit_with_code, log_flag = log_flag)
+      if(exit_code != -1) {
+        stop()
+      }
+      # Return all updated variables in SPEEDI_variables list
+      SPEEDI_variables <- list(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path,
+                               reference_dir = reference_dir, output_dir = output_dir, metadata_df = metadata_df,
+                               reference_file_name = reference_file_name, reference_cell_type_attribute = reference_cell_type_attribute,
+                               analysis_name = analysis_name, sample_id_list = sample_id_list, sample_file_paths = sample_file_paths,
+                               record_doublets = record_doublets, RNA_output_dir = RNA_output_dir, ATAC_output_dir = ATAC_output_dir,
+                               exit_with_code = exit_with_code, log_flag = log_flag, log_file_path = log_file_path, old_wd = old_wd)
+      print_SPEEDI("Updated SPEEDI variables are: ", log_flag)
+      for(index in 1:length(SPEEDI_variables)) {
+        print_SPEEDI(paste0(names(SPEEDI_variables)[index], ": ", SPEEDI_variables[index]), log_flag = log_flag)
+      }
+      return(SPEEDI_variables)
+    },
+    error = function(cond) {
+      if(exit_code == -1) {
+        print_SPEEDI("Error running initialize_SPEEDI() function", log_flag = FALSE)
+        print_SPEEDI(cond, log_flag = FALSE)
+        exit_code <- 3
+      }
+      quit_SPEEDI(exit_with_code = exit_with_code, exit_code = exit_code, log_flag = FALSE)
+    }
+  )
+  gc()
   return(SPEEDI_variables)
 }

@@ -19,7 +19,8 @@ initialize_SPEEDI(
   analysis_name = NULL,
   sample_id_list = NULL,
   sample_file_paths = NULL,
-  record_doublets = FALSE
+  record_doublets = FALSE,
+  exit_with_code = FALSE
 )
 }
 \arguments{
@@ -76,6 +77,8 @@ For mouse data, possible choices include:
 \item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{data_path}). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., \verb{"c("sample1/matrix.mtx", "sample2/matrix.mtx"}"). If this argument is used, \code{sample_id_list} is required and should be written in the same order as the sample file paths.}
 
 \item{record_doublets}{Boolean flag to indicate whether we will record doublets in the data (using the \link{scDblFinder} package). Possible choices are \code{TRUE} or \code{FALSE}.}
+
+\item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 }
 \value{
 List containing initialized SPEEDI variables

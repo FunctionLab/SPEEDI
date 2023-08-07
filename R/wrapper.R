@@ -64,66 +64,83 @@
 #' @import ArchR
 run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE) {
   SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, data_path, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, sample_file_paths, record_doublets, exit_with_code)
-  log_flag <- TRUE
-  print_SPEEDI("Beginning SPEEDI Run!", log_flag = log_flag)
+  print(SPEEDI_variables)
+  print(SPEEDI_variables$log_flag)
+  print_SPEEDI("Beginning SPEEDI Run!", log_flag = SPEEDI_variables$log_flag)
   # Load reference
   reference <- LoadReferenceSPEEDI(reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, reference_dir = SPEEDI_variables$reference_dir,
-                                   reference_file_name = SPEEDI_variables$reference_file_name, log_flag = log_flag)
+                                   reference_file_name = SPEEDI_variables$reference_file_name, exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
   if(data_type != "ATAC") {
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
     all_sc_exp_matrices <- Read_RNA(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list,
-                                    sample_file_paths = SPEEDI_variables$sample_file_paths, log_flag = log_flag)
+                                    sample_file_paths = SPEEDI_variables$sample_file_paths, exit_with_code = SPEEDI_variables$exit_with_code,
+                                    log_flag = SPEEDI_variables$log_flag)
     sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = SPEEDI_variables$species,
                                 record_doublets = SPEEDI_variables$record_doublets, output_dir = SPEEDI_variables$RNA_output_dir,
-                                log_file_path = SPEEDI_variables$log_file_name, log_flag = log_flag)
+                                exit_with_code = SPEEDI_variables$exit_with_code, log_file_path = SPEEDI_variables$log_file_path,
+                                log_flag = SPEEDI_variables$log_flag)
     rm(all_sc_exp_matrices)
     sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = SPEEDI_variables$species, output_dir = SPEEDI_variables$RNA_output_dir,
-                                    metadata_df = SPEEDI_variables$metadata_df, log_flag = log_flag)
-    sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = log_flag)
-    sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = log_flag)
-    sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = log_flag)
+                                    metadata_df = SPEEDI_variables$metadata_df, exit_with_code = SPEEDI_variables$exit_with_code,
+                                    log_flag = SPEEDI_variables$log_flag)
+    sc_obj <- InferBatches(sc_obj = sc_obj, exit_with_code = SPEEDI_variables$exit_with_code,
+                           log_flag = SPEEDI_variables$log_flag)
+    sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, exit_with_code = SPEEDI_variables$exit_with_code,
+                                   log_flag = SPEEDI_variables$log_flag)
+    sc_obj <- VisualizeIntegration(sc_obj = sc_obj, exit_with_code = SPEEDI_variables$exit_with_code,
+                                   log_flag = SPEEDI_variables$log_flag)
   }
   if(data_type != "RNA") {
     # Read in ATAC data, filter data, perform initial processing, infer batches, and integrate by batch
     atac_proj <- Read_ATAC(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list,
                            sample_file_paths = SPEEDI_variables$sample_file_paths, species = SPEEDI_variables$species,
-                           log_flag = log_flag)
-    atac_proj <- FilterRawData_ATAC(proj = atac_proj, log_flag = log_flag)
-    atac_proj <- InitialProcessing_ATAC(proj = atac_proj, log_flag = log_flag)
-    atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, log_flag = log_flag)
+                           exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
+    atac_proj <- FilterRawData_ATAC(proj = atac_proj, exit_with_code = SPEEDI_variables$exit_with_code,
+                                    log_flag = SPEEDI_variables$log_flag)
+    atac_proj <- InitialProcessing_ATAC(proj = atac_proj, exit_with_code = SPEEDI_variables$exit_with_code,
+                                        log_flag = SPEEDI_variables$log_flag)
+    atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, exit_with_code = SPEEDI_variables$exit_with_code,
+                                       log_flag = SPEEDI_variables$log_flag)
   }
   # Map cell types from reference onto query data
   if(data_type != "ATAC") {
     sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference,
                                reference_cell_type_attribute = SPEEDI_variables$reference_cell_type_attribute,
-                               output_dir = SPEEDI_variables$RNA_output_dir, log_flag = log_flag)
+                               output_dir = SPEEDI_variables$RNA_output_dir, exit_with_code = SPEEDI_variables$exit_with_code,
+                               log_flag = SPEEDI_variables$log_flag)
     # If the user provided metadata, we can perform downstream analyses (differential expression, functional module discovery)
     if(!is.null(metadata_df)) {
-      run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, metadata_df = SPEEDI_variables$metadata_df, output_dir = SPEEDI_variables$RNA_output_dir, log_flag = log_flag)
+      run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species,
+                                  metadata_df = SPEEDI_variables$metadata_df, output_dir = SPEEDI_variables$RNA_output_dir,
+                                  exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
     }
   }
   if(data_type != "RNA") {
     atac_proj <- MapCellTypes_ATAC(proj = atac_proj, reference = reference,
-                                   reference_cell_type_attribute = SPEEDI_variables$reference_cell_type_attribute, log_flag = log_flag)
+                                   reference_cell_type_attribute = SPEEDI_variables$reference_cell_type_attribute, exit_with_code = SPEEDI_variables$exit_with_code,
+                                   log_flag = SPEEDI_variables$log_flag)
   }
   # Write Seurat object to output directory
   if(data_type != "ATAC") {
-    print_SPEEDI("Saving Seurat object (RNA)", log_flag = log_flag)
+    print_SPEEDI("Saving Seurat object (RNA)", log_flag = SPEEDI_variables$log_flag)
     save(sc_obj, file = paste0(SPEEDI_variables$RNA_output_dir, SPEEDI_variables$analysis_name, ".RNA.rds"))
   }
   # Save ArchR project
   if(data_type != "RNA") {
-    print_SPEEDI("Saving ArchR project (ATAC)", log_flag = log_flag)
+    print_SPEEDI("Saving ArchR project (ATAC)", log_flag = SPEEDI_variables$log_flag)
     ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE)
   }
   if(data_type == "true_multiome") {
-    sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", log_flag = log_flag)
-    print_SPEEDI("Saving Seurat object (True Multiome)", log_flag = log_flag)
+    sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", exit_with_code = SPEEDI_variables$exit_with_code,
+                                  log_flag = SPEEDI_variables$log_flag)
+    print_SPEEDI("Saving Seurat object (True Multiome)", log_flag = SPEEDI_variables$log_flag)
     save(sc_obj, file = paste0(SPEEDI_variables$RNA_output_dir, SPEEDI_variables$analysis_name, ".RNA.multiome.rds"))
-    atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", log_flag = log_flag)
+    atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", exit_with_code = SPEEDI_variables$exit_with_code,
+                                     log_flag = SPEEDI_variables$log_flag)
     ATAC_multiome_output_dir <- paste0(SPEEDI_variables$ATAC_output_dir, "ArchRMultiomeOutput", "/")
-    atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, log_flag = log_flag)
-    print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = log_flag)
+    atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, exit_with_code = SPEEDI_variables$exit_with_code,
+                                   log_flag = SPEEDI_variables$log_flag)
+    print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = SPEEDI_variables$log_flag)
     saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
   }
   # If any ATAC plots exist, copy them to the ATAC base directory so they're easier for the user to find
@@ -136,7 +153,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     file.remove(paste0(SPEEDI_variables$output_dir, "Rplots.pdf"))
   }
   setwd(SPEEDI_variables$old_wd)
-  print_SPEEDI("SPEEDI Run Complete!", log_flag = log_flag)
+  print_SPEEDI("SPEEDI Run Complete!", log_flag = SPEEDI_variables$log_flag)
   if(data_type == "RNA") {
     return(sc_obj)
   } else if(data_type == "ATAC") {

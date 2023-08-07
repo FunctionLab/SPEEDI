@@ -9,6 +9,7 @@ LoadReferenceSPEEDI(
   species = "human",
   reference_dir = getwd(),
   reference_file_name = NULL,
+  exit_with_code = FALSE,
   log_flag = FALSE
 )
 }
@@ -42,6 +43,8 @@ For mouse data, possible choices include:
 \item{reference_dir}{Path to directory where reference is either already located (see \code{reference_file_name}) or will be downloaded by \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}} if necessary. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Note that Azimuth references from \link{SeuratData} do not require use of \code{reference_dir}.}
 
 \item{reference_file_name}{Base name of custom reference file. Should be located inside \code{reference_dir} and \code{reference_tissue} should be set to \code{"custom"}.}
+
+\item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }

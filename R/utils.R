@@ -96,35 +96,47 @@ create_SPEEDI_log_file <- function(output_dir = getwd(), log_file_name = NULL) {
 #' @return TRUE
 #' @export
 preliminary_check_for_SPEEDI_errors <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE, log_flag = FALSE) {
-  exit_code <- 0
+  exit_code <- -1
   possible_references <- get_references()
-  if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full"
-                                                             & tolower(reference_tissue) != "custom") & tolower(reference_tissue) != "none") {
-    print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", log_flag)
-    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 3, log_flag = log_flag)
-  }
-  if(!is.null(sample_file_paths) & is.null(sample_id_list)) {
-    print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag)
-    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 4, log_flag = log_flag)
-  }
-  if(is.null(data_path) & is.null(sample_file_paths)) {
-    print_SPEEDI("Error: You must provide a value for \"data_path\" if you do not provide a value for \"sample_file_paths\".", log_flag)
-    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 5, log_flag = log_flag)
-  }
-  if(tolower(species) != "human" && tolower(species) != "mouse") {
-    print_SPEEDI("Error: Species is not supported (must be human or mouse).", log_flag)
-    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 6, log_flag = log_flag)
-  }
+  azimuth_references <- get_azimuth_references()
   if(!(tolower(reference_tissue) %in% possible_references)) {
     print_SPEEDI("Error: Reference is not supported. It should be one of the following: \n", log_flag)
-    print_SPEEDI(paste0(possible_references, collapse = "\n"), log_flag)
-    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 7, log_flag = log_flag)
-  if(data_type != "RNA" && data_type != "ATAC" && data_type != "sample_paired" && data_type != "true_multiome") {
-    print_SPEEDI("Error: Data type is not supported (must be RNA, ATAC, sample_paired, or true_multiome).", log_flag)
-    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 8, log_flag = log_flag)
-
+    print_SPEEDI(paste0(possible_references, collapse = "\n"), silence_time = TRUE, log_flag = log_flag)
+    exit_code <- 4
   }
-  return(TRUE)
+  if(data_type != "RNA" && data_type != "ATAC" && data_type != "sample_paired" && data_type != "true_multiome") {
+    print_SPEEDI("Error: Data type is not supported (must be RNA, ATAC, sample_paired, or true_multiome).", log_flag = log_flag)
+    exit_code <- 5
+  }
+  if(tolower(species) != "human" && tolower(species) != "mouse") {
+    print_SPEEDI("Error: Species is not supported (must be human or mouse).", log_flag = log_flag)
+    exit_code <- 6
+  }
+  if(is.null(data_path) & is.null(sample_file_paths)) {
+    print_SPEEDI("Error: You must provide a value for \"data_path\" if you do not provide a value for \"sample_file_paths\".", log_flag = log_flag)
+    exit_code <- 7
+  }
+  if(!is.null(reference_file_name) && is.null(reference_dir)) {
+    print_SPEEDI("Error: If reference file name is provided, reference dir must also be provided.", log_flag = log_flag)
+    exit_code <- 8
+  }
+  if(!is.null(reference_file_name) && !file.exists(paste0(reference_dir, reference_file_name))) {
+    print_SPEEDI("Error: Reference file was not found in reference dir.", log_flag = log_flag)
+    exit_code <- 9
+  }
+  if(!is.null(sample_file_paths) & is.null(sample_id_list)) {
+    print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag = log_flag)
+    exit_code <- 10
+  }
+  if(!inherits(record_doublets, "logical")) {
+    print_SPEEDI("Error: \"record_doublets\" must be TRUE or FALSE.", log_flag = log_flag)
+    exit_code <- 11
+  }
+  if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) %in% azimuth_references)) {
+    print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", log_flag = log_flag)
+    exit_code <- 12
+  }
+  return(exit_code)
 }
 
 #' Print to console as well as log file (if it's present)
@@ -145,17 +157,29 @@ print_SPEEDI <- function(current_message, log_flag = FALSE, silence_time = FALSE
 }
 
 #' Quits SPEEDI (either with exit code if exit_with_code == TRUE or with stop())
+#' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param exit_code exit code
-#' @param log_flag boolean to indicate whether we're also printing to log file
+#' @param log_flag Boolean to indicate whether we're also printing to log file
 #' @return TRUE
 #' @export
 quit_SPEEDI <- function(exit_with_code, exit_code = 0, log_flag = FALSE) {
+  logr::log_close()
   if(exit_with_code) {
     quit(status = exit_code)
   } else {
-    stop()
+    stop_quietly()
   }
   return(TRUE) # Never reached
+}
+
+#' Stops SPEEDI quietly (so we don't write superfluous error messages)
+#' @return TRUE
+#' @export
+stop_quietly <- function() {
+  opt <- options(show.error.messages = FALSE)
+  on.exit(options(opt))
+  stop()
+  return(TRUE)
 }
 
 #' Print UMAP for Seurat object (RNA)

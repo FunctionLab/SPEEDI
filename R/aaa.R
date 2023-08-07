@@ -14,7 +14,13 @@ the$fmd_submission_url <- 'https://hb.flatironinstitute.org/api/integrations/com
 # List of possible references
 the$references <- c("adipose", "bonemarrow", "fetus",
                                "heart", "humancortex", "kidney",
-                               "lung", "pancreas", "pbmc", "pbmc_full", "tonsil", "mousecortex")
+                               "lung", "pancreas", "pbmc", "pbmc_full", "tonsil", "mousecortex", "custom", "none")
+
+# List of Azimuth references
+the$azimuth_references <- c("adipose", "bonemarrow", "fetus",
+                    "heart", "humancortex", "kidney",
+                    "lung", "pancreas", "pbmc", "tonsil", "mousecortex")
+
 
 #' Get PBMC reference URL
 #' @export
@@ -47,6 +53,12 @@ get_fmd_submission_url <- function() {
 #' @export
 get_references <- function() {
   the$references
+}
+
+#' Get possible Azimuth reference options
+#' @export
+get_azimuth_references <- function() {
+  the$azimuth_references
 }
 
 # We use the packages below, but not with direct calls in our functions.

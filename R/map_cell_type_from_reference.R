@@ -22,6 +22,7 @@
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
 #' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
 #' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `reference_tissue` should be set to `"custom"`.
+#' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A reference object
 #' @examples
@@ -30,89 +31,103 @@
 #' \dontrun{reference <- LoadReferenceSPEEDI(reference_tissue = "custom", species = "human",
 #' reference_dir = "~/reference/", reference_file_name = "custom_pbmc_reference.h5")}
 #' @export
-LoadReferenceSPEEDI <- function(reference_tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL, log_flag = FALSE) {
-  # Normalize paths (in case user provides relative paths)
-  reference_dir <- normalize_dir_path(reference_dir)
-  # Change reference_tissue to all lowercase to prevent any issues with casing
-  reference_tissue <- tolower(reference_tissue)
-  species <- tolower(species)
-  print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI(paste0("Step 1: loading reference (and installing reference data if necessary)"), log_flag)
-  print_SPEEDI(paste0("reference_tissue is: ", reference_tissue), log_flag)
-  print_SPEEDI(paste0("species is: ", species), log_flag)
-  print_SPEEDI(paste0("reference_dir (if necessary) is: ", reference_dir), log_flag)
-  if(!is.null(reference_file_name)) {
-    print_SPEEDI(paste0("reference_file_name is: ", reference_file_name), log_flag)
-  }
-  if (species == "human") {
-    if (reference_tissue == "adipose") {
-      SeuratData::InstallData("adiposeref")
-      reference <- "adiposeref"
-    } else if (reference_tissue == "bone_marrow") {
-      SeuratData::InstallData("bonemarrowref")
-      reference <- "bonemarrowref"
-    } else if (reference_tissue == "cortex") {
-      SeuratData::InstallData("humancortexref")
-      reference <- "humancortexref"
-    } else if (reference_tissue == "fetus") {
-      SeuratData::InstallData("fetusref")
-      reference <- "fetusref"
-    } else if (reference_tissue == "heart") {
-      SeuratData::InstallData("heartref")
-      reference <- "heartref"
-    } else if (reference_tissue == "kidney") {
-      SeuratData::InstallData("kidneyref")
-      reference <- "kidneyref"
-    } else if (reference_tissue == "lung") {
-      SeuratData::InstallData("lungref")
-      reference <- "lungref"
-    } else if (reference_tissue == "pancreas") {
-      SeuratData::InstallData("pancreasref")
-      reference <- "pancreasref"
-    } else if (reference_tissue == "pbmc") {
-      SeuratData::InstallData("pbmcref")
-      reference <- "pbmcref"
-    } else if (reference_tissue == "pbmc_full") {
-      reference_url <- get_pbmc_reference_url()
-      # Download PBMC reference if the user doesn't have it
-      if(!file.exists(paste0(reference_dir, sub("\\?.*", "", basename(reference_url))))) {
-        print_SPEEDI(paste0("Downloading PBMC reference from ", reference_url), log_flag)
-        httr::GET(
-          url = reference_url,
-          httr::write_disk(paste0(reference_dir, sub("\\?.*", "", basename(reference_url)))),
-          httr::verbose()
-        ) -> res
+LoadReferenceSPEEDI <- function(reference_tissue, species = "human", reference_dir = getwd(), reference_file_name = NULL, exit_with_code = FALSE, log_flag = FALSE) {
+  exit_code <- -1
+  reference <- tryCatch(
+    {
+      # Normalize paths (in case user provides relative paths)
+      reference_dir <- normalize_dir_path(reference_dir)
+      # Change reference_tissue to all lowercase to prevent any issues with casing
+      reference_tissue <- tolower(reference_tissue)
+      species <- tolower(species)
+      print_SPEEDI("\n", log_flag, silence_time = TRUE)
+      print_SPEEDI(paste0("Step 1: loading reference (and installing reference data if necessary)"), log_flag)
+      print_SPEEDI(paste0("reference_tissue is: ", reference_tissue), log_flag)
+      print_SPEEDI(paste0("species is: ", species), log_flag)
+      print_SPEEDI(paste0("reference_dir (if necessary) is: ", reference_dir), log_flag)
+      if(!is.null(reference_file_name)) {
+        print_SPEEDI(paste0("reference_file_name is: ", reference_file_name), log_flag)
       }
-      # Load and return PBMC reference
-      reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, basename(reference_url)))
-    } else if (reference_tissue == "tonsil") {
-      SeuratData::InstallData("tonsilref")
-      reference <- "tonsilref"
-    } else if (reference_tissue == "custom") {
-      # Load and return reference
-      reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
-    } else if (reference_tissue == "none") {
-      reference <- "none"
-    } else {
-      message(paste0("\nYour reference tissue ", reference_tissue, " is not valid for the selected species"))
+      if (species == "human") {
+        if (reference_tissue == "adipose") {
+          SeuratData::InstallData("adiposeref")
+          reference <- "adiposeref"
+        } else if (reference_tissue == "bone_marrow") {
+          SeuratData::InstallData("bonemarrowref")
+          reference <- "bonemarrowref"
+        } else if (reference_tissue == "cortex") {
+          SeuratData::InstallData("humancortexref")
+          reference <- "humancortexref"
+        } else if (reference_tissue == "fetus") {
+          SeuratData::InstallData("fetusref")
+          reference <- "fetusref"
+        } else if (reference_tissue == "heart") {
+          SeuratData::InstallData("heartref")
+          reference <- "heartref"
+        } else if (reference_tissue == "kidney") {
+          SeuratData::InstallData("kidneyref")
+          reference <- "kidneyref"
+        } else if (reference_tissue == "lung") {
+          SeuratData::InstallData("lungref")
+          reference <- "lungref"
+        } else if (reference_tissue == "pancreas") {
+          SeuratData::InstallData("pancreasref")
+          reference <- "pancreasref"
+        } else if (reference_tissue == "pbmc") {
+          SeuratData::InstallData("pbmcref")
+          reference <- "pbmcref"
+        } else if (reference_tissue == "pbmc_full") {
+          reference_url <- get_pbmc_reference_url()
+          # Download PBMC reference if the user doesn't have it
+          if(!file.exists(paste0(reference_dir, sub("\\?.*", "", basename(reference_url))))) {
+            print_SPEEDI(paste0("Downloading PBMC reference from ", reference_url), log_flag)
+            httr::GET(
+              url = reference_url,
+              httr::write_disk(paste0(reference_dir, sub("\\?.*", "", basename(reference_url)))),
+              httr::verbose()
+            ) -> res
+          }
+          # Load and return PBMC reference
+          reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, basename(reference_url)))
+        } else if (reference_tissue == "tonsil") {
+          SeuratData::InstallData("tonsilref")
+          reference <- "tonsilref"
+        } else if (reference_tissue == "custom") {
+          # Load and return reference
+          reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
+        } else if (reference_tissue == "none") {
+          reference <- "none"
+        } else {
+          message(paste0("\nYour reference tissue ", reference_tissue, " is not valid for the selected species"))
+        }
+      } else {
+        if (reference_tissue == "cortex") {
+          SeuratData::InstallData("mousecortexref")
+          reference <- "mousecortexref"
+        } else if (reference_tissue == "custom") {
+          # Load and return reference
+          reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
+        } else if (reference_tissue == "none") {
+          reference <- "none"
+        } else {
+          message(paste0("\nYour reference tissue ", reference_tissue, " is not valid for the selected species"))
+        }
+      }
+      if(inherits(reference, "character")) {
+        print_SPEEDI(paste0("Selected reference based on reference_tissue is: ", reference), log_flag)
+      }
+      print_SPEEDI("Step 1: Complete", log_flag)
+      return(reference)
+    },
+    error = function(cond) {
+      if(exit_code == -1) {
+        print_SPEEDI("Error running LoadReferenceSPEEDI() function", log_flag = log_flag)
+        print_SPEEDI(cond, log_flag = log_flag)
+        exit_code <- 13
+      }
+      quit_SPEEDI(exit_with_code = exit_with_code, exit_code = exit_code, log_flag = log_flag)
     }
-  } else {
-    if (reference_tissue == "cortex") {
-      SeuratData::InstallData("mousecortexref")
-      reference <- "mousecortexref"
-    } else if (reference_tissue == "custom") {
-      # Load and return reference
-      reference <- SeuratDisk::LoadH5Seurat(paste0(reference_dir, reference_file_name))
-    } else if (reference_tissue == "none") {
-      reference <- "none"
-    } else {
-      message(paste0("\nYour reference tissue ", reference_tissue, " is not valid for the selected species"))
-    }
-  }
-  if(inherits(reference, "character")) {
-    print_SPEEDI(paste0("Selected reference based on reference_tissue is: ", reference), log_flag)
-  }
-  print_SPEEDI("Step 1: Complete", log_flag)
+  )
   return(reference)
 }
 
@@ -354,6 +369,7 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param data_type String to indicate whether we're analyzing scRNA or snRNA data
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
+#' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains majority vote labels
 #' @examples
@@ -361,64 +377,81 @@ SetPredictedId <- function(sc_obj, reference, log_flag = FALSE) {
 #' reference_cell_type_attribute = "Celltype")}
 #' \dontrun{sc_obj <- MapCellTypes_RNA(sc_obj, reference = "adiposeref")}
 #' @export
-MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = "celltype.l2", data_type = "scRNA", output_dir = getwd(), log_flag = FALSE) {
-  # Normalize paths (in case user provides relative paths)
-  output_dir <- normalizePath(output_dir, "/")
-  print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 8: Reference-based cell type mapping (RNA)", log_flag)
-  if(inherits(reference, "character")) {
-    print_SPEEDI(paste0("reference is: ", reference), log_flag)
-  }
-  if(!is.null(reference_cell_type_attribute)) {
-    print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
-  }
-  print_SPEEDI(paste0("data_type is: ", data_type), log_flag)
-  # Set default assay (to integrated or SCT)
-  sc_obj <- SetDefaultAssay(sc_obj)
-  if(inherits(reference, "Seurat")) {
-    anchors <- FindMappingAnchors(sc_obj, reference, data_type, log_flag)
-    print_SPEEDI("Mapping reference onto query cells", log_flag)
-    sc_obj <- Seurat::MapQuery(anchorset = anchors,
-                     query = sc_obj,
-                     reference = reference,
-                     refdata = reference_cell_type_attribute,
-                     reference.reduction = "spca",
-                     reduction.model = "wnn.umap",
-                     verbose = TRUE)
-    print_SPEEDI("Done mapping reference onto query cells", log_flag)
-    sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
-  } else if(inherits(reference, "character") & reference %in% possible_seuratdata_references) {
-    print_SPEEDI("Running Azimuth to map reference onto query cells", log_flag)
-    sc_obj <- Azimuth::RunAzimuth(query = sc_obj, reference = reference)
-    print_SPEEDI("Done running Azimuth to map reference onto query cells", log_flag)
-    sc_obj <- SetDefaultAssay(sc_obj)
-    sc_obj <- SetPredictedId(sc_obj, reference, log_flag)
-    sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
-  } else if(inherits(reference, "character") && reference == "none") {
-    print_SPEEDI("Not performing reference mapping because no reference was provided", log_flag)
-  } else {
-    if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
-      print_SPEEDI(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."), log_flag)
+MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = "celltype.l2", data_type = "scRNA", output_dir = getwd(), exit_with_code = FALSE, log_flag = FALSE) {
+  exit_code <- -1
+  azimuth_references <- get_azimuth_references()
+  sc_obj <- tryCatch(
+    {
+      # Normalize paths (in case user provides relative paths)
+      output_dir <- normalizePath(output_dir, "/")
+      print_SPEEDI("\n", log_flag, silence_time = TRUE)
+      print_SPEEDI("Step 8: Reference-based cell type mapping (RNA)", log_flag)
+      if(inherits(reference, "character")) {
+        print_SPEEDI(paste0("reference is: ", reference), log_flag)
+      }
+      if(!is.null(reference_cell_type_attribute)) {
+        print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
+      }
+      print_SPEEDI(paste0("data_type is: ", data_type), log_flag)
+      # Set default assay (to integrated or SCT)
+      sc_obj <- SetDefaultAssay(sc_obj)
+      if(inherits(reference, "Seurat")) {
+        anchors <- FindMappingAnchors(sc_obj, reference, data_type, log_flag)
+        print_SPEEDI("Mapping reference onto query cells", log_flag)
+        sc_obj <- Seurat::MapQuery(anchorset = anchors,
+                                   query = sc_obj,
+                                   reference = reference,
+                                   refdata = reference_cell_type_attribute,
+                                   reference.reduction = "spca",
+                                   reduction.model = "wnn.umap",
+                                   verbose = TRUE)
+        print_SPEEDI("Done mapping reference onto query cells", log_flag)
+        sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
+      } else if(inherits(reference, "character") & reference %in% azimuth_references) {
+        print_SPEEDI("Running Azimuth to map reference onto query cells", log_flag)
+        sc_obj <- Azimuth::RunAzimuth(query = sc_obj, reference = reference)
+        print_SPEEDI("Done running Azimuth to map reference onto query cells", log_flag)
+        sc_obj <- SetDefaultAssay(sc_obj)
+        sc_obj <- SetPredictedId(sc_obj, reference, log_flag)
+        sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
+      } else if(inherits(reference, "character") && reference == "none") {
+        print_SPEEDI("Not performing reference mapping because no reference was provided", log_flag)
+      } else {
+        if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
+          print_SPEEDI(paste0("\nError: Your reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."), log_flag = log_flag)
+          exit_code <- 29
+          stop()
+        }
+      }
+      if(inherits(reference, "Seurat") || (inherits(reference, "character") && reference != "none")) {
+        print_SPEEDI("Printing final UMAPs", log_flag)
+        print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Majority_Vote_Cell_Type.png",
+                       group_by_category = "predicted_celltype_majority_vote", output_dir = output_dir,
+                       log_flag = log_flag)
+        print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Cluster.png",
+                       group_by_category = "seurat_clusters", output_dir = output_dir,
+                       log_flag = log_flag)
+        print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Raw_Predicted_Cell_Type.png",
+                       group_by_category = "predicted.id", output_dir = output_dir,
+                       log_flag = log_flag)
+        print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Sample.png",
+                       group_by_category = "sample", output_dir = output_dir,
+                       log_flag = log_flag)
+        print_heatmap_cell_type_proportions_RNA(sc_obj, file_name = "Final_RNA_Cell_Type_Proportion_Heatmap.png",
+                                                output_dir = output_dir, log_flag = log_flag)
+      }
+      print_SPEEDI("Step 8: Complete", log_flag)
+      return(sc_obj)
+    },
+    error = function(cond) {
+      if(exit_code == -1) {
+        print_SPEEDI("Error running MapCellTypes_RNA() function", log_flag = log_flag)
+        print_SPEEDI(cond, log_flag = log_flag)
+        exit_code <- 24
+      }
+      quit_SPEEDI(exit_with_code = exit_with_code, exit_code = exit_code, log_flag = log_flag)
     }
-  }
-  if(inherits(reference, "Seurat") || (inherits(reference, "character") && reference != "none")) {
-    print_SPEEDI("Printing final UMAPs", log_flag)
-    print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Majority_Vote_Cell_Type.png",
-               group_by_category = "predicted_celltype_majority_vote", output_dir = output_dir,
-               log_flag = log_flag)
-    print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Cluster.png",
-               group_by_category = "seurat_clusters", output_dir = output_dir,
-               log_flag = log_flag)
-    print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Raw_Predicted_Cell_Type.png",
-               group_by_category = "predicted.id", output_dir = output_dir,
-               log_flag = log_flag)
-    print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Sample.png",
-               group_by_category = "sample", output_dir = output_dir,
-               log_flag = log_flag)
-    print_heatmap_cell_type_proportions_RNA(sc_obj, file_name = "Final_RNA_Cell_Type_Proportion_Heatmap.png",
-                                            output_dir = output_dir, log_flag = log_flag)
-  }
-  print_SPEEDI("Step 8: Complete", log_flag)
+  )
   gc()
   return(sc_obj)
 }
@@ -428,65 +461,80 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
 #' @param proj ArchR project containing cells for all samples
 #' @param reference Seurat reference object
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
+#' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR object which contains majority vote labels
 #' @examples
 #' \dontrun{sc_obj <- MapCellTypes_ATAC(proj, reference = custom_reference_seurat_object)}
 #' @export
-MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "celltype.l2", log_flag = FALSE) {
-  print_SPEEDI("\n", log_flag, silence_time = TRUE)
-  print_SPEEDI("Step 8: Reference-based cell type mapping (ATAC)", log_flag)
-  if(inherits(reference, "character")) {
-    print_SPEEDI(paste0("reference is: ", reference), log_flag)
-  }
-  if(!is.null(reference_cell_type_attribute)) {
-    print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
-  }
-  if(inherits(reference, "character") && reference == "none") {
-    print_SPEEDI("Not performing reference mapping because no reference was provided", log_flag)
-  } else {
-    print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)
-    # If we only had one batch, then we just use IterativeLSI - otherwise, we use Harmony
-    if(length(unique(proj$Batch)) == 1) {
-      reducedDims_param <- "IterativeLSI"
-    } else {
-      reducedDims_param <- "Harmony"
+MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "celltype.l2", exit_with_code = FALSE, log_flag = FALSE) {
+  exit_code <- -1
+  proj <- tryCatch(
+    {
+      print_SPEEDI("\n", log_flag, silence_time = TRUE)
+      print_SPEEDI("Step 8: Reference-based cell type mapping (ATAC)", log_flag)
+      if(inherits(reference, "character")) {
+        print_SPEEDI(paste0("reference is: ", reference), log_flag)
+      }
+      if(!is.null(reference_cell_type_attribute)) {
+        print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
+      }
+      if(inherits(reference, "character") && reference == "none") {
+        print_SPEEDI("Not performing reference mapping because no reference was provided", log_flag)
+      } else {
+        print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)
+        # If we only had one batch, then we just use IterativeLSI - otherwise, we use Harmony
+        if(length(unique(proj$Batch)) == 1) {
+          reducedDims_param <- "IterativeLSI"
+        } else {
+          reducedDims_param <- "Harmony"
+        }
+        if(Seurat::DefaultAssay(reference) == "SCT") {
+          normalization_method <- "SCT"
+        } else {
+          normalization_method <- "LogNormalize"
+        }
+        proj <- addGeneIntegrationMatrix_SPEEDI(
+          ArchRProj = proj,
+          useMatrix = "GeneScoreMatrix",
+          matrixName = "GeneIntegrationMatrix",
+          reducedDims = reducedDims_param,
+          seRNA = reference,
+          dimsToUse = 2:30,
+          addToArrow = FALSE,
+          groupRNA = reference_cell_type_attribute,
+          nameCell = "predictedCell",
+          nameGroup = "predictedGroup",
+          nameScore = "predictedScore",
+          normalization.method = normalization_method,
+          force = TRUE
+        )
+        print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
+        pal <- paletteDiscrete(values = proj$predictedGroup)
+        p1 <- plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "predictedGroup", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
+        ArchR::plotPDF(p1, name = "UMAP_after_Initial_Cell_Type_Reference_Mapping_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+        # We have to perform majority voting with a different cluster attribute if Harmony was not run
+        # (due to only having one batch)
+        proj <- MajorityVote_ATAC(proj, log_flag)
+        pal <- paletteDiscrete(values = proj$Cell_type_voting)
+        p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
+        p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+        p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+        p4 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+        ArchR::plotPDF(p1,p2,p3,p4, name = "UMAP_after_Final_Cell_Type_Majority_Voting_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+      }
+      print_SPEEDI("Step 8: Complete", log_flag)
+      return(proj)
+    },
+    error = function(cond) {
+      if(exit_code == -1) {
+        print_SPEEDI("Error running MapCellTypes_ATAC() function", log_flag = log_flag)
+        print_SPEEDI(cond, log_flag = log_flag)
+        exit_code <- 25
+      }
+      quit_SPEEDI(exit_with_code = exit_with_code, exit_code = exit_code, log_flag = log_flag)
     }
-    if(Seurat::DefaultAssay(reference) == "SCT") {
-      normalization_method <- "SCT"
-    } else {
-      normalization_method <- "LogNormalize"
-    }
-    proj <- addGeneIntegrationMatrix_SPEEDI(
-      ArchRProj = proj,
-      useMatrix = "GeneScoreMatrix",
-      matrixName = "GeneIntegrationMatrix",
-      reducedDims = reducedDims_param,
-      seRNA = reference,
-      dimsToUse = 2:30,
-      addToArrow = FALSE,
-      groupRNA = reference_cell_type_attribute,
-      nameCell = "predictedCell",
-      nameGroup = "predictedGroup",
-      nameScore = "predictedScore",
-      normalization.method = normalization_method,
-      force = TRUE
-    )
-    print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
-    pal <- paletteDiscrete(values = proj$predictedGroup)
-    p1 <- plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "predictedGroup", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
-    ArchR::plotPDF(p1, name = "UMAP_after_Initial_Cell_Type_Reference_Mapping_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
-    # We have to perform majority voting with a different cluster attribute if Harmony was not run
-    # (due to only having one batch)
-    proj <- MajorityVote_ATAC(proj, log_flag)
-    pal <- paletteDiscrete(values = proj$Cell_type_voting)
-    p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
-    p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
-    p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
-    p4 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
-    ArchR::plotPDF(p1,p2,p3,p4, name = "UMAP_after_Final_Cell_Type_Majority_Voting_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
-  }
-  print_SPEEDI("Step 8: Complete", log_flag)
+  )
   gc()
   return(proj)
 }

@@ -4,10 +4,12 @@
 \alias{InitialProcessing_ATAC}
 \title{Process filtered data (ATAC)}
 \usage{
-InitialProcessing_ATAC(proj, log_flag = FALSE)
+InitialProcessing_ATAC(proj, exit_with_code = FALSE, log_flag = FALSE)
 }
 \arguments{
 \item{proj}{ArchR project associated with data}
+
+\item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }
