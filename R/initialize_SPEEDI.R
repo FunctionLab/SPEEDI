@@ -37,9 +37,10 @@
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
 #' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If this argument is used, `sample_id_list` is required and should be written in the same order as the sample file paths.
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
+#' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @return List containing initialized SPEEDI variables
 #' @export
-initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE) {
+initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE) {
   # Normalize paths (in case user provides relative paths)
   data_path <- normalize_dir_path(data_path)
   reference_dir <- normalize_dir_path(reference_dir)
@@ -86,10 +87,7 @@ initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "hu
     setwd(ATAC_output_dir)
   }
   # Check user parameters for immediate errors
-  speedi_exit_code <- preliminary_check_for_SPEEDI_errors(data_type = data_type, reference_tissue = reference_tissue, log_flag = log_flag)
-  if(speedi_exit_code != 0) {
-    quit(speedi_exit_code)
-  }
+  preliminary_check_for_SPEEDI_errors(data_type = data_type, reference_tissue = reference_tissue, exit_with_code = exit_with_code, log_flag = log_flag)
   # Return all updated variables in SPEEDI_variables list
   SPEEDI_variables <- list(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path,
                            reference_dir = reference_dir, output_dir = output_dir, metadata_df = metadata_df,

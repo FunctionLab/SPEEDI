@@ -86,6 +86,8 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
     }
   } else {
     data_files <- sample_file_paths
+    positions <- sapply(sample_id_list, function(pattern) grep(pattern, data_files))
+    sample_id_list <- sample_id_list[order(positions)]
   }
   print_SPEEDI(paste0("Total sample count is: ", length(sample_id_list)), log_flag)
   # Set up reading of data so it's parallel (max cores == number of samples)

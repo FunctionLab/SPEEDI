@@ -53,6 +53,7 @@
 #' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
 #' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If this argument is used, `sample_id_list` is required and should be written in the same order as the sample file paths.
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
+#' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @return A Seurat object that has been processed through the SPEEDI pipeline
 #' @examples
 #' \dontrun{sc_obj <- run_SPEEDI(reference_tissue = "PBMC", species = "human")}
@@ -61,8 +62,8 @@
 #' species = "human", record_doublets = TRUE)}
 #' @export
 #' @import ArchR
-run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE) {
-  SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, data_path, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, sample_file_paths, record_doublets)
+run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE) {
+  SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, data_path, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, sample_file_paths, record_doublets, exit_with_code)
   log_flag <- TRUE
   print_SPEEDI("Beginning SPEEDI Run!", log_flag = log_flag)
   # Load reference

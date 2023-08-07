@@ -58,18 +58,19 @@ create_SPEEDI_log_file <- function(output_dir = getwd(), log_file_name = NULL) {
 #' Preliminary check for SPEEDI errors
 #' @param data_type Data type
 #' @param reference_tissue Reference tissue
+#' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag boolean to indicate whether we're also printing to log file
-#' @return exit code indicating error
+#' @return TRUE
 #' @export
-preliminary_check_for_SPEEDI_errors <- function(data_type, reference_tissue, log_flag = FALSE) {
+preliminary_check_for_SPEEDI_errors <- function(data_type, reference_tissue, exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- 0
   # First check
   if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full"
                                                              & tolower(reference_tissue) != "custom") & tolower(reference_tissue) != "none") {
     print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", log_flag)
-    exit_code <- 1
+    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 1, log_flag = log_flag)
   }
-  return(exit_code)
+  return(TRUE)
 }
 
 #' Print to console as well as log file (if it's present)
@@ -87,6 +88,20 @@ print_SPEEDI <- function(current_message, log_flag = FALSE, silence_time = FALSE
     logr::log_print(current_message, console = FALSE, hide_notes = TRUE, blank_after = FALSE)
   }
   return(TRUE)
+}
+
+#' Quits SPEEDI (either with exit code if exit_with_code == TRUE or with stop())
+#' @param exit_code exit code
+#' @param log_flag boolean to indicate whether we're also printing to log file
+#' @return TRUE
+#' @export
+quit_SPEEDI <- function(exit_with_code, exit_code = 0, log_flag = FALSE) {
+  if(exit_with_code) {
+    quit(status = exit_code)
+  } else {
+    stop()
+  }
+  return(TRUE) # Never reached
 }
 
 #' Print UMAP for Seurat object (RNA)
