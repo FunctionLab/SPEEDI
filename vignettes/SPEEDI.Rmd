@@ -126,7 +126,7 @@ We'll begin with the parameters that we provide values for in this analysis:
 * `output_dir`: Path to directory where output will be saved. Here, we choose `output/`.
 * `metadata_df`: Data frame that contains metadata about our samples. Its value will declared in the code snippet below.
 
-There are two different PBMC reference tissue types in SPEEDI: `PBMC` and `PBMC_full`. The former uses a `SeuratData` reference and `Azimuth` to map cell types, while the latter downloads a more detailed, quite large PBMC reference (~8 GB) for cell type mapping. To get the best possible mapping, we choose the latter. Importantly, SPEEDI loads this reference into memory during processing, so you should use `PBMC` unless you have sufficient memory to load the `PBMC_full` reference.
+There are two different PBMC reference tissue types in SPEEDI: `PBMC` and `PBMC_full`. The former uses a `SeuratData` reference and `Azimuth` to map cell types, while the latter downloads a more detailed, quite large (~8 GB) PBMC reference for cell type mapping. To get the best possible mapping, we choose the latter. Importantly, SPEEDI loads this reference into memory during processing, so you should use `PBMC` unless you have sufficient memory to load the `PBMC_full` reference.
 
 Our other parameters will use the default values:
 
@@ -315,7 +315,7 @@ de_results <- run_downstream_analyses_RNA(sc_obj = sc_obj, reference_tissue = SP
                                       output_dir = SPEEDI_variables$RNA_output_dir, log_flag = TRUE)
 ```
 
-In our metadata data frame, we provided one metadata category ("disease") with each sample being assigned a value of "COVID" or "healthy". The `run_downstream_analyses_RNA()` wrapper function finds differentially expressed genes (DEGs) for each cell type (COVID vs. healthy) using SPEEDI's `RunDE_RNA()` function. SPEEDI first uses the `Seurat` function `FindMarkers()` to find DEGs on a single cell sample level (adjusted p-value threshold of 0.05, log fold change threshold of 0.1, and min.pct threshold of 0.1) and then uses `DESeq2` to further curate this list using pseudobulk level filtering (p-value of 0.05 and log fold change threshold of 0.3). 
+In our metadata data frame, we provided one metadata category ("disease") with each sample being assigned a value of "COVID" or "healthy". The `run_downstream_analyses_RNA()` wrapper function finds differentially expressed genes (DEGs) for each cell type (COVID vs. healthy) using SPEEDI's `RunDE_RNA()` function. SPEEDI first uses the `Seurat` function `FindMarkers()` to find DEGs on a single cell sample level (adjusted p-value threshold of 0.05, log fold change threshold of 0.1, and min.pct threshold of 0.1) and then uses `DESeq2` to further curate this list using pseudobulk level filtering (p-value threshold of 0.05 and log fold change threshold of 0.3). 
 
 The final output is a table containing DEGs for each cell type:
 
