@@ -41,9 +41,21 @@
 #' @return List containing initialized SPEEDI variables
 #' @export
 initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE) {
+  if(!is.null(data_path) && !dir.exists(data_path)) {
+    print_SPEEDI("Error: Input directory doesn't exist.", log_flag)
+    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 1, log_flag = FALSE)
+  }
+  if(!is.null(output_dir)) {
+    print_SPEEDI("Error: You must provide an output directory (cannot be NULL).", log_flag)
+    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 2, log_flag = FALSE)
+  }
   # Normalize paths (in case user provides relative paths)
-  data_path <- normalize_dir_path(data_path)
-  reference_dir <- normalize_dir_path(reference_dir)
+  if(!is.null(data_path)) {
+    data_path <- normalize_dir_path(data_path)
+  }
+  if(!is.null(reference_dir)) {
+    reference_dir <- normalize_dir_path(reference_dir)
+  }
   output_dir <- normalize_dir_path(output_dir)
   # Change reference_tissue and species to all lowercase to prevent any issues with casing
   reference_tissue <- tolower(reference_tissue)
@@ -87,7 +99,7 @@ initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "hu
     setwd(ATAC_output_dir)
   }
   # Check user parameters for immediate errors
-  preliminary_check_for_SPEEDI_errors(data_type = data_type, reference_tissue = reference_tissue, exit_with_code = exit_with_code, log_flag = log_flag)
+  preliminary_check_for_SPEEDI_errors(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path, reference_dir = reference_dir, output_dir = output_dir, metadata_df = metadata_df, reference_file_name = reference_file_name, reference_cell_type_attribute = reference_cell_type_attribute, analysis_name = analysis_name, sample_id_list = sample_id_list, sample_file_paths = sample_file_paths, record_doublets = record_doublets, exit_with_code = exit_with_code, log_flag = log_flag)
   # Return all updated variables in SPEEDI_variables list
   SPEEDI_variables <- list(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path,
                            reference_dir = reference_dir, output_dir = output_dir, metadata_df = metadata_df,

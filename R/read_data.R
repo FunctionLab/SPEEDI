@@ -30,14 +30,6 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
     print_SPEEDI("sample_file_paths includes the following file paths:", log_flag)
     print_SPEEDI(paste0(sample_file_paths, collapse = ", "), log_flag)
   }
-  if(!is.null(sample_file_paths) & is.null(sample_id_list)) {
-    print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag)
-    stop()
-  }
-  if(is.null(data_path) & is.null(sample_file_paths)) {
-    print_SPEEDI("Error: You must provide a value for \"data_path\" if you do not provide a value for \"sample_file_paths\".", log_flag)
-    stop()
-  }
   if(is.null(sample_file_paths)) {
     # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
     data_path <- path.expand(data_path)

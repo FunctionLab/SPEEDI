@@ -56,19 +56,73 @@ create_SPEEDI_log_file <- function(output_dir = getwd(), log_file_name = NULL) {
 }
 
 #' Preliminary check for SPEEDI errors
-#' @param data_type Data type
-#' @param reference_tissue Reference tissue
+#' @param reference_tissue Reference tissue type (used to map cell types via reference). For human data, possible choices include:
+#' * `"adipose"`
+#' * `"bone_marrow"`
+#' * `"cortex"`
+#' * `"fetus"`
+#' * `"heart"`
+#' * `"kidney"`
+#' * `"lung"`
+#' * `"pancreas"`
+#' * `"pbmc"` (uses [Azimuth] reference)
+#' * `"pbmc_full"` (downloads more complete PBMC reference - should provide better mapping quality but also quite large (~8 GB) to load into memory)
+#' * `"tonsil"`
+#' * `"custom"` (`reference_file_name` must be provided)
+#' * `"none"` (cell mapping from reference will not be performed)
+#'
+#' For mouse data, possible choices include:
+#' * `"cortex"`
+#' * `"custom"` (`reference_file_name` must be provided)
+#' * `"none"` (cell mapping from reference will not be performed)
+#' @param data_type Type of data being processed. Possible choices include:
+#' * `"RNA"`
+#' * `"ATAC"` (`reference_tissue` must be set to `"pbmc_full"`, `"custom"`, or `"none"`)
+#' * `"sample_paired"` (reference mapping for ATAC will not be performed if an Azimuth reference is selected)
+#' * `"true_multiome"` (reference mapping for full ATAC will not be performed if an Azimuth reference is selected, but RNA cell types will be mapped over to ATAC for overlapping cells that pass QC)
+#' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
+#' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
+#' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
+#' @param metadata_df Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
+#' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `reference_tissue` should be set to `"custom"`.
+#' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
+#' @param analysis_name Name used to create subdirectory in `output_dir` for current analysis run. Directory will be created if it doesn't already exist.
+#' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
+#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If this argument is used, `sample_id_list` is required and should be written in the same order as the sample file paths.
+#' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
-#' @param log_flag boolean to indicate whether we're also printing to log file
+#' @param log_flag Boolean flag to indicate whether we're also printing to log file
 #' @return TRUE
 #' @export
-preliminary_check_for_SPEEDI_errors <- function(data_type, reference_tissue, exit_with_code = FALSE, log_flag = FALSE) {
+preliminary_check_for_SPEEDI_errors <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- 0
-  # First check
+  possible_references <- get_references()
   if((data_type == "ATAC" | data_type == "sample_paired") & (tolower(reference_tissue) != "pbmc_full"
                                                              & tolower(reference_tissue) != "custom") & tolower(reference_tissue) != "none") {
     print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", log_flag)
-    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 1, log_flag = log_flag)
+    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 3, log_flag = log_flag)
+  }
+  if(!is.null(sample_file_paths) & is.null(sample_id_list)) {
+    print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag)
+    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 4, log_flag = log_flag)
+  }
+  if(is.null(data_path) & is.null(sample_file_paths)) {
+    print_SPEEDI("Error: You must provide a value for \"data_path\" if you do not provide a value for \"sample_file_paths\".", log_flag)
+    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 5, log_flag = log_flag)
+  }
+  if(tolower(species) != "human" && tolower(species) != "mouse") {
+    print_SPEEDI("Error: Species is not supported (must be human or mouse).", log_flag)
+    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 6, log_flag = log_flag)
+  }
+  if(!(tolower(reference_tissue) %in% possible_references)) {
+    print_SPEEDI("Error: Reference is not supported. It should be one of the following: \n", log_flag)
+    print_SPEEDI(paste0(possible_references, collapse = "\n"), log_flag)
+    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 7, log_flag = log_flag)
+  if(data_type != "RNA" && data_type != "ATAC" && data_type != "sample_paired" && data_type != "true_multiome") {
+    print_SPEEDI("Error: Data type is not supported (must be RNA, ATAC, sample_paired, or true_multiome).", log_flag)
+    quit_SPEEDI(exit_with_code = exit_with_code, exit_code = 8, log_flag = log_flag)
+
   }
   return(TRUE)
 }

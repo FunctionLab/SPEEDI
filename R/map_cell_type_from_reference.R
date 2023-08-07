@@ -375,8 +375,6 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
   print_SPEEDI(paste0("data_type is: ", data_type), log_flag)
   # Set default assay (to integrated or SCT)
   sc_obj <- SetDefaultAssay(sc_obj)
-  # Grab all possible SeuratData references (to make sure that user provided a valid one)
-  possible_seuratdata_references <- get_seuratdata_references()
   if(inherits(reference, "Seurat")) {
     anchors <- FindMappingAnchors(sc_obj, reference, data_type, log_flag)
     print_SPEEDI("Mapping reference onto query cells", log_flag)
@@ -401,9 +399,6 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
   } else {
     if(!inherits(reference, "Seurat") & !inherits(reference, "character")) {
       print_SPEEDI(paste0("\nYour reference is not a supported class. It is class ", class(reference), " and should be a Seurat object or a character string."), log_flag)
-    } else if(inherits(reference, "character") & !(reference %in% possible_seuratdata_references)) {
-      print_SPEEDI(paste0("\nYour reference name (", reference, ") is not valid (it was not found in SeuratData). It should be one of the following: \n"), log_flag)
-      print_SPEEDI(paste0(possible_seuratdata_references, collapse = "\n"), log_flag)
     }
   }
   if(inherits(reference, "Seurat") || (inherits(reference, "character") && reference != "none")) {

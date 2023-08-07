@@ -11,10 +11,10 @@ the$gene_check_url <- 'https://hb.flatironinstitute.org/api/genes/search/multi?'
 # URL for submitting functional module discovery job to HumanBase
 the$fmd_submission_url <- 'https://hb.flatironinstitute.org/api/integrations/community/?integration='
 
-# List of possible SeuratData references
-the$seuratdata_references <- c("adiposeref", "bonemarrowref", "fetusref",
-                               "heartref", "humancortexref", "kidneyref",
-                               "lungref", "pancreasref", "pbmcref", "tonsilref", "mousecortexref")
+# List of possible references
+the$references <- c("adipose", "bonemarrow", "fetus",
+                               "heart", "humancortex", "kidney",
+                               "lung", "pancreas", "pbmc", "pbmc_full", "tonsil", "mousecortex")
 
 #' Get PBMC reference URL
 #' @export
@@ -43,10 +43,10 @@ get_fmd_submission_url <- function() {
   the$fmd_submission_url
 }
 
-#' Get possible SeuratData references
+#' Get possible reference options
 #' @export
-get_seuratdata_references <- function() {
-  the$seuratdata_references
+get_references <- function() {
+  the$references
 }
 
 # We use the packages below, but not with direct calls in our functions.
