@@ -136,6 +136,10 @@ preliminary_check_for_SPEEDI_errors <- function(reference_tissue, data_type = "R
     print_SPEEDI("Error: You cannot use an Azimuth reference if you are processing ATAC or sample-paired data.", log_flag = log_flag)
     exit_code <- 12
   }
+  if(data_type != "RNA" && grepl(" ", output_dir, fixed = TRUE)) {
+    print_SPEEDI("Error: ArchR (used for ATAC processing) does not allow spaces in your output directory path.", log_flag = log_flag)
+    exit_code <- 31
+  }
   return(exit_code)
 }
 
