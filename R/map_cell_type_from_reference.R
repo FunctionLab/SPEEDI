@@ -511,21 +511,34 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
           force = TRUE
         )
         print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
+        num_cells <- length(proj$cellNames)
+        num_samples <- length(unique(proj$Sample))
+        sample_text <- ""
+        if(num_samples == 1) {
+          sample_text <- paste0("(1 Sample, ", num_cells, " Cells)")
+        } else {
+          sample_text <- paste0("(", num_samples, " Samples, ", num_cells, " Cells)")
+        }
         pal <- paletteDiscrete(values = proj$predictedGroup)
-        p1 <- plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "predictedGroup", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
-        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Raw_Predicted_Cell_Type.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
+        p1 <- plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "predictedGroup", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE) +
+          ggplot2::ggtitle(paste0("ATAC Data After Integration (By Raw Predicted Cell Type) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Raw_Predicted_Cell_Type.png"), plot = p1, device = "png", width = 8, height = 8, units = "in") +
         ArchR::plotPDF(p1, name = "Final_ATAC_UMAP_by_Raw_Predicted_Cell_Type", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
         # We have to perform majority voting with a different cluster attribute if Harmony was not run
         # (due to only having one batch)
         proj <- MajorityVote_ATAC(proj, log_flag)
         pal <- paletteDiscrete(values = proj$Cell_type_voting)
-        p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
+        p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE) +
+          ggplot2::ggtitle(paste0("ATAC Data After Integration (By Majority Vote Cell Type) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
         ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Majority_Vote_Cell_Type.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
-        p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+        p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
+          ggplot2::ggtitle(paste0("ATAC Data After Integration (By Clusters) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
         ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Clusters.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
-        p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+        p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
+          ggplot2::ggtitle(paste0("ATAC Data After Integration (By Sample) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
         ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Sample.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
-        p4 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+        p4 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
+          ggplot2::ggtitle(paste0("ATAC Data After Integration (By TSS Enrichment) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
         ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_TSSEnrichment.png"), plot = p4, device = "png", width = 8, height = 8, units = "in")
         ArchR::plotPDF(p1,p2,p3,p4, name = "UMAP_after_Final_Cell_Type_Majority_Voting_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       }

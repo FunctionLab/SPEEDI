@@ -68,9 +68,19 @@ TransferRNALabels <- function(sc_obj, proj, output_dir = getwd(), exit_with_code
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 10: Transferring cell type labels from RNA data to ATAC data (true multiome)", log_flag)
       proj <- ArchR::addCellColData(ArchRProj = proj, data = as.character(sc_obj$predicted_celltype_majority_vote), cells = proj$cellNames, name = "Cell_type_voting_RNA", force = TRUE)
-      p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting_RNA", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+      num_cells <- length(proj$cellNames)
+      num_samples <- length(unique(proj$Sample))
+      sample_text <- ""
+      if(num_samples == 1) {
+        sample_text <- paste0("(1 Sample, ", num_cells, " Cells)")
+      } else {
+        sample_text <- paste0("(", num_samples, " Samples, ", num_cells, " Cells)")
+      }
+      p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting_RNA", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
+        ggplot2::ggtitle(paste0("Multiome Overlap for ATAC Data (By RNA Majority Vote Cell Type) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
       ggplot2::ggsave(filename = paste0(output_dir, "Final_Multiome_Overlap_UMAP_by_RNA_Majority_Vote_Cell_Type_Labels.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
-      p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+      p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
+        ggplot2::ggtitle(paste0("Multiome Overlap for ATAC Data (By ATAC Majority Vote Cell Type) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
       ggplot2::ggsave(filename = paste0(output_dir, "Final_Multiome_Overlap_UMAP_by_Original_ATAC_Majority_Vote_Cell_Type_Labels.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
       ArchR::plotPDF(p1,p2, name = "UMAP_multiome_RNA_labels_and_original_labels_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       print_SPEEDI("Step 10: Complete", log_flag)
