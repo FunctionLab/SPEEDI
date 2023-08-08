@@ -64,8 +64,6 @@
 #' @import ArchR
 run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE) {
   SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, data_path, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, sample_file_paths, record_doublets, exit_with_code)
-  print(SPEEDI_variables)
-  print(SPEEDI_variables$log_flag)
   print_SPEEDI("Beginning SPEEDI Run!", log_flag = SPEEDI_variables$log_flag)
   # Load reference
   reference <- LoadReferenceSPEEDI(reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, reference_dir = SPEEDI_variables$reference_dir,
