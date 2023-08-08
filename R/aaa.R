@@ -17,9 +17,9 @@ the$references <- c("adipose", "bonemarrow", "fetus",
                                "lung", "pancreas", "pbmc", "pbmc_full", "tonsil", "mousecortex", "custom", "none")
 
 # List of Azimuth references
-the$azimuth_references <- c("adipose", "bonemarrow", "fetus",
-                    "heart", "humancortex", "kidney",
-                    "lung", "pancreas", "pbmc", "tonsil", "mousecortex")
+the$azimuth_references <- c("adiposeref", "bonemarrowref", "fetusref",
+                    "heartref", "humancortexref", "kidneyref",
+                    "lungref", "pancreasref", "pbmcref", "tonsilref", "mousecortexref")
 
 
 #' Get PBMC reference URL

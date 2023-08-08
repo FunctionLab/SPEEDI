@@ -470,6 +470,7 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
 #' @export
 MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
+  azimuth_references <- get_azimuth_references()
   proj <- tryCatch(
     {
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
@@ -482,6 +483,8 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
       }
       if(inherits(reference, "character") && reference == "none") {
         print_SPEEDI("Not performing reference mapping because no reference was provided", log_flag)
+      } else if(inherits(reference, "character") && reference %in% azimuth_references) {
+        print_SPEEDI("Warning: Not performing reference mapping because Azimuth reference was provided", log_flag)
       } else {
         print_SPEEDI("Adding gene integration matrix into ArchR project using reference", log_flag)
         # If we only had one batch, then we just use IterativeLSI - otherwise, we use Harmony
