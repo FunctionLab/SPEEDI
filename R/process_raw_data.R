@@ -287,8 +287,11 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
       print_SPEEDI("Running PCA and UMAP on normalized data", log_flag)
       sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
       sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30)
+      sample_count <- length(unique(sc_obj$sample))
+      cell_count <- length(sc_obj$cell_name)
+      current_title <- paste0("RNA Data Before Integration \n (", sample_count, " Samples, ", cell_count, " Cells)")
       print_UMAP_RNA(sc_obj, file_name = "Before_Batch_Correction_RNA_UMAP_by_Sample.png",
-                     group_by_category = "sample", output_dir = output_dir,
+                     group_by_category = "sample", output_dir = output_dir, title = current_title,
                      log_flag = log_flag)
       # Add metadata to samples
       if(!is.null(metadata_df)) {

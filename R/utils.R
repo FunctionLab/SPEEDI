@@ -191,14 +191,20 @@ stop_quietly <- function() {
 #' @param file_name File name for saved plot
 #' @param group_by_category Category to group samples by
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
+#' @param title Title of plot (if NULL, automatically generated)
 #' @param log_flag boolean to indicate whether we're also printing to log file
 #' @return TRUE
-print_UMAP_RNA <- function(sc_obj, file_name, group_by_category = NULL, output_dir = getwd(), log_flag = FALSE) {
+print_UMAP_RNA <- function(sc_obj, file_name, group_by_category = NULL, output_dir = getwd(), title = NULL, log_flag = FALSE) {
   # Normalize paths (in case user provides relative paths)
   output_dir <- normalize_dir_path(output_dir)
   sample_count <- length(unique(sc_obj$sample))
   cell_count <- length(sc_obj$cell_name)
-  current_title <- paste0("RNA Data Integration \n (", sample_count, " Samples, ", cell_count, " Cells)")
+  current_title <- ""
+  if(is.null(title)) {
+    current_title <- paste0("RNA Data Integration \n (", sample_count, " Samples, ", cell_count, " Cells)")
+  } else {
+    current_title <- title
+  }
   if(!is.null(group_by_category)) {
     p <- Seurat::DimPlot(sc_obj, reduction = "umap", group.by = group_by_category, label = TRUE,
                     label.size = 3, repel = TRUE, raster = FALSE) +
