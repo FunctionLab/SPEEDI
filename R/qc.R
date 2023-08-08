@@ -41,17 +41,21 @@ Create_QC_Output_Prefiltered_RNA <- function(sc_obj, output_dir = getwd(), log_f
 #' Create QC output files for prefiltered data (ATAC)
 #'
 #' @param proj ArchR project associated with data
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return TRUE
 #' @examples
 #' \dontrun{Create_QC_Output_Prefiltered_ATAC(proj = proj}
 #' @export
-Create_QC_Output_Prefiltered_ATAC <- function(proj, log_flag = FALSE) {
+Create_QC_Output_Prefiltered_ATAC <- function(proj, output_dir = getwd(), log_flag = FALSE) {
   print_SPEEDI("Printing QC plots on pre-filtered data (ATAC)", log_flag)
   # Plot out TSS Enrichment / Doublet Enrichment / Nucleosome Ratio for each sample to help us decide filtering thresholds
   p1 <- ArchR::plotGroups(ArchRProj = proj, groupBy = "Sample", colorBy = "cellColData", name = "TSSEnrichment", plotAs = "ridges")
+  ggplot2::ggsave(filename = paste0(output_dir, "pre-filtered_TSSEnrichment.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
   p2 <- ArchR::plotGroups(ArchRProj = proj, groupBy = "Sample", colorBy = "cellColData", name = "DoubletEnrichment", plotAs = "ridges")
+  ggplot2::ggsave(filename = paste0(output_dir, "pre-filtered_DoubletEnrichment.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
   p3 <- ArchR::plotGroups(ArchRProj = proj, groupBy = "Sample", colorBy = "cellColData", name = "NucleosomeRatio", plotAs = "ridges")
+  ggplot2::ggsave(filename = paste0(output_dir, "pre-filtered_NucleosomeRatio.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
   ArchR::plotPDF(p1,p2,p3, name = "pre-filtered_QC_metrics_plots", ArchRProj = proj, addDOC = FALSE, width = 7, height = 5)
   gc()
   return(TRUE)

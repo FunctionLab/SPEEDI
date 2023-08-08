@@ -3,7 +3,7 @@
 #' @param all_sc_exp_matrices List of single cell expression matrices
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
-#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_file_path Path to log file (used to capture QC thresholds during parallel processing). Most likely only used in the context of [run_SPEEDI()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
@@ -201,19 +201,20 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
 #' Filter raw data for ATAC
 #'
 #' @param proj ArchR project associated with data
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR project which contains filtered data
 #' @examples
 #' \dontrun{proj <- FilterRawData_ATAC(proj)}
 #' @export
-FilterRawData_ATAC <- function(proj, exit_with_code = FALSE, log_flag = FALSE) {
+FilterRawData_ATAC <- function(proj, output_dir = getwd(), exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   proj <- tryCatch(
     {
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 3: Filtering out bad samples (ATAC)", log_flag)
-      Create_QC_Output_Prefiltered_ATAC(proj, log_flag)
+      Create_QC_Output_Prefiltered_ATAC(proj, output_dir, log_flag)
       print_SPEEDI("Filtering out doublets and low quality cells (only keep cells which have TSS enrichment >= 12 and nucleosome ratio < 2)", log_flag)
       proj <- ArchR::filterDoublets(ArchRProj = proj)
       idxPass <- which(proj$TSSEnrichment >= 12 & proj$NucleosomeRatio < 2)
@@ -320,13 +321,14 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
 #' Process filtered data (ATAC)
 #'
 #' @param proj ArchR project associated with data
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @return An ArchR project which contains processed data
 #' @examples
 #' \dontrun{proj <- InitialProcessing_ATAC(proj)}
 #' @export
-InitialProcessing_ATAC <- function(proj, exit_with_code = FALSE, log_flag = FALSE) {
+InitialProcessing_ATAC <- function(proj, output_dir = getwd(), exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   proj <- tryCatch(
     {
@@ -344,8 +346,11 @@ InitialProcessing_ATAC <- function(proj, exit_with_code = FALSE, log_flag = FALS
                                  maxClusters = NULL, force = TRUE)
       print_SPEEDI("Printing UMAPs of filtered data", log_flag)
       p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+      ggplot2::ggsave(filename = paste0(output_dir, "Before_Batch_Correction_ATAC_UMAP_by_Sample.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
       p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+      ggplot2::ggsave(filename = paste0(output_dir, "Before_Batch_Correction_ATAC_UMAP_by_Clusters.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
       p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+      ggplot2::ggsave(filename = paste0(output_dir, "Before_Batch_Correction_ATAC_UMAP_by_TSSEnrichment.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
       ArchR::plotPDF(p1,p2,p3, name = "UMAPs_After_Initial_Processing_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       print_SPEEDI("Step 4: Complete", log_flag)
       return(proj)

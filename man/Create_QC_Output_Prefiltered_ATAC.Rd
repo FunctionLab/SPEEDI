@@ -4,10 +4,12 @@
 \alias{Create_QC_Output_Prefiltered_ATAC}
 \title{Create QC output files for prefiltered data (ATAC)}
 \usage{
-Create_QC_Output_Prefiltered_ATAC(proj, log_flag = FALSE)
+Create_QC_Output_Prefiltered_ATAC(proj, output_dir = getwd(), log_flag = FALSE)
 }
 \arguments{
 \item{proj}{ArchR project associated with data}
+
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{log_flag}{If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of \code{\link[=run_SPEEDI]{run_SPEEDI()}}.}
 }

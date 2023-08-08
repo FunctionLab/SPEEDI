@@ -93,10 +93,10 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     atac_proj <- Read_ATAC(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list,
                            sample_file_paths = SPEEDI_variables$sample_file_paths, species = SPEEDI_variables$species,
                            exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
-    atac_proj <- FilterRawData_ATAC(proj = atac_proj, exit_with_code = SPEEDI_variables$exit_with_code,
-                                    log_flag = SPEEDI_variables$log_flag)
-    atac_proj <- InitialProcessing_ATAC(proj = atac_proj, exit_with_code = SPEEDI_variables$exit_with_code,
-                                        log_flag = SPEEDI_variables$log_flag)
+    atac_proj <- FilterRawData_ATAC(proj = atac_proj, output_dir = SPEEDI_variables$ATAC_output_dir,
+                                    exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
+    atac_proj <- InitialProcessing_ATAC(proj = atac_proj, output_dir = SPEEDI_variables$ATAC_output_dir,
+                                        exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
     atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, exit_with_code = SPEEDI_variables$exit_with_code,
                                        log_flag = SPEEDI_variables$log_flag)
   }
@@ -115,8 +115,8 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   }
   if(data_type != "RNA") {
     atac_proj <- MapCellTypes_ATAC(proj = atac_proj, reference = reference,
-                                   reference_cell_type_attribute = SPEEDI_variables$reference_cell_type_attribute, exit_with_code = SPEEDI_variables$exit_with_code,
-                                   log_flag = SPEEDI_variables$log_flag)
+                                   reference_cell_type_attribute = SPEEDI_variables$reference_cell_type_attribute, output_dir = SPEEDI_variables$ATAC_output_dir,
+                                   exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
   }
   # Write Seurat object to output directory
   if(data_type != "ATAC") {
@@ -136,15 +136,10 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", exit_with_code = SPEEDI_variables$exit_with_code,
                                      log_flag = SPEEDI_variables$log_flag)
     ATAC_multiome_output_dir <- paste0(SPEEDI_variables$ATAC_output_dir, "ArchRMultiomeOutput", "/")
-    atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, exit_with_code = SPEEDI_variables$exit_with_code,
-                                   log_flag = SPEEDI_variables$log_flag)
+    atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, output_dir = SPEEDI_variables$ATAC_output_dir,
+                                   exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
     print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = SPEEDI_variables$log_flag)
     saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
-  }
-  # If any ATAC plots exist, copy them to the ATAC base directory so they're easier for the user to find
-  if(data_type != "RNA") {
-    atac_plot_files <- list.files(path = SPEEDI_variables$ATAC_output_dir, pattern = "_plots\\.pdf$", recursive = TRUE, full.names = TRUE)
-    file.copy(from = atac_plot_files, to = SPEEDI_variables$ATAC_output_dir)
   }
   # Delete Rplots.pdf file if it exists (junk file created by R batch mode)
   if(file.exists(paste0(SPEEDI_variables$output_dir, "Rplots.pdf"))) {

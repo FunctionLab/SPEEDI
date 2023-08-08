@@ -461,13 +461,14 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
 #' @param proj ArchR project containing cells for all samples
 #' @param reference Seurat reference object
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR object which contains majority vote labels
 #' @examples
 #' \dontrun{sc_obj <- MapCellTypes_ATAC(proj, reference = custom_reference_seurat_object)}
 #' @export
-MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "celltype.l2", exit_with_code = FALSE, log_flag = FALSE) {
+MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "celltype.l2", output_dir = getwd(), exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   proj <- tryCatch(
     {
@@ -512,15 +513,20 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
         print_SPEEDI("Done adding gene integration matrix into ArchR project using reference", log_flag)
         pal <- paletteDiscrete(values = proj$predictedGroup)
         p1 <- plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "predictedGroup", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
-        ArchR::plotPDF(p1, name = "UMAP_after_Initial_Cell_Type_Reference_Mapping_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Raw_Predicted_Cell_Type.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
+        ArchR::plotPDF(p1, name = "Final_ATAC_UMAP_by_Raw_Predicted_Cell_Type", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
         # We have to perform majority voting with a different cluster attribute if Harmony was not run
         # (due to only having one batch)
         proj <- MajorityVote_ATAC(proj, log_flag)
         pal <- paletteDiscrete(values = proj$Cell_type_voting)
         p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE)
+        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Majority_Vote_Cell_Type.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
         p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Clusters.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
         p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Sample.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
         p4 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE)
+        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_TSSEnrichment.png"), plot = p4, device = "png", width = 8, height = 8, units = "in")
         ArchR::plotPDF(p1,p2,p3,p4, name = "UMAP_after_Final_Cell_Type_Majority_Voting_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       }
       print_SPEEDI("Step 8: Complete", log_flag)

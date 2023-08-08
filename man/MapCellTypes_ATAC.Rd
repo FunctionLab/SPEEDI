@@ -8,6 +8,7 @@ MapCellTypes_ATAC(
   proj,
   reference,
   reference_cell_type_attribute = "celltype.l2",
+  output_dir = getwd(),
   exit_with_code = FALSE,
   log_flag = FALSE
 )
@@ -18,6 +19,8 @@ MapCellTypes_ATAC(
 \item{reference}{Seurat reference object}
 
 \item{reference_cell_type_attribute}{If using a Seurat reference object, this parameter captures where the cell type information is stored}
+
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 
