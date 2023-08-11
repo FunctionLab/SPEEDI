@@ -6,12 +6,11 @@
 - [Using the SPEEDI Website](#using-the-speedi-website)
 - [Running SPEEDI Locally](#running-speedi-locally)
 - [Citing SPEEDI](#citing-speedi)
+- [Need Help?](#need-help?)
 
 ## Overview of SPEEDI
 
 ![Overview of SPEEDI](https://github.com/FunctionLab/SPEEDI/blob/main/SPEEDI_overview.png?raw=true)
-
-*Important Note*: SPEEDI is currently a work in progress. If you encounter any issues, feel free to contact William (wat2@princeton.edu).
 
 Single-cell Pipeline for End to End Data Integration (SPEEDI) is a fully automated, end-to-end pipeline that facilitates single cell data analysis and improves robustness and reproducibility. SPEEDI computationally infers batch labels and automates the application of state of the art processing and analysis tools. Additionally, SPEEDI implements a reference-based cell type annotation method coupled with a majority-vote system. SPEEDI takes raw count feature-by-barcode single cell data matrices as input and outputs an integrated and annotated single-cell object, a log file with auto-selected analysis parameters, and a set of preliminary analyses.
 
@@ -54,3 +53,7 @@ You can also run the individual steps of the pipeline separately. Read through t
 ## Citing SPEEDI
 
 The SPEEDI manuscript is currently in preparation.
+
+## Need Help?
+
+If you encounter any issues using SPEEDI, feel free to contact William (wat2@princeton.edu).
