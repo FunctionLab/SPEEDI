@@ -4,10 +4,17 @@
 \alias{VisualizeIntegration}
 \title{Visualize integration and prepare SCT for finding markers}
 \usage{
-VisualizeIntegration(sc_obj, exit_with_code = FALSE, log_flag = FALSE)
+VisualizeIntegration(
+  sc_obj,
+  output_dir = getwd(),
+  exit_with_code = FALSE,
+  log_flag = FALSE
+)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
+
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 

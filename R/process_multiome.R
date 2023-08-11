@@ -19,6 +19,7 @@ FindMultiomeOverlap <- function(sc_obj, proj, data_modality = "RNA", output_dir 
       print_SPEEDI("Step 9: Finding overlap between RNA and ATAC for multiome data", log_flag)
       print_SPEEDI(paste0("data_modality is: ", data_modality), log_flag)
       if(data_modality == "ATAC") {
+        print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = log_flag)
         proj <- ArchR::subsetArchRProject(ArchRProj = proj,
                                           cells = colnames(sc_obj),
                                           force = TRUE,

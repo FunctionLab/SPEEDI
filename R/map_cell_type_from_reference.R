@@ -233,28 +233,6 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
 #' @export
 MajorityVote_ATAC <- function(proj, log_flag = FALSE) {
   print_SPEEDI("Begin majority voting for ATAC-seq data...", log_flag)
-  if(length(unique(proj$Batch)) == 1) {
-    reducedDims_param <- "IterativeLSI"
-  } else {
-    reducedDims_param <- "Harmony"
-  }
-  tile_reduc <- ArchR::getReducedDims(ArchRProj = proj, reducedDims = reducedDims_param, returnMatrix = TRUE)
-  tmp <- matrix(stats::rnorm(nrow(tile_reduc) * 3, 10), ncol = nrow(tile_reduc), nrow = 3)
-  colnames(tmp) <- rownames(tile_reduc)
-  rownames(tmp) <- paste0("t",seq_len(nrow(tmp)))
-  obj <- Seurat::CreateSeuratObject(tmp, project='scATAC', min.cells=0, min.features=0)
-  obj[[reducedDims_param]] <- Seurat::CreateDimReducObject(embeddings=tile_reduc, key=paste0(reducedDims_param, "_"), assay='RNA')
-  obj <- Seurat::FindNeighbors(obj, reduction = reducedDims_param, dims = 1:29)
-  obj <- find_clusters_SPEEDI(obj, resolution = 2, log_flag)
-  obj <- Seurat::RunUMAP(obj, reduction = reducedDims_param, dims = 1:29)
-  proj <- ArchR::addCellColData(
-    ArchRProj = proj,
-    cells = names(obj$seurat_clusters),
-    data = as.character(obj$seurat_clusters),
-    name = "seurat_clusters",
-    force = TRUE)
-
-  rm(obj)
 
   seurat_clusters <- as.factor(proj$seurat_clusters)
   predictedGroup <- proj$predictedGroup
@@ -428,14 +406,8 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
         print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Majority_Vote_Cell_Type.png",
                        group_by_category = "predicted_celltype_majority_vote", output_dir = output_dir,
                        log_flag = log_flag)
-        print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Cluster.png",
-                       group_by_category = "seurat_clusters", output_dir = output_dir,
-                       log_flag = log_flag)
         print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Raw_Predicted_Cell_Type.png",
                        group_by_category = "predicted.id", output_dir = output_dir,
-                       log_flag = log_flag)
-        print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Sample.png",
-                       group_by_category = "sample", output_dir = output_dir,
                        log_flag = log_flag)
         print_heatmap_cell_type_proportions_RNA(sc_obj, file_name = "Final_RNA_Cell_Type_Proportion_Heatmap.png",
                                                 output_dir = output_dir, log_flag = log_flag)
@@ -531,19 +503,10 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
         # (due to only having one batch)
         proj <- MajorityVote_ATAC(proj, log_flag)
         pal <- paletteDiscrete(values = proj$Cell_type_voting)
-        p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE) +
+        p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", pal = pal, force = TRUE, keepAxis = TRUE) +
           ggplot2::ggtitle(paste0("ATAC Data After Integration (By Majority Vote Cell Type) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
-        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Majority_Vote_Cell_Type.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
-        p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-          ggplot2::ggtitle(paste0("ATAC Data After Integration (By Clusters) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
-        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Clusters.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
-        p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-          ggplot2::ggtitle(paste0("ATAC Data After Integration (By Sample) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
-        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Sample.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
-        p4 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-          ggplot2::ggtitle(paste0("ATAC Data After Integration (By TSS Enrichment) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
-        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_TSSEnrichment.png"), plot = p4, device = "png", width = 8, height = 8, units = "in")
-        ArchR::plotPDF(p1,p2,p3,p4, name = "UMAP_after_Final_Cell_Type_Majority_Voting_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+        ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Majority_Vote_Cell_Type.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
+        ArchR::plotPDF(p1,p2, name = "UMAP_Cell_Type_Label_Plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       }
       print_SPEEDI("Step 8: Complete", log_flag)
       return(proj)

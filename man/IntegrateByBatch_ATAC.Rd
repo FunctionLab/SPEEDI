@@ -4,10 +4,17 @@
 \alias{IntegrateByBatch_ATAC}
 \title{Integrate batches (ATAC)}
 \usage{
-IntegrateByBatch_ATAC(proj, exit_with_code = FALSE, log_flag = FALSE)
+IntegrateByBatch_ATAC(
+  proj,
+  output_dir = getwd(),
+  exit_with_code = FALSE,
+  log_flag = FALSE
+)
 }
 \arguments{
 \item{proj}{ArchR project containing cells for all samples}
+
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 

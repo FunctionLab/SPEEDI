@@ -85,8 +85,8 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
                            log_flag = SPEEDI_variables$log_flag)
     sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, exit_with_code = SPEEDI_variables$exit_with_code,
                                    log_flag = SPEEDI_variables$log_flag)
-    sc_obj <- VisualizeIntegration(sc_obj = sc_obj, exit_with_code = SPEEDI_variables$exit_with_code,
-                                   log_flag = SPEEDI_variables$log_flag)
+    sc_obj <- VisualizeIntegration(sc_obj = sc_obj, output_dir = SPEEDI_variables$RNA_output_dir,
+                                   exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
   }
   if(data_type != "RNA") {
     # Read in ATAC data, filter data, perform initial processing, infer batches, and integrate by batch
@@ -97,8 +97,8 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
                                     exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
     atac_proj <- InitialProcessing_ATAC(proj = atac_proj, output_dir = SPEEDI_variables$ATAC_output_dir,
                                         exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
-    atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, exit_with_code = SPEEDI_variables$exit_with_code,
-                                       log_flag = SPEEDI_variables$log_flag)
+    atac_proj <- IntegrateByBatch_ATAC(proj = atac_proj, output_dir = SPEEDI_variables$ATAC_output_dir,
+                                       exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
   }
   # Map cell types from reference onto query data
   if(data_type != "ATAC") {
@@ -141,8 +141,6 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
                                      ATAC_output_dir = SPEEDI_variables$ATAC_output_dir, exit_with_code = SPEEDI_variables$exit_with_code,
                                      log_flag = SPEEDI_variables$log_flag)
     }
-    print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = SPEEDI_variables$log_flag)
-    saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
   }
   # Delete Rplots.pdf file if it exists (junk file created by R batch mode)
   if(file.exists(paste0(SPEEDI_variables$output_dir, "Rplots.pdf"))) {

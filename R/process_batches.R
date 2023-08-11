@@ -255,13 +255,14 @@ IntegrateByBatch_RNA <- function(sc_obj, exit_with_code = FALSE, log_flag = FALS
 #' Integrate batches (ATAC)
 #'
 #' @param proj ArchR project containing cells for all samples
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR object which contains integrated data
 #' @examples
 #' \dontrun{proj <- IntegrateByBatch_ATAC(proj)}
 #' @export
-IntegrateByBatch_ATAC <- function(proj, exit_with_code = FALSE, log_flag = FALSE) {
+IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   proj <- tryCatch(
     {
@@ -315,7 +316,7 @@ IntegrateByBatch_ATAC <- function(proj, exit_with_code = FALSE, log_flag = FALSE
       proj$Batch <- tile_seurat$batch
       # If we only have one batch, we don't need to integrate by batch, so we exit the function
       if(length(unique(proj$Batch)) == 1) {
-        print_SPEEDI("Only one batch was found, so we don't need to integrate batches. Exiting IntegrateByBatch!", log_flag)
+        print_SPEEDI("Only one batch was found, so we don't need to integrate batches. Skipping Step 6 (integration of samples) and Step 7 Part 1 (final processing of integrated data).", log_flag)
       } else {
         print_SPEEDI("\n", log_flag, silence_time = TRUE)
         print_SPEEDI("Step 6: Integrating samples based on inferred groups", log_flag)
@@ -325,13 +326,55 @@ IntegrateByBatch_ATAC <- function(proj, exit_with_code = FALSE, log_flag = FALSE
                                   corCutOff = 0.75, groupBy = "Batch", force = TRUE)
         print_SPEEDI("Step 6: Complete", log_flag)
         print_SPEEDI("\n", log_flag, silence_time = TRUE)
-        print_SPEEDI("Step 7: Final processing of integrated data (ATAC)", log_flag)
+        print_SPEEDI("Step 7 (Part 1): Final processing of integrated data (ATAC)", log_flag)
         proj <- ArchR::addUMAP(ArchRProj = proj, reducedDims = "Harmony", force = TRUE)
         proj <- ArchR::addClusters(input = proj, reducedDims = "Harmony", method = "Seurat",
                                    name = "Harmony_clusters", resolution = 2, knnAssign = 30,
                                    maxClusters = NULL, force = TRUE)
+        print_SPEEDI("Step 7: Complete", log_flag)
       }
-      print_SPEEDI("Step 7: Complete", log_flag)
+      print_SPEEDI("Step 7 (Part 2): Clustering with Seurat and printing final UMAPs (ATAC)", log_flag)
+      if(length(unique(proj$Batch)) == 1) {
+        reducedDims_param <- "IterativeLSI"
+      } else {
+        reducedDims_param <- "Harmony"
+      }
+      tile_reduc <- ArchR::getReducedDims(ArchRProj = proj, reducedDims = reducedDims_param, returnMatrix = TRUE)
+      tmp <- matrix(stats::rnorm(nrow(tile_reduc) * 3, 10), ncol = nrow(tile_reduc), nrow = 3)
+      colnames(tmp) <- rownames(tile_reduc)
+      rownames(tmp) <- paste0("t",seq_len(nrow(tmp)))
+      obj <- Seurat::CreateSeuratObject(tmp, project='scATAC', min.cells=0, min.features=0)
+      obj[[reducedDims_param]] <- Seurat::CreateDimReducObject(embeddings=tile_reduc, key=paste0(reducedDims_param, "_"), assay='RNA')
+      obj <- Seurat::FindNeighbors(obj, reduction = reducedDims_param, dims = 1:29)
+      obj <- find_clusters_SPEEDI(obj, resolution = 2, log_flag)
+      obj <- Seurat::RunUMAP(obj, reduction = reducedDims_param, dims = 1:29)
+      proj <- ArchR::addCellColData(
+        ArchRProj = proj,
+        cells = names(obj$seurat_clusters),
+        data = as.character(obj$seurat_clusters),
+        name = "seurat_clusters",
+        force = TRUE)
+      rm(obj)
+      # Grab info for titles of plots
+      num_cells <- length(proj$cellNames)
+      num_samples <- length(unique(proj$Sample))
+      sample_text <- ""
+      if(num_samples == 1) {
+        sample_text <- paste0("(1 Sample, ", num_cells, " Cells)")
+      } else {
+        sample_text <- paste0("(", num_samples, " Samples, ", num_cells, " Cells)")
+      }
+      # Plot integrated UMAPs
+      p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
+        ggplot2::ggtitle(paste0("ATAC Data After Integration (By Clusters) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+      ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Clusters.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
+      p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
+        ggplot2::ggtitle(paste0("ATAC Data After Integration (By Sample) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+      ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Sample.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
+      p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
+        ggplot2::ggtitle(paste0("ATAC Data After Integration (By TSS Enrichment) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+      ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_TSSEnrichment.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
+      ArchR::plotPDF(p1,p2,p3, name = "UMAP_Final_Integrated_Plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       return(proj)
     },
     error = function(cond) {
@@ -350,13 +393,14 @@ IntegrateByBatch_ATAC <- function(proj, exit_with_code = FALSE, log_flag = FALSE
 #' Visualize integration and prepare SCT for finding markers
 #'
 #' @param sc_obj Seurat object containing cells for all samples
+#' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object with SCT markers and visualizations
 #' @examples
 #' \dontrun{sc_obj <- VisualizeIntegration(sc_obj)}
 #' @export
-VisualizeIntegration <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
+VisualizeIntegration <- function(sc_obj, output_dir = getwd(), exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   sc_obj <- tryCatch(
     {
@@ -369,6 +413,19 @@ VisualizeIntegration <- function(sc_obj, exit_with_code = FALSE, log_flag = FALS
       sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, return.model = T)
       print_SPEEDI("Preparing integrated data for FindMarkers", log_flag)
       sc_obj <- Seurat::PrepSCTFindMarkers(sc_obj)
+      print_SPEEDI("Finding clusters and printing UMAPS of integrated data", log_flag)
+      if(is.null(sc_obj@graphs$integrated_snn) & is.null(sc_obj@graphs$SCT_nn)) {
+        sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
+      } else {
+        print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
+      }
+      sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = 2, log_flag)
+      print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Cluster.png",
+                     group_by_category = "seurat_clusters", output_dir = output_dir,
+                     log_flag = log_flag)
+      print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Sample.png",
+                     group_by_category = "sample", output_dir = output_dir,
+                     log_flag = log_flag)
       print_SPEEDI("Step 7: Complete", log_flag)
       return(sc_obj)
     },
