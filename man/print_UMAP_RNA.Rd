@@ -9,6 +9,7 @@ print_UMAP_RNA(
   file_name,
   group_by_category = NULL,
   output_dir = getwd(),
+  title = NULL,
   log_flag = FALSE
 )
 }
@@ -20,6 +21,8 @@ print_UMAP_RNA(
 \item{group_by_category}{Category to group samples by}
 
 \item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
+
+\item{title}{Title of plot (if NULL, automatically generated)}
 
 \item{log_flag}{boolean to indicate whether we're also printing to log file}
 }

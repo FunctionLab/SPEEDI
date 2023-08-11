@@ -129,15 +129,18 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     ArchR::saveArchRProject(ArchRProj = atac_proj, load = FALSE)
   }
   if(data_type == "true_multiome") {
-    sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", exit_with_code = SPEEDI_variables$exit_with_code,
-                                  log_flag = SPEEDI_variables$log_flag)
+    sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", output_dir = SPEEDI_variables$RNA_output_dir,
+                                  exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
     print_SPEEDI("Saving Seurat object (True Multiome)", log_flag = SPEEDI_variables$log_flag)
     save(sc_obj, file = paste0(SPEEDI_variables$RNA_output_dir, SPEEDI_variables$analysis_name, ".RNA.multiome.rds"))
-    atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", exit_with_code = SPEEDI_variables$exit_with_code,
-                                     log_flag = SPEEDI_variables$log_flag)
+    atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", output_dir = SPEEDI_variables$ATAC_output_dir,
+                                     exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
     ATAC_multiome_output_dir <- paste0(SPEEDI_variables$ATAC_output_dir, "ArchRMultiomeOutput", "/")
-    atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, output_dir = SPEEDI_variables$ATAC_output_dir,
-                                   exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
+    if(SPEEDI_variables$reference_tissue != "none") {
+      atac_proj <- TransferRNALabels(sc_obj = sc_obj, proj = atac_proj, RNA_output_dir = SPEEDI_variables$RNA_output_dir,
+                                     ATAC_output_dir = SPEEDI_variables$ATAC_output_dir, exit_with_code = SPEEDI_variables$exit_with_code,
+                                     log_flag = SPEEDI_variables$log_flag)
+    }
     print_SPEEDI("Saving ArchR project (True Multiome)", log_flag = SPEEDI_variables$log_flag)
     saveArchRProject(ArchRProj = atac_proj, load = FALSE, outputDirectory = ATAC_multiome_output_dir)
   }

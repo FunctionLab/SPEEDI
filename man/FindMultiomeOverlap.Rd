@@ -8,6 +8,7 @@ FindMultiomeOverlap(
   sc_obj,
   proj,
   data_modality = "RNA",
+  output_dir = getwd(),
   exit_with_code = FALSE,
   log_flag = FALSE
 )
@@ -18,6 +19,8 @@ FindMultiomeOverlap(
 \item{proj}{ArchR project associated with data}
 
 \item{data_modality}{data modality to return (in Seurat object or ArchR project)}
+
+\item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 
