@@ -6,7 +6,7 @@
 - [Using the SPEEDI Website](#using-the-speedi-website)
 - [Running SPEEDI Locally](#running-speedi-locally)
 - [Citing SPEEDI](#citing-speedi)
-- [Need Help?](#need-help?)
+- [Need Help?](#need-help)
 
 ## Overview of SPEEDI
 
