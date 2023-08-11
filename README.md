@@ -9,7 +9,7 @@
 
 ## Overview of SPEEDI
 
-![Overview of SPEEDI](https://github.com/FunctionLab/SPEEDI/SPEEDI_overview.png?raw=true)
+![Overview of SPEEDI](https://github.com/FunctionLab/SPEEDI/blob/main/SPEEDI_overview.png?raw=true)
 
 *Important Note*: SPEEDI is currently a work in progress. If you encounter any issues, feel free to contact William (wat2@princeton.edu).
 
