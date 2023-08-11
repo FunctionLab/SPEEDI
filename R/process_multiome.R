@@ -84,6 +84,7 @@ TransferRNALabels <- function(sc_obj, proj, output_dir = getwd(), exit_with_code
       ggplot2::ggsave(filename = paste0(output_dir, "Final_Multiome_Overlap_UMAP_by_Original_ATAC_Majority_Vote_Cell_Type_Labels.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
       ArchR::plotPDF(p1,p2, name = "UMAP_multiome_RNA_labels_and_original_labels_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       print_SPEEDI("Step 10: Complete", log_flag)
+      return(proj)
     },
     error = function(cond) {
       if(exit_code == -1) {

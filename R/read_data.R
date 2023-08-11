@@ -173,6 +173,9 @@ Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list 
       if(!is.null(data_path)) {
         print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
       }
+      if(!is.null(output_dir)) {
+        print_SPEEDI(paste0("output_dir is: ", output_dir), log_flag)
+      }
       if(!is.null(sample_id_list)) {
         print_SPEEDI(paste0("sample_id_list is: ", sample_id_list), log_flag)
       }

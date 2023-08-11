@@ -99,7 +99,8 @@ initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "hu
       ATAC_output_dir <- paste0(output_dir, "ATAC", "/")
       if(data_type != "ATAC") {
         if (!dir.exists(RNA_output_dir)) {dir.create(RNA_output_dir)}
-      } else if (data_type != "RNA") {
+      }
+      if(data_type != "RNA") {
         if (!dir.exists(ATAC_output_dir)) {dir.create(ATAC_output_dir)}
         setwd(ATAC_output_dir)
       }
