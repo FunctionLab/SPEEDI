@@ -366,13 +366,13 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
       }
       # Plot integrated UMAPs
       p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-        ggplot2::ggtitle(paste0("ATAC Data After Integration (By Clusters) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+        ggplot2::ggtitle(paste0("ATAC Data After Integration (By Clusters) \n ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
       ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Clusters.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
       p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-        ggplot2::ggtitle(paste0("ATAC Data After Integration (By Sample) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+        ggplot2::ggtitle(paste0("ATAC Data After Integration (By Sample) \n ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
       ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Sample.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
       p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-        ggplot2::ggtitle(paste0("ATAC Data After Integration (By TSS Enrichment) ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+        ggplot2::ggtitle(paste0("ATAC Data After Integration (By TSS Enrichment) \n ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
       ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_TSSEnrichment.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
       ArchR::plotPDF(p1,p2,p3, name = "UMAP_Final_Integrated_Plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       return(proj)
