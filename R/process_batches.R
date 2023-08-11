@@ -406,14 +406,16 @@ VisualizeIntegration <- function(sc_obj, output_dir = getwd(), exit_with_code = 
     {
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 7: Final processing of integrated data (RNA)", log_flag)
-      print_SPEEDI("Scaling integrated data", log_flag)
-      sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)
-      print_SPEEDI("Running PCA and UMAP on integrated data", log_flag)
-      sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
-      sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, return.model = T)
+      if(length(unique(sc_obj$batch)) != 1) {
+        print_SPEEDI("Scaling integrated data", log_flag)
+        sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)
+        print_SPEEDI("Running PCA and UMAP on integrated data", log_flag)
+        sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
+        sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, return.model = T)
+      }
       print_SPEEDI("Preparing integrated data for FindMarkers", log_flag)
       sc_obj <- Seurat::PrepSCTFindMarkers(sc_obj)
-      print_SPEEDI("Finding clusters and printing UMAPS of integrated data", log_flag)
+      print_SPEEDI("Finding clusters and printing UMAPs of integrated data", log_flag)
       if(is.null(sc_obj@graphs$integrated_snn) & is.null(sc_obj@graphs$SCT_nn)) {
         sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
       } else {
