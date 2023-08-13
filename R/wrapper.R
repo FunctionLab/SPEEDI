@@ -64,28 +64,23 @@
 #' @import ArchR
 run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE) {
   # Sets random seed for SPEEDI - if you want to change this from its default value, use the set_speed_seed function!
-  set.seed(get_speedi_seed())
+  set.seed(5)
   print(runif(5))
   SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, data_path, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, sample_file_paths, record_doublets, exit_with_code)
-  print(runif(5))
   print_SPEEDI("Beginning SPEEDI Run!", log_flag = SPEEDI_variables$log_flag)
   # Load reference
   reference <- LoadReferenceSPEEDI(reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, reference_dir = SPEEDI_variables$reference_dir,
                                    reference_file_name = SPEEDI_variables$reference_file_name, exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
-  print(runif(5))
   if(data_type != "ATAC") {
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
     all_sc_exp_matrices <- Read_RNA(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list,
                                     sample_file_paths = SPEEDI_variables$sample_file_paths, exit_with_code = SPEEDI_variables$exit_with_code,
                                     log_flag = SPEEDI_variables$log_flag)
-    print(runif(5))
     sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = SPEEDI_variables$species,
                                 record_doublets = SPEEDI_variables$record_doublets, output_dir = SPEEDI_variables$RNA_output_dir,
                                 exit_with_code = SPEEDI_variables$exit_with_code, log_file_path = SPEEDI_variables$log_file_path,
                                 log_flag = SPEEDI_variables$log_flag)
-    print(runif(5))
     rm(all_sc_exp_matrices)
-    print(runif(5))
     sc_obj <- InitialProcessing_RNA(sc_obj = sc_obj, species = SPEEDI_variables$species, output_dir = SPEEDI_variables$RNA_output_dir,
                                     metadata_df = SPEEDI_variables$metadata_df, exit_with_code = SPEEDI_variables$exit_with_code,
                                     log_flag = SPEEDI_variables$log_flag)
