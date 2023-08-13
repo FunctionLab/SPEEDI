@@ -27,11 +27,11 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
           print_SPEEDI("Neighbors exist. Skipping construction of neighborhood graph...", log_flag)
         }
       }
-      sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.3)
+      sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.3, random.seed = get_speedi_seed(), log_flag = log_flag)
       if (length(unique(sc_obj$seurat_clusters)) > 30) {
-        sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.2)
+        sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.2, random.seed = get_speedi_seed(), log_flag = log_flag)
         if (length(unique(sc_obj$seurat_clusters)) > 30) {
-          sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.1)
+          sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.1, random.seed = get_speedi_seed(), log_flag = log_flag)
         }
       }
       # Use LISI metric to guess batch labels
@@ -206,8 +206,9 @@ IntegrateByBatch_RNA <- function(sc_obj, exit_with_code = FALSE, log_flag = FALS
                                    do.scale = TRUE,
                                    do.center = TRUE,
                                    return.only.var.genes = TRUE,
+                                   seed.use = get_speedi_seed(),
                                    verbose = TRUE)
-        tmp <- Seurat::RunPCA(tmp, npcs = 30, approx = T, verbose = T)
+        tmp <- Seurat::RunPCA(tmp, npcs = 30, approx = T,  seed.use = get_speedi_seed(), verbose = T)
         return(tmp)
       }
       print_SPEEDI(paste0(length(r), " samples transformed."), log_flag)
@@ -346,8 +347,8 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
       obj <- Seurat::CreateSeuratObject(tmp, project='scATAC', min.cells=0, min.features=0)
       obj[[reducedDims_param]] <- Seurat::CreateDimReducObject(embeddings=tile_reduc, key=paste0(reducedDims_param, "_"), assay='RNA')
       obj <- Seurat::FindNeighbors(obj, reduction = reducedDims_param, dims = 1:29)
-      obj <- find_clusters_SPEEDI(obj, resolution = 2, log_flag)
-      obj <- Seurat::RunUMAP(obj, reduction = reducedDims_param, dims = 1:29)
+      obj <- find_clusters_SPEEDI(obj, resolution = 2, random.seed = get_speedi_seed(), log_flag)
+      obj <- Seurat::RunUMAP(obj, reduction = reducedDims_param, dims = 1:29, seed.use = get_speedi_seed())
       proj <- ArchR::addCellColData(
         ArchRProj = proj,
         cells = names(obj$seurat_clusters),
@@ -410,8 +411,8 @@ VisualizeIntegration <- function(sc_obj, output_dir = getwd(), exit_with_code = 
         print_SPEEDI("Scaling integrated data", log_flag)
         sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)
         print_SPEEDI("Running PCA and UMAP on integrated data", log_flag)
-        sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
-        sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, return.model = T)
+        sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, seed.use = get_speedi_seed(), verbose = T)
+        sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, seed.use = get_speedi_seed(), return.model = T)
       }
       print_SPEEDI("Preparing integrated data for FindMarkers", log_flag)
       sc_obj <- Seurat::PrepSCTFindMarkers(sc_obj)

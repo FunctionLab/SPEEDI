@@ -239,20 +239,21 @@ print_heatmap_cell_type_proportions_RNA <- function(sc_obj, file_name, output_di
 #' First, try Leiden algorithm for clustering. If that doesn't work, then try Louvain
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param resolution Resolution for clustering
+#' @param random.seed Random seed used for clustering
 #' @param log_flag boolean to indicate whether we're also printing to log file
 #' @return Seurat object with clustering complete
 #' @export
-find_clusters_SPEEDI <- function(sc_obj, resolution, log_flag = FALSE) {
+find_clusters_SPEEDI <- function(sc_obj, resolution, random.seed = 1254, log_flag = FALSE) {
   sc_obj <- tryCatch(
     {
       print_SPEEDI("Trying to use Leiden algorithm for clustering", log_flag)
-      Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 4, method='igraph')
+      Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 4, method='igraph', random.seed = random.seed)
     },
     error=function(cond) {
       print_SPEEDI("Error using Leiden algorithm for clustering", log_flag)
       print_SPEEDI(cond, log_flag)
       print_SPEEDI("Trying Louvain instead", log_flag)
-      return(Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 2))
+      return(Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 2, random.seed = random.seed))
     },
     finally={
       print_SPEEDI("Clustering complete", log_flag)

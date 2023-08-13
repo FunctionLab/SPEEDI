@@ -4,12 +4,14 @@
 \alias{find_clusters_SPEEDI}
 \title{First, try Leiden algorithm for clustering. If that doesn't work, then try Louvain}
 \usage{
-find_clusters_SPEEDI(sc_obj, resolution, log_flag = FALSE)
+find_clusters_SPEEDI(sc_obj, resolution, random.seed = 1254, log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{resolution}{Resolution for clustering}
+
+\item{random.seed}{Random seed used for clustering}
 
 \item{log_flag}{boolean to indicate whether we're also printing to log file}
 }

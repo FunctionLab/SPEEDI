@@ -21,6 +21,9 @@ the$azimuth_references <- c("adiposeref", "bonemarrowref", "fetusref",
                     "heartref", "humancortexref", "kidneyref",
                     "lungref", "pancreasref", "pbmcref", "tonsilref", "mousecortexref")
 
+# SPEEDI random seed
+the$speedi_seed <- 1253
+
 
 #' Get PBMC reference URL
 #' @export
@@ -59,6 +62,21 @@ get_references <- function() {
 #' @export
 get_azimuth_references <- function() {
   the$azimuth_references
+}
+
+#' Get SPEEDI random seed
+#' @export
+get_speedi_seed <- function() {
+  the$speedi_seed
+}
+
+#' Set SPEEDI random seed
+#' @param new_seed the new SPEEDI random seed
+#' @export
+set_speedi_seed <- function(new_seed = 1253) {
+  old <- the$speedi_seed
+  the$speedi_seed <- new_seed
+  invisible(old)
 }
 
 # We use the packages below, but not with direct calls in our functions.

@@ -282,11 +282,12 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
                                                 do.scale = TRUE,
                                                 do.center = TRUE,
                                                 return.only.var.genes = TRUE,
+                                                seed.use = get_speedi_seed(),
                                                 verbose = TRUE))
       # Run PCA and UMAP to visualize data (prior to batch correction)
       print_SPEEDI("Running PCA and UMAP on normalized data", log_flag)
-      sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, verbose = T)
-      sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30)
+      sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, seed.use = get_speedi_seed(), verbose = T)
+      sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, seed.use = get_speedi_seed())
       sample_count <- length(unique(sc_obj$sample))
       cell_count <- length(sc_obj$cell_name)
       current_title <- paste0("RNA Data Before Integration \n (", sample_count, " Samples, ", cell_count, " Cells)")
