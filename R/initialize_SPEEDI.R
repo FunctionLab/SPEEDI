@@ -46,7 +46,7 @@ initialize_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "hu
     {
       if(!is.null(data_path) && !dir.exists(data_path)) {
         print_SPEEDI("Error: Input directory doesn't exist.", log_flag = FALSE)
-        exit_code <- 1
+        exit_code <- 32
         stop()
       }
       if(is.null(output_dir)) {
