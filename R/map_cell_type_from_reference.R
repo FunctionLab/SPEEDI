@@ -177,7 +177,7 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
   } else {
     print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
   }
-  sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = current_resolution, random.seed = get_speedi_seed(), log_flag)
+  sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = current_resolution, log_flag)
   sc_obj$predicted.id <- as.character(sc_obj$predicted.id)
   votes <- c()
   vote_levels_fix <- as.character(levels(sc_obj$seurat_clusters))

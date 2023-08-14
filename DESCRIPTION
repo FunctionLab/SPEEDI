@@ -17,6 +17,7 @@ Imports:
     Biostrings,
     chromVAR,
     ComplexHeatmap,
+    cluster,
     DESeq2,
     doParallel,
     digest,
