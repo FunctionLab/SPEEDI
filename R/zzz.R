@@ -2,3 +2,7 @@
 # This makes it so we don't have to define the namespace of all of the ArchR functions
 # inside the function
 environment(addGeneIntegrationMatrix_SPEEDI) <- asNamespace('ArchR')
+
+.onLoad <- function(...) {
+  RNGkind("Mersenne-Twister", "Inversion", "Rejection")
+}
