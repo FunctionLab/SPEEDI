@@ -5,9 +5,9 @@
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object which contains labeled batches
 #' @examples
-#' \dontrun{sc_obj <- InferBatches(sc_obj)}
+#' \dontrun{sc_obj <- InferBatches_alt(sc_obj)}
 #' @export
-InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
+InferBatches_alt <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   sc_obj <- tryCatch(
     {
@@ -149,6 +149,159 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
       print_SPEEDI(paste0("Total batches detected: ", length(unique(tmp$batch))), log_flag)
       print_SPEEDI("Step 5: Complete", log_flag)
       return(tmp)
+    },
+    error = function(cond) {
+      if(exit_code == -1) {
+        print_SPEEDI("Error running InferBatches() function", log_flag = log_flag)
+        print_SPEEDI(cond, log_flag = log_flag)
+        exit_code <- 20
+      }
+      quit_SPEEDI(exit_with_code = exit_with_code, exit_code = exit_code, log_flag = log_flag)
+    }
+  )
+  gc()
+  return(sc_obj)
+}
+
+#' Infer batches using LISI metric
+#'
+#' @param sc_obj Seurat object containing cells for all samples
+#' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
+#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
+#' @return A Seurat object which contains labeled batches
+#' @examples
+#' \dontrun{sc_obj <- InferBatches(sc_obj)}
+#' @export
+InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
+  exit_code <- -1
+  sc_obj <- tryCatch(
+    {
+      print_SPEEDI("\n", log_flag, silence_time = TRUE)
+      print_SPEEDI("Step 5: Inferring heterogeneous groups for integration", log_flag)
+      # Find clusters in data (prior to batch correction)
+      if ('lsi' %in% SeuratObject::Reductions(sc_obj)) {
+        if (is.null(sc_obj@graphs$tileMatrix_snn)) {
+          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:30)
+        } else {
+          print_SPEEDI("Neighbors exist. Skipping construction of neighborhood graph...", log_flag)
+        }
+      } else {
+        if (is.null(sc_obj@graphs$SCT_snn)) {
+          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
+        } else {
+          print_SPEEDI("Neighbors exist. Skipping construction of neighborhood graph...", log_flag)
+        }
+      }
+      sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.3, log_flag = log_flag)
+      if (length(unique(sc_obj$seurat_clusters)) > 30) {
+        sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.2, log_flag = log_flag)
+        if (length(unique(sc_obj$seurat_clusters)) > 30) {
+          sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.1, log_flag = log_flag)
+        }
+      }
+      # Use LISI metric to guess batch labels
+      X <- sc_obj@reductions$umap@cell.embeddings
+      meta_data <- data.frame(sc_obj$sample)
+      colnames(meta_data) <- "batch"
+      meta_data$cluster <- sc_obj$seurat_clusters
+      lisi.res <- data.frame(matrix(ncol = 4, nrow = 0))
+      colnames(lisi.res) <- c("batch", "score", "cluster", "freq")
+      clusters.interest <- names(table(sc_obj$seurat_clusters))[prop.table(table(sc_obj$seurat_clusters)) > 0.01]
+      for (cluster in clusters.interest) { #levels(sc_obj$seurat_clusters)) {
+        cells <- names(sc_obj$seurat_clusters[sc_obj$seurat_clusters == cluster])
+        X.sub <- X[which(rownames(X) %in% cells),]
+        meta_data.sub <- meta_data[which(rownames(meta_data) %in% cells),]
+        res <- lisi::compute_lisi(X.sub, meta_data.sub, label_colnames = "batch")
+        rownames(res) <- cells
+        colnames(res) <- "score"
+        res$batch <- meta_data.sub$batch
+        agg.res <- stats::aggregate(.~batch,data=res,mean)
+        agg.res$cluster <- cluster
+        agg.res$freq <- data.frame(table(res$batch))$Freq[which(data.frame(table(res$batch))$Var1 %in% agg.res$batch)]
+        lisi.res <- rbind(lisi.res, agg.res)
+      }
+
+      p.values <- list()
+      used.sample.dump <- c()
+      batch.assign <- list()
+      for ( i in clusters.interest) {
+        lisi.res.sub <- lisi.res[lisi.res$cluster == i,]
+        lisi.res.sub$batch_count <- as.numeric(as.character(table(sc_obj$sample)[lisi.res.sub$batch]))
+        lisi.res.sub$scaled.score <- (lisi.res.sub$score / max(lisi.res.sub$score)) * (lisi.res.sub$freq / lisi.res.sub$batch_count)
+
+        if (max(lisi.res.sub$score) <= 1.01) {
+          lisi.res.sub <- lisi.res.sub[order(lisi.res.sub$score, decreasing = TRUE),]
+          samples.of.batch <- lisi.res.sub$batch[1]
+
+          if (!(list(samples.of.batch) %in% batch.assign)) {
+            batch.assign <- lappend(batch.assign, samples.of.batch)
+          }
+          used.sample.dump <- union(used.sample.dump, samples.of.batch)
+        } else {
+          lisi.res.sub <- lisi.res.sub[order(lisi.res.sub$scaled.score, decreasing = TRUE),]
+
+          if (dim(lisi.res.sub)[1] > 30) {
+            lisi.res.sub <- lisi.res.sub[1:30,]
+          }
+          lisi.res.sub$diff.scaled.score <- abs(c(diff(lisi.res.sub$scaled.score), 0))
+
+          if (dim(lisi.res.sub)[1] >= 3) {
+            p.values[[i]] <- outliers::dixon.test(lisi.res.sub$diff.scaled.score)$p.value[[1]]
+          } else {
+            p.values[[i]] <- 1
+          }
+
+          if (p.values[[i]] > 0.05 & dim(lisi.res.sub)[1] >= 3) {
+            lisi.res.sub <- lisi.res.sub[-which.max(lisi.res.sub$diff.scaled.score),]
+            p.values[[i]] <- outliers::dixon.test(lisi.res.sub$diff.scaled.score)$p.value[[1]]
+          }
+
+          if (p.values[[i]] < 0.05 & dim(lisi.res.sub)[1] >= 3) {
+            max.index <- which.max(lisi.res.sub$diff.scaled.score)
+            samples.of.batch <- lisi.res.sub$batch[1:max.index]
+
+            if (any(samples.of.batch %in% used.sample.dump)) {
+              if (!all(samples.of.batch %in% used.sample.dump)) {
+                used.index <- which(samples.of.batch %in% used.sample.dump)
+                samples.of.batch <- samples.of.batch[-used.index]
+                if (length(samples.of.batch) > 0) {
+                  batch.assign <- lappend(batch.assign, samples.of.batch)
+                }
+              } else if (!list(samples.of.batch) %in% batch.assign) {
+                if (length(samples.of.batch) == 1) {
+                  batch.assign <- lappend(batch.assign, samples.of.batch)
+                } else {
+                  used.index <- which(samples.of.batch %in% unlist(batch.assign))
+                  samples.of.batch <- samples.of.batch[-used.index]
+                  if (length(samples.of.batch) > 0) {
+                    batch.assign <- lappend(batch.assign, samples.of.batch)
+                  }
+                }
+              }
+            } else {
+              batch.assign <- lappend(batch.assign, samples.of.batch)
+            }
+            used.sample.dump <- union(used.sample.dump, samples.of.batch)
+          }
+        }
+      }
+
+      batch <- as.factor(sc_obj$sample)
+      if (length(batch.assign) > 0) {
+        levels.batch <- levels(batch)
+        for (i in 1:length(batch.assign)) {
+          levels.batch[which(levels(batch) %in% batch.assign[[i]])] <- i
+        }
+        levels.batch[!levels.batch %in% c(1:length(batch.assign))] <- length(batch.assign)+1
+        levels(batch) <- levels.batch
+        sc_obj$batch <- as.character(batch)
+      } else {
+        print_SPEEDI("No batch effect detected!", log_flag)
+        sc_obj$batch <- "No Batch"
+      }
+      print_SPEEDI(paste0("Total batches detected: ", length(unique(sc_obj$batch))), log_flag)
+      print_SPEEDI("Step 5: Complete", log_flag)
+      return(sc_obj)
     },
     error = function(cond) {
       if(exit_code == -1) {
