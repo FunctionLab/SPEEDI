@@ -274,7 +274,7 @@ Note that we will now use the `integrated` assay for visualization (as opposed t
 We perform some final processing of our integrated data (scaling and preparing for differential expression) using the `VisualizeIntegration()` function.
 
 ```{r visualize_integration_rna, fig.show='hide'}
-sc_obj <- VisualizeIntegration(sc_obj = sc_obj, log_flag = TRUE)
+sc_obj <- VisualizeIntegration(sc_obj = sc_obj, output_dir = SPEEDI_variables$RNA_output_dir, log_flag = TRUE)
 ```
 
 ## Step 8: Map Cell Types
