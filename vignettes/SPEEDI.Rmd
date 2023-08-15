@@ -151,9 +151,12 @@ rownames(metadata_df) <- c("scRNA_34-7", "scRNA_39-7", "scRNA_41-7", "scRNA_145-
                            "scRNA_2209", "scRNA_2211", "scRNA_2213", "scRNA_2224", "scRNA_2227")
 ```
 
-To complete our setup, we use the `initialize_SPEEDI()` function. While this step isn't strictly necessary for using SPEEDI, it will help make sure that all variables are set properly and will create a log file for SPEEDI.
+To complete our setup, we set a random seed using `set.seed()` to ensure reproducibility and then use the `initialize_SPEEDI()` function. While this function isn't strictly necessary for using SPEEDI, it will help make sure that all variables are set properly and will create a log file for SPEEDI.
 
 ```{r initialize_speedi_rna}
+# Note that we use get_speedi_seed() to get the global seed used by SPEEDI for tasks like SCTransform normalization, UMAP generation etc.
+# If you want to set a different global seed for SPEEDI, you can use the set_speedi_seed() function
+set.seed(get_speedi_seed())
 SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, 
                                       data_path, reference_dir, output_dir, metadata_df)
 ```
