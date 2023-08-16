@@ -290,7 +290,7 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
       sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, seed.use = get_speedi_seed())
       sample_count <- length(unique(sc_obj$sample))
       cell_count <- length(sc_obj$cell_name)
-      current_title <- paste0("RNA Data Before Integration \n (By Sample) \n (", sample_count, " Samples, ", cell_count, " Cells)")
+      current_title <- paste0("RNA Data Before Integration\n(By Sample)\n(", sample_count, " Samples, ", cell_count, " Cells)")
       print_UMAP_RNA(sc_obj, file_name = "Before_Batch_Correction_RNA_UMAP_by_Sample.png",
                      group_by_category = "sample", output_dir = output_dir, title = current_title,
                      log_flag = log_flag)
@@ -358,10 +358,10 @@ InitialProcessing_ATAC <- function(proj, output_dir = getwd(), exit_with_code = 
         sample_text <- paste0("(", num_samples, " Samples, ", num_cells, " Cells)")
       }
       p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-        ggplot2::ggtitle(paste0("ATAC Data Before Integration (By Sample) \n ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+        ggplot2::ggtitle(paste0("ATAC Data Before Integration\n(By Sample)\n", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18), legend.text = ggplot2::element_text(size=10))
       ggplot2::ggsave(filename = paste0(output_dir, "Before_Batch_Correction_ATAC_UMAP_by_Sample.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
       p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-        ggplot2::ggtitle(paste0("ATAC Data Before Integration (By TSS Enrichment) \n ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+        ggplot2::ggtitle(paste0("ATAC Data Before Integration\n(By TSS Enrichment)\n", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18), legend.key.size = ggplot2::unit(1, "cm"), legend.text = ggplot2::element_text(size=10))
       ggplot2::ggsave(filename = paste0(output_dir, "Before_Batch_Correction_ATAC_UMAP_by_TSSEnrichment.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
       ArchR::plotPDF(p1,p2, name = "UMAPs_After_Initial_Processing_Plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       print_SPEEDI("Step 4: Complete", log_flag)

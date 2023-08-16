@@ -367,13 +367,13 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
       }
       # Plot integrated UMAPs
       p1 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "seurat_clusters", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-        ggplot2::ggtitle(paste0("ATAC Data After Integration (By Clusters) \n ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+        ggplot2::ggtitle(paste0("ATAC Data Integration\n(By Clusters)\n", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18), legend.text = ggplot2::element_text(size=10))
       ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Clusters.png"), plot = p1, device = "png", width = 8, height = 8, units = "in")
       p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Sample", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-        ggplot2::ggtitle(paste0("ATAC Data After Integration (By Sample) \n ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+        ggplot2::ggtitle(paste0("ATAC Data Integration\n(By Sample)\n", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18), legend.text = ggplot2::element_text(size=10))
       ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_Sample.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
       p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
-        ggplot2::ggtitle(paste0("ATAC Data After Integration (By TSS Enrichment) \n ", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+        ggplot2::ggtitle(paste0("ATAC Data Integration\n(By TSS Enrichment)\n", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18), legend.key.size = ggplot2::unit(1, "cm"), legend.text = ggplot2::element_text(size=10))
       ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_TSSEnrichment.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
       ArchR::plotPDF(p1,p2,p3, name = "UMAP_Final_Integrated_Plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       return(proj)
@@ -426,12 +426,12 @@ VisualizeIntegration <- function(sc_obj, output_dir = getwd(), exit_with_code = 
       sample_count <- length(unique(sc_obj$sample))
       cell_count <- length(sc_obj$cell_name)
       # Plot by cluster
-      current_title <- paste0("RNA Data Integration (By Cluster) \n (", sample_count, " Samples, ", cell_count, " Cells)")
+      current_title <- paste0("RNA Data Integration\n(By Cluster)\n(", sample_count, " Samples, ", cell_count, " Cells)")
       print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Cluster.png",
                      group_by_category = "seurat_clusters", output_dir = output_dir, title = current_title,
                      log_flag = log_flag)
       # Plot by sample
-      current_title <- paste0("RNA Data Integration (By Sample) \n (", sample_count, " Samples, ", cell_count, " Cells)")
+      current_title <- paste0("RNA Data Integration\n(By Sample)\n(", sample_count, " Samples, ", cell_count, " Cells)")
       print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Sample.png",
                      group_by_category = "sample", output_dir = output_dir, title = current_title,
                      log_flag = log_flag)
