@@ -231,7 +231,10 @@ print_heatmap_cell_type_proportions_RNA <- function(sc_obj, file_name, output_di
   output_dir <- normalize_dir_path(output_dir)
   voting_cell_type_proportion <- as.matrix(table(sc_obj$sample, sc_obj$predicted_celltype_majority_vote))
   voting_cell_type_proportion <- apply(voting_cell_type_proportion, 1, function(x){x/sum(x)})
-  output.plot <- pheatmap::pheatmap(voting_cell_type_proportion,  cluster_rows = FALSE, cluster_cols = FALSE, display_numbers = TRUE, number_format = "%.3f", legend = FALSE)
+  sample_count <- length(unique(sc_obj$sample))
+  cell_count <- length(sc_obj$cell_name)
+  output.plot <- pheatmap::pheatmap(voting_cell_type_proportion,  cluster_rows = FALSE, cluster_cols = FALSE, display_numbers = TRUE, number_format = "%.3f", legend = FALSE) +
+    ggplot2::ggtitle(paste0("Cell Type Proportions \n Integrated RNA Data \n (", sample_count, " Samples, ", cell_count, " Cells)")) + ggplot2::theme(plot.title = ggplot2::element_text(size=18))
   ggplot2::ggsave(filename = paste0(output_dir, file_name), plot = output.plot, device = "png", width = 8, height = 8, units = "in")
   return(TRUE)
 }

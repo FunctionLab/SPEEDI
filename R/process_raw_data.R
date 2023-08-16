@@ -290,7 +290,7 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
       sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, seed.use = get_speedi_seed())
       sample_count <- length(unique(sc_obj$sample))
       cell_count <- length(sc_obj$cell_name)
-      current_title <- paste0("RNA Data Before Integration \n (", sample_count, " Samples, ", cell_count, " Cells)")
+      current_title <- paste0("RNA Data Before Integration \n (By Sample) \n (", sample_count, " Samples, ", cell_count, " Cells)")
       print_UMAP_RNA(sc_obj, file_name = "Before_Batch_Correction_RNA_UMAP_by_Sample.png",
                      group_by_category = "sample", output_dir = output_dir, title = current_title,
                      log_flag = log_flag)

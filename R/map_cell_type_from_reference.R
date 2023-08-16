@@ -403,12 +403,19 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
       }
       if(inherits(reference, "Seurat") || (inherits(reference, "character") && reference != "none")) {
         print_SPEEDI("Printing final UMAPs", log_flag)
+        sample_count <- length(unique(sc_obj$sample))
+        cell_count <- length(sc_obj$cell_name)
+        # Plot by majority vote cell type
+        current_title <- paste0("RNA Data Integration \n (By Majority Vote Cell Type) \n (", sample_count, " Samples, ", cell_count, " Cells)")
         print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Majority_Vote_Cell_Type.png",
-                       group_by_category = "predicted_celltype_majority_vote", output_dir = output_dir,
+                       group_by_category = "predicted_celltype_majority_vote", output_dir = output_dir, title = current_title,
                        log_flag = log_flag)
+        # Plot by raw predicted cell type
+        current_title <- paste0("RNA Data Integration \n (By Raw Predicted Cell Type) \n (", sample_count, " Samples, ", cell_count, " Cells)")
         print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Raw_Predicted_Cell_Type.png",
-                       group_by_category = "predicted.id", output_dir = output_dir,
+                       group_by_category = "predicted.id", output_dir = output_dir, title = current_title,
                        log_flag = log_flag)
+        # Plot cell proportion heatmap
         print_heatmap_cell_type_proportions_RNA(sc_obj, file_name = "Final_RNA_Cell_Type_Proportion_Heatmap.png",
                                                 output_dir = output_dir, log_flag = log_flag)
       }

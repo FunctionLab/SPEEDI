@@ -423,11 +423,17 @@ VisualizeIntegration <- function(sc_obj, output_dir = getwd(), exit_with_code = 
         print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
       }
       sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = 2, log_flag = log_flag)
+      sample_count <- length(unique(sc_obj$sample))
+      cell_count <- length(sc_obj$cell_name)
+      # Plot by cluster
+      current_title <- paste0("RNA Data Integration (By Cluster) \n (", sample_count, " Samples, ", cell_count, " Cells)")
       print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Cluster.png",
-                     group_by_category = "seurat_clusters", output_dir = output_dir,
+                     group_by_category = "seurat_clusters", output_dir = output_dir, title = current_title,
                      log_flag = log_flag)
+      # Plot by sample
+      current_title <- paste0("RNA Data Integration (By Sample) \n (", sample_count, " Samples, ", cell_count, " Cells)")
       print_UMAP_RNA(sc_obj, file_name = "Final_RNA_UMAP_by_Sample.png",
-                     group_by_category = "sample", output_dir = output_dir,
+                     group_by_category = "sample", output_dir = output_dir, title = current_title,
                      log_flag = log_flag)
       print_SPEEDI("Step 7: Complete", log_flag)
       return(sc_obj)
