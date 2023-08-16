@@ -56,4 +56,4 @@ The SPEEDI manuscript is currently in preparation.
 
 ## Need Help?
 
-If you encounter any issues using SPEEDI, feel free to contact William (wat2@princeton.edu).
+If you encounter any issues using SPEEDI, feel free to contact a SPEEDI administrator (speedi@genomics.princeton.edu).
