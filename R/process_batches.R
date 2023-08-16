@@ -313,7 +313,7 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
       tile_seurat@reductions$umap <- reduction.data
       tile_seurat$sample <- proj$Sample
       # Step 4: Inferring batches
-      tile_seurat <- InferBatches(tile_seurat, log_flag)
+      tile_seurat <- InferBatches(tile_seurat, exit_with_code = exit_with_code, log_flag = log_flag)
       proj$Batch <- tile_seurat$batch
       # If we only have one batch, we don't need to integrate by batch, so we exit the function
       if(length(unique(proj$Batch)) == 1) {
