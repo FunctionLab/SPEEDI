@@ -16,7 +16,9 @@ Single-cell Pipeline for End to End Data Integration (SPEEDI) is a fully automat
 
 ## Using the SPEEDI Website
 
-We are currently developing a website where users can upload their single cell datasets for processing through SPEEDI and then view and download results. Coming soon! 
+[SPEEDI Website](https://speedi.princeton.edu/)
+
+The SPEEDI website allows users to upload their single cell datasets to our server for processing. Users can then view and download results once processing completes.
 
 ## Running SPEEDI Locally
 
@@ -28,27 +30,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocMana
 devtools::install_github('FunctionLab/SPEEDI', repos = BiocManager::repositories())
 ```
 
-All R-related dependencies should be installed automatically. After installing, the easiest way to use SPEEDI is with the `run_SPEEDI()` wrapper function:
-
-```
-library(SPEEDI)
-# Learn more about the SPEEDI pipeline wrapper function
-?run_SPEEDI
-# Example parameters for run_SPEEDI - note that some optional parameters 
-# (metadata_df, reference_file_name, analysis_name, and sample_id_list) were not used
-reference_tissue <- "PBMC"
-data_type <- "RNA"
-species <- "human"
-data_path <- "~/test_input"
-reference_dir <- "~/references"
-output_dir <- "~/test_output"
-record_doublets <- FALSE
-# Run SPEEDI pipeline
-run_SPEEDI(reference_tissue = reference_tissue, data_type = data_type, species = species, data_path = data_path, reference_dir = reference_dir, 
-           output_dir = output_dir, record_doublets = record_doublets)
-```
-
-You can also run the individual steps of the pipeline separately. Read through the documentation for `run_SPEEDI()` to learn more!
+All R-related dependencies should be installed automatically. To learn how to use SPEEDI, please view the [SPEEDI vignette](https://speedi.princeton.edu/vignette).
 
 ## Citing SPEEDI
 
