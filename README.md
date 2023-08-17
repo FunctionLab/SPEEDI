@@ -18,11 +18,11 @@ Single-cell Pipeline for End to End Data Integration (SPEEDI) is a fully automat
 
 [SPEEDI Website](https://speedi.princeton.edu/)
 
-The SPEEDI website allows users to upload their single cell datasets to our server for processing. Users can then view and download results once processing completes.
+The SPEEDI website allows users to upload their single cell datasets to our server for processing. Users can then view and download results once processing completes. Please visit the website to learn more!
 
 ## Running SPEEDI Locally
 
-To install SPEEDI locally, you can use `devtools` and `BiocManager`:
+To install the SPEEDI R package locally, you can use `devtools` and `BiocManager`:
 
 ```
 if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
@@ -30,7 +30,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocMana
 devtools::install_github('FunctionLab/SPEEDI', repos = BiocManager::repositories())
 ```
 
-All R-related dependencies should be installed automatically. To learn how to use SPEEDI, please view the [SPEEDI vignette](https://speedi.princeton.edu/vignette).
+All R-related dependencies should be installed automatically. To learn how to use the SPEEDI R package, please view the [SPEEDI vignette](https://speedi.princeton.edu/vignette).
 
 ## Citing SPEEDI
 
