@@ -7,6 +7,7 @@
 #' @examples
 #' \dontrun{sc_obj <- InferBatches(sc_obj)}
 #' @export
+#' @importFrom foreach %dopar%
 InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   sc_obj <- tryCatch(
@@ -27,23 +28,49 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
           print_SPEEDI("Neighbors exist. Skipping construction of neighborhood graph...", log_flag)
         }
       }
-      sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.3, log_flag = log_flag)
-      if (length(unique(sc_obj$seurat_clusters)) > 30) {
-        sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.2, log_flag = log_flag)
-        if (length(unique(sc_obj$seurat_clusters)) > 30) {
-          sc_obj <- find_clusters_SPEEDI(sc_obj, resolution = 0.1, log_flag = log_flag)
-        }
+
+      # Set up processing of different resolutions so it's parallel (max = 7 cores)
+      if (Sys.getenv("SLURM_NTASKS_PER_NODE") == "") {
+        n.cores <- as.numeric(parallel::detectCores())
+      } else {
+        n.cores <- as.numeric(Sys.getenv("SLURM_NTASKS_PER_NODE"))
       }
+
+      if (n.cores > 7) {
+        n.cores <- 7
+      }
+
+      print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
+      doParallel::registerDoParallel(n.cores)
+      metrics_list <- foreach::foreach(
+        i = c(0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4),
+        .combine = 'c',
+        .packages = c("Seurat", "bluster")
+      ) %dopar% {
+        tmp <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = i, method = "Louvain", log_flag = log_flag)
+        dims <- 1:30
+        clusters <- tmp$seurat_clusters
+        sil.out <- bluster::approxSilhouette(Seurat::Embeddings(tmp@reductions$pca)[, dims], clusters)
+        sil.score <- mean(sil.out$width)
+        names(sil.score) <- i
+        return(sil.score)
+      }
+
+      max.res <- as.numeric(as.character(names(which.max(metrics_list))))
+      print_SPEEDI(paste0("Resolution = ", max.res), log_flag = log_flag)
+
+      tmp <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = max.res, method = "Louvain", log_flag = log_flag)
+
       # Use LISI metric to guess batch labels
-      X <- sc_obj@reductions$umap@cell.embeddings
-      meta_data <- data.frame(sc_obj$sample)
+      X <- tmp@reductions$umap@cell.embeddings
+      meta_data <- data.frame(tmp$sample)
       colnames(meta_data) <- "batch"
-      meta_data$cluster <- sc_obj$seurat_clusters
+      meta_data$cluster <- tmp$seurat_clusters
       lisi.res <- data.frame(matrix(ncol = 4, nrow = 0))
       colnames(lisi.res) <- c("batch", "score", "cluster", "freq")
-      clusters.interest <- names(table(sc_obj$seurat_clusters))[prop.table(table(sc_obj$seurat_clusters)) > 0.01]
-      for (cluster in clusters.interest) { #levels(sc_obj$seurat_clusters)) {
-        cells <- names(sc_obj$seurat_clusters[sc_obj$seurat_clusters == cluster])
+      clusters.interest <- names(table(tmp$seurat_clusters))[prop.table(table(tmp$seurat_clusters)) > 0.01]
+      for (cluster in clusters.interest) {
+        cells <- names(tmp$seurat_clusters[tmp$seurat_clusters == cluster])
         X.sub <- X[which(rownames(X) %in% cells),]
         meta_data.sub <- meta_data[which(rownames(meta_data) %in% cells),]
         res <- lisi::compute_lisi(X.sub, meta_data.sub, label_colnames = "batch")
@@ -56,13 +83,19 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
         lisi.res <- rbind(lisi.res, agg.res)
       }
 
+      lisi.res <- lisi.res[lisi.res$freq > 10,]
+
       p.values <- list()
       used.sample.dump <- c()
       batch.assign <- list()
       for ( i in clusters.interest) {
         lisi.res.sub <- lisi.res[lisi.res$cluster == i,]
-        lisi.res.sub$batch_count <- as.numeric(as.character(table(sc_obj$sample)[lisi.res.sub$batch]))
-        lisi.res.sub$scaled.score <- (lisi.res.sub$score / max(lisi.res.sub$score)) * (lisi.res.sub$freq / lisi.res.sub$batch_count)
+        lisi.res.sub$batch_count <- as.numeric(as.character(table(tmp$sample)[lisi.res.sub$batch]))
+
+        lisi.res.sub$scaled.score <- mapply(
+          geometric.mean,
+          (max(lisi.res.sub$score) / lisi.res.sub$score),
+          (lisi.res.sub$freq / lisi.res.sub$batch_count))
 
         if (max(lisi.res.sub$score) <= 1.01) {
           lisi.res.sub <- lisi.res.sub[order(lisi.res.sub$score, decreasing = TRUE),]
@@ -78,17 +111,13 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
           if (dim(lisi.res.sub)[1] > 30) {
             lisi.res.sub <- lisi.res.sub[1:30,]
           }
+
           lisi.res.sub$diff.scaled.score <- abs(c(diff(lisi.res.sub$scaled.score), 0))
 
-          if (dim(lisi.res.sub)[1] >= 3) {
+          if (dim(lisi.res.sub)[1] >= 3 & sum(lisi.res.sub$diff.scaled.score) != 0) {
             p.values[[i]] <- outliers::dixon.test(lisi.res.sub$diff.scaled.score)$p.value[[1]]
           } else {
             p.values[[i]] <- 1
-          }
-
-          if (p.values[[i]] > 0.05 & dim(lisi.res.sub)[1] >= 3) {
-            lisi.res.sub <- lisi.res.sub[-which.max(lisi.res.sub$diff.scaled.score),]
-            p.values[[i]] <- outliers::dixon.test(lisi.res.sub$diff.scaled.score)$p.value[[1]]
           }
 
           if (p.values[[i]] < 0.05 & dim(lisi.res.sub)[1] >= 3) {
@@ -96,12 +125,14 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
             samples.of.batch <- lisi.res.sub$batch[1:max.index]
 
             if (any(samples.of.batch %in% used.sample.dump)) {
+
               if (!all(samples.of.batch %in% used.sample.dump)) {
                 used.index <- which(samples.of.batch %in% used.sample.dump)
                 samples.of.batch <- samples.of.batch[-used.index]
                 if (length(samples.of.batch) > 0) {
                   batch.assign <- lappend(batch.assign, samples.of.batch)
                 }
+
               } else if (!list(samples.of.batch) %in% batch.assign) {
                 if (length(samples.of.batch) == 1) {
                   batch.assign <- lappend(batch.assign, samples.of.batch)
@@ -118,10 +149,12 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
             }
             used.sample.dump <- union(used.sample.dump, samples.of.batch)
           }
+
         }
       }
 
-      batch <- as.factor(sc_obj$sample)
+      batch <- as.factor(tmp$sample)
+
       if (length(batch.assign) > 0) {
         levels.batch <- levels(batch)
         for (i in 1:length(batch.assign)) {
@@ -129,14 +162,14 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
         }
         levels.batch[!levels.batch %in% c(1:length(batch.assign))] <- length(batch.assign)+1
         levels(batch) <- levels.batch
-        sc_obj$batch <- as.character(batch)
+        tmp$batch <- as.character(batch)
       } else {
         print_SPEEDI("No batch effect detected!", log_flag)
-        sc_obj$batch <- "No Batch"
+        tmp$batch <- "No Batch"
       }
-      print_SPEEDI(paste0("Total batches detected: ", length(unique(sc_obj$batch))), log_flag)
+      print_SPEEDI(paste0("Total batches detected: ", length(unique(tmp$batch))), log_flag)
       print_SPEEDI("Step 5: Complete", log_flag)
-      return(sc_obj)
+      return(tmp)
     },
     error = function(cond) {
       if(exit_code == -1) {
@@ -228,8 +261,7 @@ IntegrateByBatch_RNA <- function(sc_obj, exit_with_code = FALSE, log_flag = FALS
 
       print_SPEEDI("Beginning integration", log_flag)
       integrated_obj <- Seurat::IntegrateData(anchorset = anchors,
-                                              normalization.method = "SCT",
-                                              k.weight = 100)
+                                              normalization.method = "SCT")
       Seurat::DefaultAssay(integrated_obj) <- "integrated"
 
       rm(sc_obj_list)
@@ -347,7 +379,7 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
       obj <- Seurat::CreateSeuratObject(tmp, project='scATAC', min.cells=0, min.features=0)
       obj[[reducedDims_param]] <- Seurat::CreateDimReducObject(embeddings=tile_reduc, key=paste0(reducedDims_param, "_"), assay='RNA')
       obj <- Seurat::FindNeighbors(obj, reduction = reducedDims_param, dims = 1:29)
-      obj <- find_clusters_SPEEDI(obj, resolution = 2, log_flag = log_flag)
+      obj <- find_clusters_SPEEDI(obj, resolution = 2, method = "Leiden", log_flag = log_flag)
       obj <- Seurat::RunUMAP(obj, reduction = reducedDims_param, dims = 1:29, seed.use = get_speedi_seed())
       proj <- ArchR::addCellColData(
         ArchRProj = proj,
@@ -422,7 +454,7 @@ VisualizeIntegration <- function(sc_obj, output_dir = getwd(), exit_with_code = 
       } else {
         print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
       }
-      sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = 2, log_flag = log_flag)
+      sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = 2, method = "Leiden", log_flag = log_flag)
       sample_count <- length(unique(sc_obj$sample))
       cell_count <- length(sc_obj$cell_name)
       # Plot by cluster

@@ -11,6 +11,15 @@ scale_zero_one <- function(x) {(x - min(x))/(max(x) - min(x))}
 #' @return A list of lists
 lappend <- function (lst, ...){ c(lst, list(...))}
 
+#' Compute geometric mean
+#'
+#' @param x First number
+#' @param y Second number
+#' @return Geometric mean of two numbers
+geometric.mean <- function(x, y) {
+  exp(mean(log(c(x, y))))
+}
+
 #' Parse namespace and function name for do.call
 #'
 #' @param x Function name (potentially with namespace attached)
@@ -238,27 +247,34 @@ print_heatmap_cell_type_proportions_RNA <- function(sc_obj, file_name, output_di
   return(TRUE)
 }
 
-#' First, try Leiden algorithm for clustering. If that doesn't work, then try Louvain
+#' Use either Louvain or Leiden for clustering. If using Leiden, tries Leiden first and then if it fails, uses Louvain
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param resolution Resolution for clustering
+#' @param method Clustering method
 #' @param log_flag boolean to indicate whether we're also printing to log file
 #' @return Seurat object with clustering complete
 #' @export
-find_clusters_SPEEDI <- function(sc_obj, resolution, log_flag = FALSE) {
-  sc_obj <- tryCatch(
-    {
-      print_SPEEDI("Trying to use Leiden algorithm for clustering", log_flag)
-      Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 4, method='igraph', random.seed = get_speedi_seed())
-    },
-    error=function(cond) {
-      print_SPEEDI("Error using Leiden algorithm for clustering", log_flag)
-      print_SPEEDI(cond, log_flag)
-      print_SPEEDI("Trying Louvain instead", log_flag)
-      return(Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 2, random.seed = get_speedi_seed()))
-    },
-    finally={
-      print_SPEEDI("Clustering complete", log_flag)
-    }
-  )
+find_clusters_SPEEDI <- function(sc_obj, resolution, method = "Louvain", log_flag = FALSE) {
+  if(method == "Louvain") {
+    print_SPEEDI("Trying to use Louvain algorithm for clustering", log_flag)
+    sc_obj <- Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 2, random.seed = get_speedi_seed())
+    print_SPEEDI("Clustering complete", log_flag)
+  } else if(method == "Leiden") {
+    sc_obj <- tryCatch(
+      {
+        print_SPEEDI("Trying to use Leiden algorithm for clustering", log_flag)
+        Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 4, method='igraph', random.seed = get_speedi_seed())
+      },
+      error=function(cond) {
+        print_SPEEDI("Error using Leiden algorithm for clustering", log_flag)
+        print_SPEEDI(cond, log_flag)
+        print_SPEEDI("Trying Louvain instead", log_flag)
+        return(Seurat::FindClusters(object = sc_obj, resolution = resolution, algorithm = 2, random.seed = get_speedi_seed()))
+      },
+      finally={
+        print_SPEEDI("Clustering complete", log_flag)
+      }
+    )
+  }
   return(sc_obj)
 }

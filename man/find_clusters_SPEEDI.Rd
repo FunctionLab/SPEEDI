@@ -2,14 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{find_clusters_SPEEDI}
 \alias{find_clusters_SPEEDI}
-\title{First, try Leiden algorithm for clustering. If that doesn't work, then try Louvain}
+\title{Use either Louvain or Leiden for clustering. If using Leiden, tries Leiden first and then if it fails, uses Louvain}
 \usage{
-find_clusters_SPEEDI(sc_obj, resolution, log_flag = FALSE)
+find_clusters_SPEEDI(sc_obj, resolution, method = "Louvain", log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{resolution}{Resolution for clustering}
+
+\item{method}{Clustering method}
 
 \item{log_flag}{boolean to indicate whether we're also printing to log file}
 }
@@ -17,5 +19,5 @@ find_clusters_SPEEDI(sc_obj, resolution, log_flag = FALSE)
 Seurat object with clustering complete
 }
 \description{
-First, try Leiden algorithm for clustering. If that doesn't work, then try Louvain
+Use either Louvain or Leiden for clustering. If using Leiden, tries Leiden first and then if it fails, uses Louvain
 }
