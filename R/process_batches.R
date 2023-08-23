@@ -50,7 +50,11 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
         tmp <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = i, method = "Louvain", log_flag = log_flag)
         dims <- 1:30
         clusters <- tmp$seurat_clusters
-        sil.out <- bluster::approxSilhouette(Seurat::Embeddings(tmp@reductions$pca)[, dims], clusters)
+        if ('lsi' %in% SeuratObject::Reductions(sc_obj)) {
+          sil.out <- bluster::approxSilhouette(Seurat::Embeddings(tmp@reductions$lsi)[, dims], clusters)
+        } else {
+          sil.out <- bluster::approxSilhouette(Seurat::Embeddings(tmp@reductions$pca)[, dims], clusters)
+        }
         sil.score <- mean(sil.out$width)
         names(sil.score) <- i
         return(sil.score)
