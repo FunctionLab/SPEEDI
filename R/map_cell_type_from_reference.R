@@ -469,21 +469,26 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
         # If we only had one batch, then we just use IterativeLSI - otherwise, we use Harmony
         if(length(unique(proj$Batch)) == 1) {
           reducedDims_param <- "IterativeLSI"
+          reducedDims <- 2:30
         } else {
           reducedDims_param <- "Harmony"
+          reducedDims <- 1:29
         }
         if(Seurat::DefaultAssay(reference) == "SCT") {
           normalization_method <- "SCT"
         } else {
           normalization_method <- "LogNormalize"
         }
+        print_SPEEDI(paste0("Using reduced dimension type: ", reducedDims_param), log_flag)
+        print_SPEEDI(paste0("Using reduced dimensions: ", reducedDims), log_flag)
+        print_SPEEDI(paste0("Using normalization method: ", normalization_method), log_flag)
         proj <- addGeneIntegrationMatrix_SPEEDI(
           ArchRProj = proj,
           useMatrix = "GeneScoreMatrix",
           matrixName = "GeneIntegrationMatrix",
           reducedDims = reducedDims_param,
           seRNA = reference,
-          dimsToUse = 2:30,
+          dimsToUse = reducedDims,
           addToArrow = FALSE,
           groupRNA = reference_cell_type_attribute,
           nameCell = "predictedCell",
