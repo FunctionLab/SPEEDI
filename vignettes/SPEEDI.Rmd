@@ -256,7 +256,7 @@ sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
 length(unique(sc_obj$batch))
 ```
 
-Above, we see that SPEEDI found 6 batches for our 9 samples. Note that SPEEDI will first attempt to use the Leiden algorithm (via Python) for community detection (due to [better performance](https://arxiv.org/abs/1810.08473)) but will fall back on the Louvain algorithm if the Python package for the Leiden algorithm is not found.
+Above, we see that SPEEDI found 6 batches for our 9 samples.
 
 ## Step 6: Integrate Batches
 
@@ -325,12 +325,12 @@ The final output is a table containing DEGs for each cell type:
 ```{r show_degs, fig.show='hide'}
 DEGs_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "disease.DE.tsv"), header = TRUE, sep = "\t")
 print(nrow(DEGs_table))
-subset_DEGs_table <- rbind(DEGs_table[200:210,], DEGs_table[400:410,])
+subset_DEGs_table <- rbind(DEGs_table[100:110,], DEGs_table[400:410,])
 subset_DEGs_table$sc_pval_adj <- format(subset_DEGs_table$sc_pval_adj, digits = 5)
 kable(subset_DEGs_table, "simple")
 ```
 
-In total, there were 1940 DEGs found. We show a subset of the DEGs found for CD4 TCM and NK.
+In total, there were 1905 DEGs found. We show a subset of the DEGs found for CD14 Mono and CD4 TCM cells.
 
 Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper function will also run [functional module discovery](https://humanbase.readthedocs.io/en/latest/modules.html) (FMD) using SPEEDI's `run_fmd_wrapper()` function. As input, SPEEDI uses the cell-type specific DEGs found above. First, each list of cell-type DEGs is divided into separate lists of positive and negative fold change. For each separate list, if at least 20 genes are found in HumanBase, an FMD job is launched. Results are provided in a TSV file and include a HumanBase URL linking to the user's full results as well as a complete list of associated gene ontology (GO) enrichment terms.
 
