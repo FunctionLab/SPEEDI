@@ -170,6 +170,11 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
   print_SPEEDI(paste0("Length of initial gene list: ", length(gene_list)), log_flag)
   print_SPEEDI(paste0("Initial gene list: ", paste(gene_list, collapse = ' ')), log_flag)
   print_SPEEDI(paste0("Background network: ", network), log_flag)
+  # Remove genes with hyphens ("-") because they match incorrectly with HB gene database
+  indices_to_remove <- grep("-", gene_list)
+  if(length(indices_to_remove) > 0) {
+    gene_list <- gene_list[-indices_to_remove]
+  }
   # HumanBase expects gene list concatenated with +
   concatenated_gene_list <- paste(gene_list, collapse = '+')
   # Grab relevant HumanBase URLs
