@@ -28,7 +28,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocMana
 devtools::install_github('FunctionLab/SPEEDI', repos = BiocManager::repositories())
 ```
 
-All R-related dependencies should be installed automatically. To learn how to use the SPEEDI R package, please view the [SPEEDI vignette](https://speedi.princeton.edu/vignette).
+All R-related dependencies should be installed automatically. Note that [RTools](https://cran.r-project.org/bin/windows/Rtools/) is required to install the SPEEDI R package in Windows. To learn how to use the SPEEDI R package, please view the [SPEEDI vignette](https://speedi.princeton.edu/vignette).
 
 ## Citing SPEEDI
 
