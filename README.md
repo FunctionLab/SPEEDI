@@ -25,7 +25,7 @@ To install the SPEEDI R package locally, you can use `devtools` and `BiocManager
 ```
 if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-devtools::install_github('FunctionLab/SPEEDI', repos = BiocManager::repositories())
+devtools::install_github('FunctionLab/SPEEDI', auth_token = "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", repos = BiocManager::repositories())
 ```
 
 All R-related dependencies should be installed automatically. Note that [RTools](https://cran.r-project.org/bin/windows/Rtools/) is required to install the SPEEDI R package in Windows. To learn how to use the SPEEDI R package, please view the [SPEEDI vignette](https://speedi.princeton.edu/vignette).
