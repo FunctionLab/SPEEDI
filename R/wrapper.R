@@ -144,7 +144,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
                                      log_flag = SPEEDI_variables$log_flag)
     }
   }
-  # Delete Rplots.pdf file if it exists (junk file created by R batch mode)
+  # Delete Rplots.pdf file if it exists (junk file created by R batch mode) 
   if(file.exists(paste0(SPEEDI_variables$output_dir, "Rplots.pdf"))) {
     file.remove(paste0(SPEEDI_variables$output_dir, "Rplots.pdf"))
   }
