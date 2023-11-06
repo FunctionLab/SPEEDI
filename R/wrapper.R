@@ -123,7 +123,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   # Write Seurat object to output directory
   if(data_type != "ATAC") {
     print_SPEEDI("Saving Seurat object (RNA)", log_flag = SPEEDI_variables$log_flag)
-    save(sc_obj, file = paste0(SPEEDI_variables$RNA_output_dir, SPEEDI_variables$analysis_name, ".RNA.rds"))
+    saveRDS(sc_obj, file = paste0(SPEEDI_variables$RNA_output_dir, SPEEDI_variables$analysis_name, ".RNA.rds"))
   }
   # Save ArchR project
   if(data_type != "RNA") {
@@ -134,7 +134,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
     sc_obj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "RNA", output_dir = SPEEDI_variables$RNA_output_dir,
                                   exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
     print_SPEEDI("Saving Seurat object (True Multiome)", log_flag = SPEEDI_variables$log_flag)
-    save(sc_obj, file = paste0(SPEEDI_variables$RNA_output_dir, SPEEDI_variables$analysis_name, ".RNA.multiome.rds"))
+    saveRDS(sc_obj, file = paste0(SPEEDI_variables$RNA_output_dir, SPEEDI_variables$analysis_name, ".RNA.multiome.rds"))
     atac_proj <- FindMultiomeOverlap(sc_obj = sc_obj, proj = atac_proj, data_modality = "ATAC", output_dir = SPEEDI_variables$ATAC_output_dir,
                                      exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
     ATAC_multiome_output_dir <- paste0(SPEEDI_variables$ATAC_output_dir, "ArchRMultiomeOutput", "/")
