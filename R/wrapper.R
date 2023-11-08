@@ -43,36 +43,36 @@
 #' * `"sample_paired"` (reference mapping for ATAC will not be performed if an Azimuth reference is selected)
 #' * `"true_multiome"` (reference mapping for full ATAC will not be performed if an Azimuth reference is selected, but RNA cell types will be mapped over to ATAC for overlapping cells that pass QC)
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
-#' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
+#' @param input_dir Path to directory where input data are located. Defaults to working directory ([getwd()]).
 #' @param reference_dir Path to directory where reference is either already located (see `reference_file_name`) or will be downloaded by [SPEEDI::LoadReferenceSPEEDI()] if necessary. Defaults to working directory ([getwd()]). Note that Azimuth references from [SeuratData] do not require use of `reference_dir`.
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]). Directory will be created if it doesn't already exist.
 #' @param metadata_df Dataframe containing metadata for samples. Rownames should be sample names and column names should be metadata attributes with two classes (e.g., condition: disease and control)
 #' @param reference_file_name Base name of custom reference file. Should be located inside `reference_dir` and `reference_tissue` should be set to `"custom"`.
 #' @param reference_cell_type_attribute If using a Seurat reference object, this parameter captures where the cell type information is stored
 #' @param analysis_name Name used to create subdirectory in `output_dir` for current analysis run. Directory will be created if it doesn't already exist.
-#' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
-#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If this argument is used, `sample_id_list` is required and should be written in the same order as the sample file paths.
+#' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `input_dir`).
+#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `input_dir`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If this argument is used, `sample_id_list` is required and should be written in the same order as the sample file paths.
 #' @param record_doublets Boolean flag to indicate whether we will record doublets in the data (using the [scDblFinder] package). Possible choices are `TRUE` or `FALSE`.
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @return A Seurat object that has been processed through the SPEEDI pipeline
 #' @examples
 #' \dontrun{sc_obj <- run_SPEEDI(reference_tissue = "PBMC", species = "human")}
-#' \dontrun{sc_obj <- run_SPEEDI(reference_tissue = "adipose", data_path = "~/input_data/",
+#' \dontrun{sc_obj <- run_SPEEDI(reference_tissue = "adipose", input_dir = "~/input_data/",
 #' reference_dir = "~/reference_dir/", output_dir = "~/adipose_output",
 #' species = "human", record_doublets = TRUE)}
 #' @export
 #' @import ArchR
-run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", data_path = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE) {
+run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", input_dir = getwd(), reference_dir = getwd(), output_dir = getwd(), metadata_df = NULL, reference_file_name = NULL, reference_cell_type_attribute = "celltype.l2", analysis_name = NULL, sample_id_list = NULL, sample_file_paths = NULL, record_doublets = FALSE, exit_with_code = FALSE) {
   # Sets random seed for SPEEDI - if you want to change this from its default value, use the set_speed_seed function!
   set.seed(get_speedi_seed())
-  SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, data_path, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, sample_file_paths, record_doublets, exit_with_code)
+  SPEEDI_variables <- initialize_SPEEDI(reference_tissue, data_type, species, input_dir, reference_dir, output_dir, metadata_df, reference_file_name, reference_cell_type_attribute, analysis_name, sample_id_list, sample_file_paths, record_doublets, exit_with_code)
   print_SPEEDI("Beginning SPEEDI Run!", log_flag = SPEEDI_variables$log_flag)
   # Load reference
   reference <- LoadReferenceSPEEDI(reference_tissue = SPEEDI_variables$reference_tissue, species = SPEEDI_variables$species, reference_dir = SPEEDI_variables$reference_dir,
                                    reference_file_name = SPEEDI_variables$reference_file_name, exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
   if(data_type != "ATAC") {
     # Read in RNA data, filter data, perform initial processing, infer batches, integrate by batch, and process UMAP of integration
-    all_sc_exp_matrices <- Read_RNA(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list,
+    all_sc_exp_matrices <- Read_RNA(input_dir = SPEEDI_variables$input_dir, sample_id_list = SPEEDI_variables$sample_id_list,
                                     sample_file_paths = SPEEDI_variables$sample_file_paths, exit_with_code = SPEEDI_variables$exit_with_code,
                                     log_flag = SPEEDI_variables$log_flag)
     sc_obj <- FilterRawData_RNA(all_sc_exp_matrices = all_sc_exp_matrices, species = SPEEDI_variables$species,
@@ -92,7 +92,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", d
   }
   if(data_type != "RNA") {
     # Read in ATAC data, filter data, perform initial processing, infer batches, and integrate by batch
-    atac_proj <- Read_ATAC(data_path = SPEEDI_variables$data_path, sample_id_list = SPEEDI_variables$sample_id_list,
+    atac_proj <- Read_ATAC(input_dir = SPEEDI_variables$input_dir, sample_id_list = SPEEDI_variables$sample_id_list,
                            sample_file_paths = SPEEDI_variables$sample_file_paths, species = SPEEDI_variables$species,
                            exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
     atac_proj <- FilterRawData_ATAC(proj = atac_proj, output_dir = SPEEDI_variables$ATAC_output_dir,

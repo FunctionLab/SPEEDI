@@ -387,6 +387,8 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
         sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
       } else if(inherits(reference, "character") & reference %in% azimuth_references) {
         print_SPEEDI("Running Azimuth to map reference onto query cells", log_flag)
+        DefaultAssay(sc_obj) <- "RNA"
+        sc_obj <- JoinLayers(sc_obj)
         sc_obj <- Azimuth::RunAzimuth(query = sc_obj, reference = reference)
         print_SPEEDI("Done running Azimuth to map reference onto query cells", log_flag)
         sc_obj <- SetDefaultAssay(sc_obj)

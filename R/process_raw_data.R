@@ -258,12 +258,16 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 4: Processing raw data (RNA)", log_flag)
       print_SPEEDI(paste0("species is: ", species), log_flag)
-      # Load cell cycle genes and perform cell cycle scoring
+      # Load cell cycle genes
       print_SPEEDI("Loading cell cycle genes and performing cell cycle scoring", log_flag)
       s.genes <- Seurat::cc.genes.updated.2019$s.genes
       g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
       m.s.genes <-  SPEEDI::cc.gene.updated.mouse$m.s.genes
       m.g2m.genes <-  SPEEDI::cc.gene.updated.mouse$m.g2m.genes
+      # New steps required for Seurat V5
+      sc_obj <- SeuratObject::JoinLayers(sc_obj)
+      sc_obj[["RNA"]]$data <- sc_obj[["RNA"]]$counts
+      # Perform cell cycle scoring
       if(species == "human") {
         sc_obj <- Seurat::CellCycleScoring(object = sc_obj, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
       } else {

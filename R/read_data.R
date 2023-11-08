@@ -1,30 +1,30 @@
 #' Read in RNA data for processing
 #'
-#' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
-#' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
-#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If this argument is used, `sample_id_list` is required and should be written in the same order as the sample file paths.
+#' @param input_dir Path to directory where input data are located. Defaults to working directory ([getwd()]).
+#' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `input_dir`).
+#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `input_dir`). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., `"c("sample1/matrix.mtx", "sample2/matrix.mtx"`"). If this argument is used, `sample_id_list` is required and should be written in the same order as the sample file paths.
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A set of single cell expression matrices
 #' @examples
 #' \dontrun{all_sc_exp_matrices <- Read_RNA()}
-#' \dontrun{all_sc_exp_matrices <- Read_RNA(data_path = "~/input_data/",
+#' \dontrun{all_sc_exp_matrices <- Read_RNA(input_dir = "~/input_data/",
 #' sample_id_list = c("sample_1", "sample_2"))}
 #' \dontrun{all_sc_exp_matrices <- Read_RNA(sample_id_list = c("sample_1", "sample_2"),
 #' sample_file_paths = c("~/input_data/sample_1/filtered_feature_bc_matrix.h5",
 #' "~/input_data/sample_2/filtered_feature_bc_matrix.h5"))}
 #' @export
 #' @importFrom foreach %dopar%
-Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_paths = NULL, exit_with_code = FALSE, log_flag = FALSE) {
+Read_RNA <- function(input_dir = getwd(), sample_id_list = NULL, sample_file_paths = NULL, exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   all_sc_exp_matrices <- tryCatch(
     {
       print_SPEEDI("Step 2 (RNA): Reading all samples", log_flag)
       # Normalize paths (in case user provides relative paths)
-      data_path <- normalize_dir_path(data_path)
+      input_dir <- normalize_dir_path(input_dir)
       # Print user parameters
-      if(!is.null(data_path)) {
-        print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
+      if(!is.null(input_dir)) {
+        print_SPEEDI(paste0("input_dir is: ", input_dir), log_flag)
       }
       if(!is.null(sample_id_list)) {
         print_SPEEDI("sample_id_list includes the following sample ids:", log_flag)
@@ -35,18 +35,18 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
         print_SPEEDI(paste0(sample_file_paths, collapse = ", "), log_flag)
       }
       if(is.null(sample_file_paths)) {
-        # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
-        data_path <- path.expand(data_path)
-        # First, remove "/" from end of data_path if it's provided (for use of list.files)
-        last_char_of_data_path <- substr(data_path, nchar(data_path), nchar(data_path))
-        if(last_char_of_data_path == "/") {
-          data_path <- substr(data_path, 1, nchar(data_path) - 1)
+        # Make sure that input_dir is fully expanded (aka replace ~ with full path to user's home dir)
+        input_dir <- path.expand(input_dir)
+        # First, remove "/" from end of input_dir if it's provided (for use of list.files)
+        last_char_of_input_dir <- substr(input_dir, nchar(input_dir), nchar(input_dir))
+        if(last_char_of_input_dir == "/") {
+          input_dir <- substr(input_dir, 1, nchar(input_dir) - 1)
         }
-        # Second, look for all filtered_feature_bc_matrix .h5 files in data_path
-        data_files <- list.files(path = data_path, pattern = "filtered_feature_bc_matrix\\.h5$", recursive = TRUE, full.names = TRUE)
+        # Second, look for all filtered_feature_bc_matrix .h5 files in input_dir
+        data_files <- list.files(path = input_dir, pattern = "filtered_feature_bc_matrix\\.h5$", recursive = TRUE, full.names = TRUE)
         data_file_format <- "HDF5"
         if(length(data_files) == 0) {
-          data_files <- list.files(path = data_path, pattern = "matrix.mtx", recursive = TRUE, full.names = TRUE)
+          data_files <- list.files(path = input_dir, pattern = "matrix.mtx", recursive = TRUE, full.names = TRUE)
           data_file_format <- "MEX"
         }
         # Finally, if the user did provide a sample_id_list, pick the subset of data files that have that sample ID in the path
@@ -73,8 +73,8 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
             sample_id_list <- final_sample_id_list
           } else {
             # We can't use this strategy if users only provide one sample ID
-            # Here, we'll just assume that the user's sample is the name of the folder right after data_path
-            sample_id_list <- strsplit(data_files, paste0(data_path, "/"))
+            # Here, we'll just assume that the user's sample is the name of the folder right after input_dir
+            sample_id_list <- strsplit(data_files, paste0(input_dir, "/"))
             sample_id_list <- sapply(sample_id_list , "[[", 2)
             sample_id_list <- strsplit(sample_id_list, "/")
             sample_id_list <- sapply(sample_id_list , "[[", 1)
@@ -148,30 +148,30 @@ Read_RNA <- function(data_path = getwd(), sample_id_list = NULL, sample_file_pat
 
 #' Read in ATAC data for processing
 #'
-#' @param data_path Path to directory where input data are located. Defaults to working directory ([getwd()]).
+#' @param input_dir Path to directory where input data are located. Defaults to working directory ([getwd()]).
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
-#' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `data_path`).
-#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `data_path`). If used, `sample_id_list` is required.
+#' @param sample_id_list Vector of sample names (optional - if not provided, will select all samples found recursively in `input_dir`).
+#' @param sample_file_paths Vector of sample file paths (optional - if not provided, will select all samples found recursively in `input_dir`). If used, `sample_id_list` is required.
 #' @param species Species being analyzed. Possible choices are `"human"` or `"mouse"`.
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return An ArchR project with associated Arrow files
 #' @examples
 #' \dontrun{proj <- Read_ATAC()}
-#' \dontrun{proj <- Read_ATAC(data_path = "~/input_data/",
+#' \dontrun{proj <- Read_ATAC(input_dir = "~/input_data/",
 #' sample_id_list = c("sample_1", "sample_2"), species = "human")}
 #' @export
 #' @importFrom foreach %dopar%
-Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list = NULL, sample_file_paths = NULL, species = "human", exit_with_code = FALSE, log_flag = FALSE) {
+Read_ATAC <- function(input_dir = getwd(), output_dir = getwd(), sample_id_list = NULL, sample_file_paths = NULL, species = "human", exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   proj <- tryCatch(
     {
       # Normalize paths (in case user provides relative paths)
-      data_path <- normalize_dir_path(data_path)
+      input_dir <- normalize_dir_path(input_dir)
       output_dir <- normalize_dir_path(output_dir)
       print_SPEEDI("Step 2 (ATAC): Reading all samples", log_flag)
-      if(!is.null(data_path)) {
-        print_SPEEDI(paste0("data_path is: ", data_path), log_flag)
+      if(!is.null(input_dir)) {
+        print_SPEEDI(paste0("input_dir is: ", input_dir), log_flag)
       }
       if(!is.null(output_dir)) {
         print_SPEEDI(paste0("output_dir is: ", output_dir), log_flag)
@@ -186,20 +186,20 @@ Read_ATAC <- function(data_path = getwd(), output_dir = getwd(), sample_id_list 
         print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag)
         stop()
       }
-      if(is.null(data_path) & is.null(sample_file_paths)) {
-        print_SPEEDI("Error: You must provide a value for \"data_path\" if you do not provide a value for \"sample_file_paths\".", log_flag)
+      if(is.null(input_dir) & is.null(sample_file_paths)) {
+        print_SPEEDI("Error: You must provide a value for \"input_dir\" if you do not provide a value for \"sample_file_paths\".", log_flag)
         stop()
       }
       if(is.null(sample_file_paths)) {
-        # Make sure that data_path is fully expanded (aka replace ~ with full path to user's home dir)
-        data_path <- path.expand(data_path)
-        # First, remove "/" from end of data_path if it's provided (for use of list.files)
-        last_char_of_data_path <- substr(data_path, nchar(data_path), nchar(data_path))
-        if(last_char_of_data_path == "/") {
-          data_path <- substr(data_path, 1, nchar(data_path) - 1)
+        # Make sure that input_dir is fully expanded (aka replace ~ with full path to user's home dir)
+        input_dir <- path.expand(input_dir)
+        # First, remove "/" from end of input_dir if it's provided (for use of list.files)
+        last_char_of_input_dir <- substr(input_dir, nchar(input_dir), nchar(input_dir))
+        if(last_char_of_input_dir == "/") {
+          input_dir <- substr(input_dir, 1, nchar(input_dir) - 1)
         }
-        # Second, look for all fragment.tsv.gz files in data_path
-        data_files <- list.files(path = data_path, pattern = "fragments\\.tsv\\.gz$", recursive = TRUE, full.names = TRUE)
+        # Second, look for all fragment.tsv.gz files in input_dir
+        data_files <- list.files(path = input_dir, pattern = "fragments\\.tsv\\.gz$", recursive = TRUE, full.names = TRUE)
         # Finally, if the user did provide a sample_id_list, pick the subset of fragment files that have that sample ID in the path
         if(!is.null(sample_id_list)) {
           data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
