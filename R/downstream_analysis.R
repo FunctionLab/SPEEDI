@@ -321,14 +321,14 @@ run_fmd_wrapper <- function(gene_list, network, RNA_output_dir, cell_type, metad
 #' @examples
 #' \dontrun{pseudobulk_counts <- create_pseudobulk_counts(sc_obj)}
 #' @export
-create_pseudobulk_counts <- function(sc_obj, log_flag) {
+create_pseudobulk_counts <- function(sc_obj, log_flag = FALSE) {
   print_SPEEDI("Computing pseudobulk counts", log_flag)
   cells_pseudobulk <- list()
   for (sample_name in unique(sc_obj$sample)) {
     idxMatch <- which(stringr::str_detect(as.character(sc_obj$sample), sample_name))
     if(length(idxMatch)>=1) {
       samples_subset <- subset(x = sc_obj, subset = sample %in% sample_name)
-      samples_data <- samples_subset@assays$RNA@counts
+      samples_data <- samples_subset@assays$RNA$counts
       samples_data <- rowSums(as.matrix(samples_data))
       cells_pseudobulk[[sample_name]] <- samples_data
     } else {
