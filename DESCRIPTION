@@ -49,6 +49,7 @@ Imports:
     SeuratData,
     SeuratDisk,
     SeuratObject,
+    Signac,
     stringr,
     SummarizedExperiment,
     uwot
