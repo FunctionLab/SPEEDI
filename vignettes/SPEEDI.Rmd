@@ -285,7 +285,7 @@ We are now ready to use our PBMC reference to map cell types onto our data. In t
 sc_obj <- MapCellTypes_RNA(sc_obj = sc_obj, reference = reference, output_dir = SPEEDI_variables$RNA_output_dir,
                            log_flag = TRUE)
 # Table of final cell type predictions
-kable(table(sc_obj$predicted_celltype_majority_vote), col.names = c("Cell Type", "Cell Count"))
+knitr::kable(table(sc_obj$predicted_celltype_majority_vote), col.names = c("Cell Type", "Cell Count"))
 ```
 
 The `MapCellTypes_RNA()` function prints UMAPs of our integrated sample data broken down by majority vote cell type, raw predicted cell type, cluster, and sample. Below, we print the sample UMAP and the majority vote cell type UMAP.
@@ -327,7 +327,7 @@ DEGs_table <- utils::read.table(paste0(SPEEDI_variables$RNA_output_dir, "disease
 print(nrow(DEGs_table))
 subset_DEGs_table <- rbind(DEGs_table[100:110,], DEGs_table[400:410,])
 subset_DEGs_table$sc_pval_adj <- format(subset_DEGs_table$sc_pval_adj, digits = 5)
-kable(subset_DEGs_table, "simple")
+knitr::kable(subset_DEGs_table, "simple")
 ```
 
 In total, there were 1905 DEGs found. We show a subset of the DEGs found for CD14 Mono and CD4 TCM cells.
@@ -342,7 +342,7 @@ FMD_URL <- readLines(FMD_file, n = 1)
 FMD_table <- utils::read.table(FMD_file, header = TRUE, sep = "\t")
 print(FMD_URL)
 
-kable(head(FMD_table, 20), "simple")
+knitr::kable(head(FMD_table, 20), "simple")
 ```
 
 If we go to the URL listed at the top of the table, we will see a network visualization of our results:
