@@ -202,7 +202,7 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
       return("ERROR")
     }
   )
-  if(gene_check_post_request == "ERROR") {
+  if(length(gene_check_post_request) == 1 && gene_check_post_request == "ERROR") {
     gc()
     return(NULL)
   } else {
@@ -256,7 +256,7 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
         return("ERROR")
       }
     )
-    if(fmd_submission_post_request == "ERROR") {
+    if(length(fmd_submission_post_request) == 1 && gene_check_post_request == "ERROR") {
       gc()
       return(NULL)
     } else {

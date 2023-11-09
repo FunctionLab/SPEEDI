@@ -251,23 +251,29 @@ knitr::include_graphics(paste0(SPEEDI_variables$RNA_output_dir, "Before_Batch_Co
 
 Next, we will use SPEEDI's data-derived batch inference method to determine sample batches in our data:
 
-```{r infer_batches_rna, fig.show='hide'}
+```{r infer_batches_rna, results='hide', fig.show='hide'}
 sc_obj <- InferBatches(sc_obj = sc_obj, log_flag = TRUE)
-length(unique(sc_obj$batch))
 ```
 
-Above, we see that SPEEDI found 6 batches for our 9 samples.
+In total, SPEEDI found 4 batches for our 9 samples:
+
+```{r infer_batches_rna_results}
+length(unique(sc_obj$batch))
+```
 
 ## Step 6: Integrate Batches
 
 After we have grouped our samples according to batch, we are ready to integrate by batch. We first normalize counts within each batch using `SCTransform()` and then use a selection of methods from `Seurat` (`SelectIntegrationFeatures()`, `PrepSCTIntegration()`, `FindIntegrationAnchors()`, and `IntegrateData()`) to integrate our data.
 
-```{r integrate_batches_rna, fig.show='hide'}
+```{r integrate_batches_rna, results='hide', fig.show='hide'}
 sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, log_flag = TRUE)
-sc_obj
 ```
 
-Note that we will now use the `integrated` assay for visualization (as opposed to the `SCT` assay) unless only one batch was found above.
+Note that we will now use the `integrated` assay for visualization (as opposed to the `SCT` assay) unless only one batch was found above:
+
+```{r integrate_batches_rna_results}
+sc_obj
+```
 
 ## Step 7: Final Processing
 
