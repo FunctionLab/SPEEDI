@@ -32,7 +32,7 @@ All R-related dependencies should be installed automatically. Note that [RTools]
 
 ## Citing SPEEDI
 
-The SPEEDI manuscript is currently in preparation.
+The SPEEDI manuscript is currently under review.
 
 ## Need Help?
 
