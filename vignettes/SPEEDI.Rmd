@@ -35,7 +35,7 @@ knitr::opts_chunk$set(
 
 # Citation
 
-The SPEEDI manuscript is currently under preparation.
+The SPEEDI manuscript is currently under review.
 
 # Installation and Loading
 
