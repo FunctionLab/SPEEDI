@@ -87,7 +87,7 @@ run_SPEEDI <- function(reference_tissue, data_type = "RNA", species = "human", i
                            log_flag = SPEEDI_variables$log_flag)
     sc_obj <- IntegrateByBatch_RNA(sc_obj = sc_obj, exit_with_code = SPEEDI_variables$exit_with_code,
                                    log_flag = SPEEDI_variables$log_flag)
-    sc_obj <- VisualizeIntegration(sc_obj = sc_obj, output_dir = SPEEDI_variables$RNA_output_dir,
+    sc_obj <- VisualizeIntegration(sc_obj = sc_obj, output_dir = SPEEDI_variables$RNA_output_dir, resolution = 2,
                                    exit_with_code = SPEEDI_variables$exit_with_code, log_flag = SPEEDI_variables$log_flag)
   }
   if(data_type != "RNA") {

@@ -7,6 +7,7 @@
 VisualizeIntegration(
   sc_obj,
   output_dir = getwd(),
+  resolution = 2,
   exit_with_code = FALSE,
   log_flag = FALSE
 )
@@ -15,6 +16,8 @@ VisualizeIntegration(
 \item{sc_obj}{Seurat object containing cells for all samples}
 
 \item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
+
+\item{resolution}{Resolution used for clustering}
 
 \item{exit_with_code}{Boolean flag to indicate whether we will terminate R session with exit code (via \code{\link[=quit]{quit()}}) if error occurs. If set to FALSE, we just use \code{\link[=stop]{stop()}}.}
 

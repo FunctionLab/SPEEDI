@@ -4,7 +4,7 @@
 \alias{create_pseudobulk_counts}
 \title{Create pseudobulk counts}
 \usage{
-create_pseudobulk_counts(sc_obj, log_flag)
+create_pseudobulk_counts(sc_obj, log_flag = FALSE)
 }
 \arguments{
 \item{sc_obj}{Seurat object Input list of genes}

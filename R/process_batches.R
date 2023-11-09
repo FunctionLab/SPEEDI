@@ -431,13 +431,14 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
 #'
 #' @param sc_obj Seurat object containing cells for all samples
 #' @param output_dir Path to directory where output will be saved. Defaults to working directory ([getwd()]).
+#' @param resolution Resolution used for clustering
 #' @param exit_with_code Boolean flag to indicate whether we will terminate R session with exit code (via [quit()]) if error occurs. If set to FALSE, we just use [stop()].
 #' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
 #' @return A Seurat object with SCT markers and visualizations
 #' @examples
 #' \dontrun{sc_obj <- VisualizeIntegration(sc_obj)}
 #' @export
-VisualizeIntegration <- function(sc_obj, output_dir = getwd(), exit_with_code = FALSE, log_flag = FALSE) {
+VisualizeIntegration <- function(sc_obj, output_dir = getwd(), resolution = 2, exit_with_code = FALSE, log_flag = FALSE) {
   exit_code <- -1
   sc_obj <- tryCatch(
     {
@@ -458,7 +459,7 @@ VisualizeIntegration <- function(sc_obj, output_dir = getwd(), exit_with_code = 
       } else {
         print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
       }
-      sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = 2, method = "Leiden", log_flag = log_flag)
+      sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = resolution, method = "Leiden", log_flag = log_flag)
       sample_count <- length(unique(sc_obj$sample))
       cell_count <- length(sc_obj$cell_name)
       # Plot by cluster

@@ -5,7 +5,7 @@
 \title{Read in ATAC data for processing}
 \usage{
 Read_ATAC(
-  data_path = getwd(),
+  input_dir = getwd(),
   output_dir = getwd(),
   sample_id_list = NULL,
   sample_file_paths = NULL,
@@ -15,13 +15,13 @@ Read_ATAC(
 )
 }
 \arguments{
-\item{data_path}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
+\item{input_dir}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{output_dir}{Path to directory where output will be saved. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
-\item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{data_path}).}
+\item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{input_dir}).}
 
-\item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{data_path}). If used, \code{sample_id_list} is required.}
+\item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{input_dir}). If used, \code{sample_id_list} is required.}
 
 \item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
 
@@ -37,6 +37,6 @@ Read in ATAC data for processing
 }
 \examples{
 \dontrun{proj <- Read_ATAC()}
-\dontrun{proj <- Read_ATAC(data_path = "~/input_data/",
+\dontrun{proj <- Read_ATAC(input_dir = "~/input_data/",
 sample_id_list = c("sample_1", "sample_2"), species = "human")}
 }

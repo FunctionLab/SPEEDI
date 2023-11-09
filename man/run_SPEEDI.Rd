@@ -8,7 +8,7 @@ run_SPEEDI(
   reference_tissue,
   data_type = "RNA",
   species = "human",
-  data_path = getwd(),
+  input_dir = getwd(),
   reference_dir = getwd(),
   output_dir = getwd(),
   metadata_df = NULL,
@@ -56,7 +56,7 @@ For mouse data, possible choices include:
 
 \item{species}{Species being analyzed. Possible choices are \code{"human"} or \code{"mouse"}.}
 
-\item{data_path}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
+\item{input_dir}{Path to directory where input data are located. Defaults to working directory (\code{\link[=getwd]{getwd()}}).}
 
 \item{reference_dir}{Path to directory where reference is either already located (see \code{reference_file_name}) or will be downloaded by \code{\link[=LoadReferenceSPEEDI]{LoadReferenceSPEEDI()}} if necessary. Defaults to working directory (\code{\link[=getwd]{getwd()}}). Note that Azimuth references from \link{SeuratData} do not require use of \code{reference_dir}.}
 
@@ -70,9 +70,9 @@ For mouse data, possible choices include:
 
 \item{analysis_name}{Name used to create subdirectory in \code{output_dir} for current analysis run. Directory will be created if it doesn't already exist.}
 
-\item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{data_path}).}
+\item{sample_id_list}{Vector of sample names (optional - if not provided, will select all samples found recursively in \code{input_dir}).}
 
-\item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{data_path}). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., \verb{"c("sample1/matrix.mtx", "sample2/matrix.mtx"}"). If this argument is used, \code{sample_id_list} is required and should be written in the same order as the sample file paths.}
+\item{sample_file_paths}{Vector of sample file paths (optional - if not provided, will select all samples found recursively in \code{input_dir}). If using Market Exchange (MEX) Format (matrix.mtx / barcodes.tsv / features.tsv or genes.tsv), please provide a full set of sample paths for only one type of file (e.g., \verb{"c("sample1/matrix.mtx", "sample2/matrix.mtx"}"). If this argument is used, \code{sample_id_list} is required and should be written in the same order as the sample file paths.}
 
 \item{record_doublets}{Boolean flag to indicate whether we will record doublets in the data (using the \link{scDblFinder} package). Possible choices are \code{TRUE} or \code{FALSE}.}
 
@@ -103,7 +103,7 @@ selected output directory (\code{output_dir}). Relevant individual functions cal
 }
 \examples{
 \dontrun{sc_obj <- run_SPEEDI(reference_tissue = "PBMC", species = "human")}
-\dontrun{sc_obj <- run_SPEEDI(reference_tissue = "adipose", data_path = "~/input_data/",
+\dontrun{sc_obj <- run_SPEEDI(reference_tissue = "adipose", input_dir = "~/input_data/",
 reference_dir = "~/reference_dir/", output_dir = "~/adipose_output",
 species = "human", record_doublets = TRUE)}
 }
