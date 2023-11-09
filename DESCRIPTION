@@ -1,6 +1,6 @@
 Package: SPEEDI
 Title: Single-cell Pipeline for End to End Data Integration (SPEEDI)
-Version: 1.1.5.0000
+Version: 1.2.0.0000
 Authors@R: c(
     person("Yuan", "Wang", email = "yuanwang@princeton.edu", role = c("aut", "cre")),
     person("William", "Thistlethwaite", email = "wat2@princeton.edu", role = "aut"))
