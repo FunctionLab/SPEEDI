@@ -191,58 +191,88 @@ RunFMD_RNA <- function(gene_list, network = "global", log_flag = FALSE) {
     q = concatenated_gene_list
   )
   # Submit POST request to gene_check_url with our list of genes
-  gene_check_post_request = httr::POST(gene_check_url, body = gene_check_payload, encode = "form", httr::verbose())
-  gene_check_post_response <- jsonlite::fromJSON(httr::content(gene_check_post_request, as = "text"))
-  # We can parse the response to grab our final list of entrez IDs that we will use for our FMD job
-  final_gene_list <- c()
-  final_gene_list_entrez <- c()
-  for(i in 1:nrow(gene_check_post_response)) {
-    current_gene_row <- gene_check_post_response[i,]
-    if(current_gene_row$num_matches > 0) {
-      final_gene_list <- c(final_gene_list, current_gene_row$query)
-      current_entrez_id <- current_gene_row$matches
-      final_gene_list_entrez <- c(final_gene_list_entrez, current_gene_row$matches[[1]][1,]$entrez)
+  gene_check_post_request <- tryCatch(
+    {
+      print_SPEEDI("Submitting POST request to get final list of entrez IDs in HumanBase", log_flag)
+      httr::POST(gene_check_url, body = gene_check_payload, encode = "form", httr::verbose())
+    },
+    error=function(cond) {
+      print_SPEEDI("Error submitting POST request. Cancelling functional module discovery job.", log_flag)
+      print_SPEEDI(cond, log_flag)
+      return("ERROR")
+    }
+  )
+  if(gene_check_post_request == "ERROR") {
+    gc()
+    return(NULL)
+  } else {
+    gene_check_post_response <- jsonlite::fromJSON(httr::content(gene_check_post_request, as = "text"))
+    # We can parse the response to grab our final list of entrez IDs that we will use for our FMD job
+    final_gene_list <- c()
+    final_gene_list_entrez <- c()
+    for(i in 1:nrow(gene_check_post_response)) {
+      current_gene_row <- gene_check_post_response[i,]
+      if(current_gene_row$num_matches > 0) {
+        final_gene_list <- c(final_gene_list, current_gene_row$query)
+        current_entrez_id <- current_gene_row$matches
+        final_gene_list_entrez <- c(final_gene_list_entrez, current_gene_row$matches[[1]][1,]$entrez)
+      }
+    }
+    final_gene_list_entrez <- as.character(final_gene_list_entrez)
+    print_SPEEDI(paste0("Length of final gene list for HumanBase: ", length(final_gene_list)), log_flag)
+    print_SPEEDI(paste0("Final gene list: ", paste(final_gene_list, collapse = ' ')), log_flag)
+
+    if(length(final_gene_list) < 20) {
+      print_SPEEDI("Fewer than 20 input genes were present in HumanBase, so we cannot run FMD", log_flag)
+      gc()
+      return(NULL)
+    }
+
+    # Each FMD job has an associated cache key (generated via SHA1) in the URL so we can refer to the results later
+    # This cache key is based on the sorted gene list (entrez) and the chosen network
+    # We generate the cache key below using the same algorithm as HumanBase (that way, you'll get the
+    # same cache key regardless of whether you use the UI or this script)
+    final_gene_list_entrez <- sort(final_gene_list_entrez)
+    fmd_payload <- list(
+      entrez = final_gene_list_entrez
+    )
+    fmd_hash <- as.character(jsonlite::toJSON(fmd_payload))
+    fmd_hash <- paste(substr(fmd_hash, 1, 1), " ", substr(fmd_hash, 2, nchar(fmd_hash)), sep = "")
+    fmd_hash <- paste(substr(fmd_hash, 1, 11), " ", substr(fmd_hash, 12, nchar(fmd_hash)), sep = "")
+    fmd_hash <- paste(substr(fmd_hash, 1, nchar(fmd_hash) - 1), " ", substr(fmd_hash, nchar(fmd_hash), nchar(fmd_hash)), sep = "")
+    fmd_hash <- paste0(fmd_hash, network)
+    fmd_hash <- digest::digest(fmd_hash, algo = "sha1", serialize = F)
+    # Create final FMD submission URL (based on network and hash)
+    current_fmd_url <- paste0(fmd_submission_url, network, "&body_tag=", fmd_hash)
+    # Submit FMD POST request (payload is our sorted list of entrez IDs)
+    fmd_submission_post_request <- tryCatch(
+      {
+        print_SPEEDI("Submitting POST request to submit functional module discovery job", log_flag)
+        httr::POST(current_fmd_url, body = fmd_payload, encode = "json", httr::verbose())
+      },
+      error=function(cond) {
+        print_SPEEDI("Error submitting POST request. Cancelling functional module discovery job.", log_flag)
+        print_SPEEDI(cond, log_flag)
+        return("ERROR")
+      }
+    )
+    if(fmd_submission_post_request == "ERROR") {
+      gc()
+      return(NULL)
+    } else {
+      fmd_submission_post_response <- jsonlite::fromJSON(httr::content(fmd_submission_post_request, as = "text"))
+      if(length(fmd_submission_post_response$enrichment) == 0) {
+        print_SPEEDI("No enrichment found for input genes", log_flag)
+        gc()
+        return(NULL)
+      }
+      cached_url = paste0("https://hb.flatironinstitute.org/module/overview/?body_tag=", fmd_hash)
+      print_SPEEDI(paste0("Done submitting FMD job! Associated URL is: ", cached_url), log_flag)
+      print_SPEEDI("Functional module discovery analysis complete", log_flag)
+      gc()
+      return(list(cached_url, fmd_submission_post_response))
     }
   }
-  final_gene_list_entrez <- as.character(final_gene_list_entrez)
-  print_SPEEDI(paste0("Length of final gene list for HumanBase: ", length(final_gene_list)), log_flag)
-  print_SPEEDI(paste0("Final gene list: ", paste(final_gene_list, collapse = ' ')), log_flag)
-
-  if(length(final_gene_list) < 20) {
-    print_SPEEDI("Fewer than 20 input genes were present in HumanBase, so we cannot run FMD", log_flag)
-    gc()
-    return(NULL)
-  }
-
-  # Each FMD job has an associated cache key (generated via SHA1) in the URL so we can refer to the results later
-  # This cache key is based on the sorted gene list (entrez) and the chosen network
-  # We generate the cache key below using the same algorithm as HumanBase (that way, you'll get the
-  # same cache key regardless of whether you use the UI or this script)
-  final_gene_list_entrez <- sort(final_gene_list_entrez)
-  fmd_payload <- list(
-    entrez = final_gene_list_entrez
-  )
-  fmd_hash <- as.character(jsonlite::toJSON(fmd_payload))
-  fmd_hash <- paste(substr(fmd_hash, 1, 1), " ", substr(fmd_hash, 2, nchar(fmd_hash)), sep = "")
-  fmd_hash <- paste(substr(fmd_hash, 1, 11), " ", substr(fmd_hash, 12, nchar(fmd_hash)), sep = "")
-  fmd_hash <- paste(substr(fmd_hash, 1, nchar(fmd_hash) - 1), " ", substr(fmd_hash, nchar(fmd_hash), nchar(fmd_hash)), sep = "")
-  fmd_hash <- paste0(fmd_hash, network)
-  fmd_hash <- digest::digest(fmd_hash, algo = "sha1", serialize = F)
-  # Create final FMD submission URL (based on network and hash)
-  current_fmd_url <- paste0(fmd_submission_url, network, "&body_tag=", fmd_hash)
-  # Submit FMD POST request (payload is our sorted list of entrez IDs)
-  fmd_submission_post_request <- httr::POST(current_fmd_url, body = fmd_payload, encode = "json", httr::verbose())
-  fmd_submission_post_response <- jsonlite::fromJSON(httr::content(fmd_submission_post_request, as = "text"))
-  if(length(fmd_submission_post_response$enrichment) == 0) {
-    print_SPEEDI("No enrichment found for input genes", log_flag)
-    gc()
-    return(NULL)
-  }
-  cached_url = paste0("https://hb.flatironinstitute.org/module/overview/?body_tag=", fmd_hash)
-  print_SPEEDI(paste0("Done submitting FMD job! Associated URL is: ", cached_url), log_flag)
-  print_SPEEDI("Functional module discovery analysis complete", log_flag)
-  gc()
-  return(list(cached_url, fmd_submission_post_response))
 }
 
 #' Grab associated HumanBase networks for current cell type and reference tissue
