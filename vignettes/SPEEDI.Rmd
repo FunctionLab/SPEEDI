@@ -336,7 +336,7 @@ subset_DEGs_table$sc_pval_adj <- format(subset_DEGs_table$sc_pval_adj, digits = 
 knitr::kable(subset_DEGs_table, "simple")
 ```
 
-In total, there were 1905 DEGs found. We show a subset of the DEGs found for CD14 Mono and CD4 TCM cells.
+In total, there were 2516 DEGs found. We show a subset of the DEGs found for CD4 TCM and CD8 Naive cells.
 
 Next, because our samples are human, the `run_downstream_analyses_RNA()` wrapper function will also run [functional module discovery](https://humanbase.readthedocs.io/en/latest/modules.html) (FMD) using SPEEDI's `run_fmd_wrapper()` function. As input, SPEEDI uses the cell-type specific DEGs found above. First, each list of cell-type DEGs is divided into separate lists of positive and negative fold change. For each separate list, if at least 20 genes are found in HumanBase, an FMD job is launched. Results are provided in a TSV file and include a HumanBase URL linking to the user's full results as well as a complete list of associated gene ontology (GO) enrichment terms.
 
