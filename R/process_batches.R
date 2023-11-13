@@ -317,7 +317,8 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
       tile_seurat <- Seurat::CreateSeuratObject(SummarizedExperiment::assays(tile_sce)$TileMatrix[, rownames(tile_reduc)],
                                                 project = "peaks",
                                                 assay = "tileMatrix")
-      tile_seurat <- Seurat::AddMetaData(tile_seurat, data.frame(t(SummarizedExperiment::colData(tile_sce))))
+      # Doesn't currently work, but I don't think it's necessary
+      # tile_seurat <- Seurat::AddMetaData(tile_seurat, data.frame(t(SummarizedExperiment::colData(tile_sce))))
       cell.embeddings <- tile_reduc
       feature.loadings <- matrix()
       assay <- "tileMatrix"
