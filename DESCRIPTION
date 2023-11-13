@@ -30,6 +30,7 @@ Imports:
     hdf5r,
     hexbin,
     httr,
+    irlba,
     jsonlite,
     kneedle,
     limma,
