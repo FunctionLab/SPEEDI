@@ -134,6 +134,12 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
         max_hb <- stats::quantile(objects[[i]]$percent.hb, .99)
         if (max_hb > 10) { max_hb <- 10 }
 
+        lower_bound_filtered_nFeature_cells <- length(objects[[i]]$nFeature_RNA[objects[[i]]$nFeature_RNA < lower_nF])
+        upper_bound_filtered_nFeature_cells <- length(objects[[i]]$nFeature_RNA[objects[[i]]$nFeature_RNA >= stats::quantile(objects[[i]]$nFeature_RNA, .99)])
+        upper_bound_filtered_percent.mt_cells <- length(objects[[i]]$percent.mt[objects[[i]]$percent.mt > max_mt])
+        upper_bound_filtered_percent.rps_cells <- length(objects[[i]]$percent.rps[objects[[i]]$percent.rps > stats::quantile(objects[[i]]$percent.rps, .99)])
+        upper_bound_filtered_percent.rpl_cells <- length(objects[[i]]$percent.rpl[objects[[i]]$percent.rpl > stats::quantile(objects[[i]]$percent.rpl, .99)])
+        upper_bound_filtered_percent.hb_cells <- length(objects[[i]]$percent.hb[objects[[i]]$percent.hb > max_hb])
         object <- subset(x = objects[[i]],
                          subset = nFeature_RNA >= lower_nF &
                            nFeature_RNA < stats::quantile(objects[[i]]$nFeature_RNA, .99) &
@@ -144,18 +150,23 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
         # Print info about QC thresholds for current sample to console
         # Note that this will not work in certain environments (e.g., RStudio) because of parallel processing
         message(paste0("QC Thresholds used for sample: ", current_sample_name))
-        message(paste0("lower nFeature: ", lower_nF))
-        message(paste0("upper nFeature: ", stats::quantile(objects[[i]]$nFeature_RNA, .99)))
-        message(paste0("max mt: ", max_mt))
-        message(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99)))
-        message(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99)))
-        message(paste0("max hb: ", max_hb))
+        message(paste0("lower nFeature: ", lower_nF, " (", lower_bound_filtered_nFeature_cells, " cells failed QC)"))
+        message(paste0("upper nFeature: ", stats::quantile(objects[[i]]$nFeature_RNA, .99), " (", upper_bound_filtered_nFeature_cells, " cells failed QC)"))
+        message(paste0("max mt: ", max_mt, " (", upper_bound_filtered_percent.mt_cells, " cells failed QC)"))
+        message(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99), " (", upper_bound_filtered_percent.rps_cells, " cells failed QC)"))
+        message(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99), " (", upper_bound_filtered_percent.rpl_cells, " cells failed QC)"))
+        message(paste0("max hb: ", max_hb, " (", upper_bound_filtered_percent.hb_cells, " cells failed QC)"))
+        total_cells_filtered_out <- length(objects[[i]]$cell_name) - length(object$cell_name)
+        message(paste0("Total cells filtered out: ", total_cells_filtered_out))
+        message(paste0("Total cells remaining: ", length(object$cell_name)))
         # If we want to guarantee that our parameters are saved to a log file, we need a different strategy
         if(log_flag) {
           # Save sample parameters to a temporary text file
           current_sample_parameters <- paste0(current_sample_name, ",", lower_nF, ",", stats::quantile(objects[[i]]$nFeature_RNA, .99),
                                               ",", max_mt, ",", stats::quantile(objects[[i]]$percent.rps, .99), ",", stats::quantile(objects[[i]]$percent.rpl, .99),
-                                              ",", max_hb)
+                                              ",", max_hb, ",", lower_bound_filtered_nFeature_cells, ",", upper_bound_filtered_nFeature_cells,
+                                              ",", upper_bound_filtered_percent.mt_cells, ",", upper_bound_filtered_percent.rps_cells, ",", upper_bound_filtered_percent.rpl_cells,
+                                              ",", upper_bound_filtered_percent.hb_cells, ",", total_cells_filtered_out, ",", length(object$cell_name))
           sample_log_file_name <- paste0(log_file_path, "_", current_sample_name, ".QC.sample.txt")
           utils::write.table(current_sample_parameters, file = sample_log_file_name)
         }
@@ -167,12 +178,14 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
         for(sample_qc_file_path in sample_qc_file_paths) {
           sample_qc_stats <- strsplit(utils::read.table(sample_qc_file_path)$x, split = ",")[[1]]
           cat(paste0("\n", Sys.time(), ": QC Thresholds used for sample: ", sample_qc_stats[1]), file = paste0(log_file_path, ".log"), append = TRUE)
-          cat(paste0("\n\n", Sys.time(), ": lower nFeature: ", sample_qc_stats[2]), file = paste0(log_file_path, ".log"), append = TRUE)
-          cat(paste0("\n", Sys.time(), ": upper nFeature: ", sample_qc_stats[3]), file = paste0(log_file_path, ".log"), append = TRUE)
-          cat(paste0("\n", Sys.time(), ": max mt: ", sample_qc_stats[4]), file = paste0(log_file_path, ".log"), append = TRUE)
-          cat(paste0("\n", Sys.time(), ": max rps: ", sample_qc_stats[5]), file = paste0(log_file_path, ".log"), append = TRUE)
-          cat(paste0("\n", Sys.time(), ": max rpl: ", sample_qc_stats[6]), file = paste0(log_file_path, ".log"), append = TRUE)
-          cat(paste0("\n", Sys.time(), ": max hb: ", sample_qc_stats[7]), file = paste0(log_file_path, ".log"), append = TRUE)
+          cat(paste0("\n\n", Sys.time(), ": lower nFeature: ", sample_qc_stats[2], " (", sample_qc_stats[8], " cells failed QC)"), file = paste0(log_file_path, ".log"), append = TRUE)
+          cat(paste0("\n", Sys.time(), ": upper nFeature: ", sample_qc_stats[3], " (", sample_qc_stats[9], " cells failed QC)"), file = paste0(log_file_path, ".log"), append = TRUE)
+          cat(paste0("\n", Sys.time(), ": max mt: ", sample_qc_stats[4], " (", sample_qc_stats[10], " cells failed QC)"), file = paste0(log_file_path, ".log"), append = TRUE)
+          cat(paste0("\n", Sys.time(), ": max rps: ", sample_qc_stats[5], " (", sample_qc_stats[11], " cells failed QC)"), file = paste0(log_file_path, ".log"), append = TRUE)
+          cat(paste0("\n", Sys.time(), ": max rpl: ", sample_qc_stats[6], " (", sample_qc_stats[12], " cells failed QC)"), file = paste0(log_file_path, ".log"), append = TRUE)
+          cat(paste0("\n", Sys.time(), ": max hb: ", sample_qc_stats[7], " (", sample_qc_stats[13], " cells failed QC)"), file = paste0(log_file_path, ".log"), append = TRUE)
+          cat(paste0("\n", Sys.time(), ": Total cells filtered out: ", sample_qc_stats[14]), file = paste0(log_file_path, ".log"), append = TRUE)
+          cat(paste0("\n", Sys.time(), ": Total cells remaining: ", sample_qc_stats[15]), file = paste0(log_file_path, ".log"), append = TRUE)
           cat("\n", file = paste0(log_file_path, ".log"), append = TRUE)
           # Remove temporary file after we're done
           file.remove(sample_qc_file_path)

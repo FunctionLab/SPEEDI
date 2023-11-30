@@ -54,6 +54,7 @@ normalize_dir_path <- function(path) {
 #' @return Open log file
 #' @export
 create_SPEEDI_log_file <- function(output_dir = getwd(), log_file_name = NULL) {
+  output_dir <- normalize_dir_path(output_dir)
   # Create log file name based on timestamp
   if(is.null(log_file_name)) {
     log_file_name <- paste0(gsub(" ", "_", Sys.time()), "_SPEEDI")
