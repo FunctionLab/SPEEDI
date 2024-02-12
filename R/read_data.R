@@ -64,6 +64,11 @@ Read_RNA <- function(input_dir = getwd(), sample_id_list = NULL, sample_file_pat
         # Finally, if the user did provide a sample_id_list, pick the subset of data files that have that sample ID in the path
         if(!is.null(sample_id_list)) {
           data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
+          if(length(data_files) == 0) {
+            print_SPEEDI(paste0("\nError: Your provided sample names did not match up with any of the input data files that we found. Please make sure that your sample names are present somewhere in the file paths of your input data files."), log_flag = log_flag)
+            exit_code <- 38
+            stop()
+          }
           positions <- sapply(sample_id_list, function(pattern) grep(pattern, data_files))
           sample_id_list <- sample_id_list[order(positions)]
         } else {
@@ -94,8 +99,6 @@ Read_RNA <- function(input_dir = getwd(), sample_id_list = NULL, sample_file_pat
         }
       } else {
         data_files <- sample_file_paths
-        positions <- sapply(sample_id_list, function(pattern) grep(pattern, data_files))
-        sample_id_list <- sample_id_list[order(positions)]
         data_file_format <- "HDF5"
         data_file_format_results <- grep("h5", sample_file_paths, ignore.case = TRUE)
         if(length(data_file_format_results) == 0) {
