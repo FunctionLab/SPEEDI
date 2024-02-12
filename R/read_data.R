@@ -33,6 +33,13 @@ Read_RNA <- function(input_dir = getwd(), sample_id_list = NULL, sample_file_pat
       if(!is.null(sample_file_paths)) {
         print_SPEEDI("sample_file_paths includes the following file paths:", log_flag)
         print_SPEEDI(paste0(sample_file_paths, collapse = ", "), log_flag)
+        for(sample_file_path in sample_file_paths) {
+          if(!file.exists(sample_file_path)) {
+            print_SPEEDI(paste0("\nError: At least some of your sample files were not found on disk. Please confirm that your file paths are valid."), log_flag = log_flag)
+            exit_code <- 35
+            stop()
+          }
+        }
       }
       if(is.null(sample_file_paths)) {
         # Make sure that input_dir is fully expanded (aka replace ~ with full path to user's home dir)
@@ -48,6 +55,11 @@ Read_RNA <- function(input_dir = getwd(), sample_id_list = NULL, sample_file_pat
         if(length(data_files) == 0) {
           data_files <- list.files(path = input_dir, pattern = "matrix.mtx", recursive = TRUE, full.names = TRUE)
           data_file_format <- "MEX"
+        }
+        if(length(data_files) == 0) {
+          print_SPEEDI(paste0("\nError: We could not find any valid input files (HDF5 (.h5) / MEX (.mtx) format) in the provided input directory."), log_flag = log_flag)
+          exit_code <- 33
+          stop()
         }
         # Finally, if the user did provide a sample_id_list, pick the subset of data files that have that sample ID in the path
         if(!is.null(sample_id_list)) {
@@ -84,6 +96,17 @@ Read_RNA <- function(input_dir = getwd(), sample_id_list = NULL, sample_file_pat
         data_files <- sample_file_paths
         positions <- sapply(sample_id_list, function(pattern) grep(pattern, data_files))
         sample_id_list <- sample_id_list[order(positions)]
+        data_file_format <- "HDF5"
+        data_file_format_results <- grep("h5", sample_file_paths, ignore.case = TRUE)
+        if(length(data_file_format_results) == 0) {
+          data_file_format <- "MEX"
+          data_file_format_results <- grep("tsv|mtx", sample_file_paths, ignore.case = TRUE)
+          if(length(data_file_format_results) == 0) {
+            print_SPEEDI(paste0("\nError: Your provided sample files were found to be invalid input files - must be in HDF5 (.h5) / MEX (.mtx) format."), log_flag = log_flag)
+            exit_code <- 34
+            stop()
+          }
+        }
       }
       print_SPEEDI(paste0("Total sample count is: ", length(sample_id_list)), log_flag)
       # Set up reading of data so it's parallel (max cores == number of samples)
@@ -177,10 +200,19 @@ Read_ATAC <- function(input_dir = getwd(), output_dir = getwd(), sample_id_list 
         print_SPEEDI(paste0("output_dir is: ", output_dir), log_flag)
       }
       if(!is.null(sample_id_list)) {
-        print_SPEEDI(paste0("sample_id_list is: ", sample_id_list), log_flag)
+        print_SPEEDI("sample_id_list includes the following sample ids:", log_flag)
+        print_SPEEDI(paste0(sample_id_list, collapse = ", "), log_flag)
       }
       if(!is.null(sample_file_paths)) {
-        print_SPEEDI(paste0("sample_file_paths is: ", sample_file_paths), log_flag)
+        print_SPEEDI("sample_file_paths includes the following file paths:", log_flag)
+        print_SPEEDI(paste0(sample_file_paths, collapse = ", "), log_flag)
+        for(sample_file_path in sample_file_paths) {
+          if(!file.exists(sample_file_path)) {
+            print_SPEEDI(paste0("\nError: At least some of your sample files were not found on disk. Please confirm that your file paths are valid."), log_flag = log_flag)
+            exit_code <- 35
+            stop()
+          }
+        }
       }
       if(!is.null(sample_file_paths) & is.null(sample_id_list)) {
         print_SPEEDI("Error: You must provide a value for \"sample_id_list\" if you provide a value for \"sample_file_paths\".", log_flag)
@@ -200,6 +232,11 @@ Read_ATAC <- function(input_dir = getwd(), output_dir = getwd(), sample_id_list 
         }
         # Second, look for all fragment.tsv.gz files in input_dir
         data_files <- list.files(path = input_dir, pattern = "fragments\\.tsv\\.gz$", recursive = TRUE, full.names = TRUE)
+        if(length(data_files) == 0) {
+          print_SPEEDI(paste0("\nError: We could not find any valid input files (fragments.tsv.gz) in the provided input directory."), log_flag = log_flag)
+          exit_code <- 36
+          stop()
+        }
         # Finally, if the user did provide a sample_id_list, pick the subset of fragment files that have that sample ID in the path
         if(!is.null(sample_id_list)) {
           data_files <- data_files[grepl(paste(sample_id_list,collapse="|"), data_files)]
@@ -224,6 +261,13 @@ Read_ATAC <- function(input_dir = getwd(), output_dir = getwd(), sample_id_list 
         }
       } else {
         data_files <- sample_file_paths
+        data_file_format_results <- grep("fragments\\.tsv\\.gz$", data_files, ignore.case = TRUE)
+        if(length(data_file_format_results) == 0) {
+          print_SPEEDI(paste0("\nError: Your provided sample files were found to be invalid input files - must be in fragment.tsv.gz format."), log_flag = log_flag)
+          exit_code <- 37
+          stop()
+        }
+
       }
       print_SPEEDI(paste0("Total sample count is: ", length(sample_id_list)), log_flag)
       # Set up reading of data so it's parallel (max cores == number of samples)
