@@ -55,6 +55,7 @@ Imports:
     uwot
 Depends: 
     utils,
+    logr,
     ArchR
 Remotes: 
     github::GreenleafLab/ArchR,
