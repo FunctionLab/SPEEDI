@@ -454,6 +454,8 @@ MapCellTypes_ATAC <- function(proj, reference, reference_cell_type_attribute = "
   azimuth_references <- get_azimuth_references()
   proj <- tryCatch(
     {
+      # Normalize paths (in case user provides relative paths)
+      output_dir <- normalize_dir_path(output_dir)
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 8: Reference-based cell type mapping (ATAC)", log_flag)
       if(inherits(reference, "character")) {

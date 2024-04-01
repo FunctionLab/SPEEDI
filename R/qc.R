@@ -48,6 +48,8 @@ Create_QC_Output_Prefiltered_RNA <- function(sc_obj, output_dir = getwd(), log_f
 #' \dontrun{Create_QC_Output_Prefiltered_ATAC(proj = proj}
 #' @export
 Create_QC_Output_Prefiltered_ATAC <- function(proj, output_dir = getwd(), log_flag = FALSE) {
+  # Normalize paths (in case user provides relative paths)
+  output_dir <- normalize_dir_path(output_dir)
   num_cells <- length(proj$cellNames)
   num_samples <- length(unique(proj$Sample))
   sample_text <- ""

@@ -353,6 +353,8 @@ InitialProcessing_ATAC <- function(proj, output_dir = getwd(), exit_with_code = 
   exit_code <- -1
   proj <- tryCatch(
     {
+      # Normalize paths (in case user provides relative paths)
+      output_dir <- normalize_dir_path(output_dir)
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 4: Processing raw data (ATAC)", log_flag)
       proj <- ArchR::addIterativeLSI(ArchRProj = proj, useMatrix = "TileMatrix", name = "IterativeLSI",

@@ -303,6 +303,8 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
   exit_code <- -1
   proj <- tryCatch(
     {
+      # Normalize paths (in case user provides relative paths)
+      output_dir <- normalize_dir_path(output_dir)
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Preparing ATAC samples for batch inference", log_flag)
       tile_sce <- ArchR::getMatrixFromProject(proj, useMatrix='TileMatrix', binarize = TRUE)
