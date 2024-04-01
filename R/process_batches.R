@@ -321,6 +321,7 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
                                                 assay = "tileMatrix")
       # Doesn't currently work, but I don't think it's necessary
       # tile_seurat <- Seurat::AddMetaData(tile_seurat, data.frame(t(SummarizedExperiment::colData(tile_sce))))
+      # LSI
       cell.embeddings <- tile_reduc
       feature.loadings <- matrix()
       assay <- "tileMatrix"
@@ -335,14 +336,16 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
         misc = list()
       )
       tile_seurat@reductions$lsi <- reduction.data
+      # UMAP
       tile_umap <- ArchR::getEmbedding(ArchRProj = proj, embedding = "UMAP", returnDF = TRUE)
-      cell.embeddings <- as.matrix(tile_umap)
+      cell.embeddings_UMAP <- as.matrix(tile_umap)
+      cell.embeddings_UMAP <- cell.embeddings_UMAP[match(rownames(cell.embeddings), rownames(cell.embeddings_UMAP)),]
       feature.loadings <- matrix()
       assay <- "tileMatrix"
       sdev <- 0
       reduction.key <- "UMAP_"
       reduction.data <- Seurat::CreateDimReducObject(
-        embeddings = cell.embeddings,
+        embeddings = cell.embeddings_UMAP,
         loadings = feature.loadings,
         assay = assay,
         stdev = sdev,
