@@ -67,7 +67,7 @@ Create_QC_Output_Prefiltered_ATAC <- function(proj, output_dir = getwd(), log_fl
   p3 <- ArchR::plotGroups(ArchRProj = proj, groupBy = "Sample", colorBy = "cellColData", name = "NucleosomeRatio", plotAs = "ridges") +
     ggplot2::ggtitle(paste0("Nucleosome Ratio\n", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18), axis.text=ggplot2::element_text(size=10), axis.title=ggplot2::element_text(size=14))
   ggplot2::ggsave(filename = paste0(output_dir, "pre-filtered_NucleosomeRatio.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
-  ArchR::plotPDF(p1,p2,p3, name = "pre-filtered_QC_metrics_plots", ArchRProj = proj, addDOC = FALSE, width = 7, height = 5)
+  # ArchR::plotPDF(p1,p2,p3, name = "pre-filtered_QC_metrics_plots", ArchRProj = proj, addDOC = FALSE, width = 7, height = 5)
   gc()
   return(TRUE)
 }
