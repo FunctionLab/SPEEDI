@@ -199,7 +199,7 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
 #' @export
 #' @importFrom foreach %dopar%
 IntegrateByBatch_RNA <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
-  exit_code <- 21
+  exit_code <- -1
   integrated_obj <- tryCatch(
     {
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
