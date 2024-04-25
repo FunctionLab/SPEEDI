@@ -16,7 +16,7 @@ Single-cell Pipeline for End to End Data Integration (SPEEDI) is a fully automat
 
 ## Using the SPEEDI Website
 
-The [SPEEDI Website](https://speedi.princeton.edu/) allows users to upload their single cell datasets to our server for processing. Users can then view and download results once processing completes. Please visit the website to learn more!
+The [SPEEDI Website](http://speedi.princeton.edu/) allows users to upload their single cell datasets to our server for processing. Users can then view and download results once processing completes. Please visit the website to learn more!
 
 ## Running SPEEDI Locally
 

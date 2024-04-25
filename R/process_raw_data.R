@@ -353,6 +353,8 @@ InitialProcessing_ATAC <- function(proj, output_dir = getwd(), exit_with_code = 
   exit_code <- -1
   proj <- tryCatch(
     {
+      # Normalize paths (in case user provides relative paths)
+      output_dir <- normalize_dir_path(output_dir)
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 4: Processing raw data (ATAC)", log_flag)
       proj <- ArchR::addIterativeLSI(ArchRProj = proj, useMatrix = "TileMatrix", name = "IterativeLSI",
@@ -380,7 +382,7 @@ InitialProcessing_ATAC <- function(proj, output_dir = getwd(), exit_with_code = 
       p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
         ggplot2::ggtitle(paste0("ATAC Data Before Integration\n(By TSS Enrichment)\n", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18), legend.key.size = ggplot2::unit(1, "cm"), legend.text = ggplot2::element_text(size=10))
       ggplot2::ggsave(filename = paste0(output_dir, "Before_Batch_Correction_ATAC_UMAP_by_TSSEnrichment.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
-      ArchR::plotPDF(p1,p2, name = "UMAPs_After_Initial_Processing_Plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+      # ArchR::plotPDF(p1,p2, name = "UMAPs_After_Initial_Processing_Plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       print_SPEEDI("Step 4: Complete", log_flag)
       return(proj)
     },

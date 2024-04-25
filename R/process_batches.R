@@ -303,6 +303,8 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
   exit_code <- -1
   proj <- tryCatch(
     {
+      # Normalize paths (in case user provides relative paths)
+      output_dir <- normalize_dir_path(output_dir)
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Preparing ATAC samples for batch inference", log_flag)
       tile_sce <- ArchR::getMatrixFromProject(proj, useMatrix='TileMatrix', binarize = TRUE)
@@ -319,6 +321,7 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
                                                 assay = "tileMatrix")
       # Doesn't currently work, but I don't think it's necessary
       # tile_seurat <- Seurat::AddMetaData(tile_seurat, data.frame(t(SummarizedExperiment::colData(tile_sce))))
+      # LSI
       cell.embeddings <- tile_reduc
       feature.loadings <- matrix()
       assay <- "tileMatrix"
@@ -333,14 +336,16 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
         misc = list()
       )
       tile_seurat@reductions$lsi <- reduction.data
+      # UMAP
       tile_umap <- ArchR::getEmbedding(ArchRProj = proj, embedding = "UMAP", returnDF = TRUE)
-      cell.embeddings <- as.matrix(tile_umap)
+      cell.embeddings_UMAP <- as.matrix(tile_umap)
+      cell.embeddings_UMAP <- cell.embeddings_UMAP[match(rownames(cell.embeddings), rownames(cell.embeddings_UMAP)),]
       feature.loadings <- matrix()
       assay <- "tileMatrix"
       sdev <- 0
       reduction.key <- "UMAP_"
       reduction.data <- Seurat::CreateDimReducObject(
-        embeddings = cell.embeddings,
+        embeddings = cell.embeddings_UMAP,
         loadings = feature.loadings,
         assay = assay,
         stdev = sdev,
@@ -412,7 +417,7 @@ IntegrateByBatch_ATAC <- function(proj, output_dir = getwd(), exit_with_code = F
       p3 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "TSSEnrichment", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
         ggplot2::ggtitle(paste0("ATAC Data Integration\n(By TSS Enrichment)\n", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18), legend.key.size = ggplot2::unit(1, "cm"), legend.text = ggplot2::element_text(size=10))
       ggplot2::ggsave(filename = paste0(output_dir, "Final_ATAC_UMAP_by_TSSEnrichment.png"), plot = p3, device = "png", width = 8, height = 8, units = "in")
-      ArchR::plotPDF(p1,p2,p3, name = "UMAP_Final_Integrated_Plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+      # ArchR::plotPDF(p1,p2,p3, name = "UMAP_Final_Integrated_Plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       return(proj)
     },
     error = function(cond) {

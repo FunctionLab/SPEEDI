@@ -103,7 +103,7 @@ TransferRNALabels <- function(sc_obj, proj, RNA_output_dir = getwd(), ATAC_outpu
       p2 <- ArchR::plotEmbedding(ArchRProj = proj, colorBy = "cellColData", name = "Cell_type_voting", embedding = "UMAP", force = TRUE, keepAxis = TRUE) +
         ggplot2::ggtitle(paste0("Multiome Overlap for ATAC Data\n(By ATAC Majority Vote Cell Type)\n", sample_text)) + ggplot2::theme(plot.title = ggplot2::element_text(size=18), legend.text = ggplot2::element_text(size=10))
       ggplot2::ggsave(filename = paste0(ATAC_output_dir, "Final_Multiome_Overlap_ATAC_UMAP_by_Original_ATAC_Majority_Vote_Cell_Type_Labels.png"), plot = p2, device = "png", width = 8, height = 8, units = "in")
-      ArchR::plotPDF(p1,p2, name = "UMAP_multiome_ATAC_with_RNA_labels_and_original_labels_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
+      # ArchR::plotPDF(p1,p2, name = "UMAP_multiome_ATAC_with_RNA_labels_and_original_labels_plots", ArchRProj = proj, addDOC = FALSE, width = 5, height = 5)
       # RNA
       sample_count <- length(unique(sc_obj$sample))
       cell_count <- length(sc_obj$cell_name)
