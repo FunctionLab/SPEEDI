@@ -238,7 +238,7 @@ IntegrateByBatch_RNA <- function(sc_obj, exit_with_code = FALSE, log_flag = FALS
 
       print_SPEEDI("Finished integration", log_flag)
       print_SPEEDI("Step 6: Complete", log_flag)
-      return(integrated_obj)
+      return(sc_obj)
     },
     error = function(cond) {
       if(exit_code == -1) {
