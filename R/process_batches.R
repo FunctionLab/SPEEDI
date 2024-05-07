@@ -211,7 +211,7 @@ IntegrateByBatch_RNA <- function(sc_obj, exit_with_code = FALSE, log_flag = FALS
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 6: Integrating samples based on inferred groups (RNA)", log_flag)
       # If we only have one batch, we don't need to integrate by batch, so we exit the function
-      if(length(unique(sc_obj$batch) == 1)) {
+      if(length(unique(sc_obj$batch)) == 1) {
         print_SPEEDI("Only one batch was found, so we don't need to integrate batches. Exiting IntegrateByBatch!", log_flag)
         return(sc_obj)
       }
