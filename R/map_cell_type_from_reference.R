@@ -171,14 +171,6 @@ FindMappingAnchors <- function(sc_obj, reference, data_type = "scRNA", log_flag 
 #' @export
 MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
   print_SPEEDI("Begin majority voting for RNA-seq...", log_flag)
-  sc_obj <- SetDefaultAssay(sc_obj)
-  if(is.null(sc_obj@graphs$integrated_snn) & is.null(sc_obj@graphs$SCT_nn)) {
-    sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
-  } else {
-    print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
-  }
-  sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = current_resolution, method = "Leiden", log_flag = log_flag)
-  sc_obj$predicted.id <- as.character(sc_obj$predicted.id)
   votes <- c()
   vote_levels_fix <- as.character(levels(sc_obj$seurat_clusters))
   vote_levels_mod <- as.character(levels(sc_obj$seurat_clusters))
@@ -193,7 +185,7 @@ MajorityVote_RNA <- function(sc_obj, current_resolution = 2, log_flag = FALSE) {
     for (j in names(prop.table(table(sub_sc_obj$predicted.id))[prop.table(table(sub_sc_obj$predicted.id)) > 0.25])) {
       cell_types <- c(cell_types, j)
       scores <- sub_sc_obj$predicted.id.score[which(sub_sc_obj$predicted.id == j)]
-      gmeans <- c(gmeans, exp(mean(log(scores))))
+      gmeans <- c(gmeans, log(mean(scores)))
     }
 
     if(!is.null(cell_types)) {
@@ -252,7 +244,7 @@ MajorityVote_ATAC <- function(proj, log_flag = FALSE) {
     for (j in names(prop.table(table(sub_predictedGroup))[prop.table(table(sub_predictedGroup)) > 0.25])) {
       cell_types <- c(cell_types, j)
       cell_type_cells <- which(sub_predictedGroup == j)
-      gmeans <- c(gmeans, exp(mean(log(sub_predictedScore[cell_type_cells]))))
+      gmeans <- c(gmeans, log(mean(sub_predictedScore[cell_type_cells])))
     }
 
     if(!is.null(cell_types)) {
@@ -272,22 +264,6 @@ MajorityVote_ATAC <- function(proj, log_flag = FALSE) {
 
   print_SPEEDI("...End majority voting for ATAC-seq", log_flag)
   return(proj)
-}
-
-#' Choose assay based on whether there are multiple batches (integrated) or only one batch (SCT)
-#' @param sc_obj Seurat object containing cells for all samples
-#' @param log_flag If set to TRUE, record certain output (e.g., parameters) to a previously set up log file. Most likely only used in the context of [run_SPEEDI()].
-#' @return A Seurat object with default assay appropriately set
-#' @examples
-#' \dontrun{sc_obj <- SetDefaultAssay(sc_obj)}
-SetDefaultAssay <- function(sc_obj, log_flag = FALSE) {
-  # Assay will be integrated if multiple batches were found - otherwise, we use SCT assay
-  if(length(unique(sc_obj$batch)) != 1) {
-    Seurat::DefaultAssay(sc_obj) <- "integrated"
-  } else {
-    Seurat::DefaultAssay(sc_obj) <- "SCT"
-  }
-  return(sc_obj)
 }
 
 #' We always want to use the `predicted.id` column in our Seurat object to determine majority vote.
@@ -371,8 +347,6 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
         print_SPEEDI(paste0("reference_cell_type_attribute is: ", reference_cell_type_attribute), log_flag)
       }
       print_SPEEDI(paste0("data_type is: ", data_type), log_flag)
-      # Set default assay (to integrated or SCT)
-      sc_obj <- SetDefaultAssay(sc_obj)
       if(inherits(reference, "Seurat")) {
         anchors <- FindMappingAnchors(sc_obj, reference, data_type, log_flag)
         print_SPEEDI("Mapping reference onto query cells", log_flag)
@@ -391,7 +365,6 @@ MapCellTypes_RNA <- function(sc_obj, reference, reference_cell_type_attribute = 
         sc_obj <- JoinLayers(sc_obj)
         sc_obj <- Azimuth::RunAzimuth(query = sc_obj, reference = reference)
         print_SPEEDI("Done running Azimuth to map reference onto query cells", log_flag)
-        sc_obj <- SetDefaultAssay(sc_obj)
         sc_obj <- SetPredictedId(sc_obj, reference, log_flag)
         sc_obj <- MajorityVote_RNA(sc_obj, log_flag = log_flag)
       } else if(inherits(reference, "character") && reference == "none") {

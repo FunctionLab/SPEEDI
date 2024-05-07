@@ -17,13 +17,13 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
       # Find clusters in data (prior to batch correction)
       if ('lsi' %in% SeuratObject::Reductions(sc_obj)) {
         if (is.null(sc_obj@graphs$tileMatrix_snn)) {
-          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:30)
+          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:100)
         } else {
           print_SPEEDI("Neighbors exist. Skipping construction of neighborhood graph...", log_flag)
         }
       } else {
         if (is.null(sc_obj@graphs$SCT_snn)) {
-          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
+          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:100)
         } else {
           print_SPEEDI("Neighbors exist. Skipping construction of neighborhood graph...", log_flag)
         }
@@ -36,19 +36,21 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
         n.cores <- as.numeric(Sys.getenv("SLURM_NTASKS_PER_NODE"))
       }
 
-      if (n.cores > 7) {
-        n.cores <- 7
+      if (n.cores > 32) {
+        n.cores <- 32
       }
+
+      res <- seq(0.1, 1, by=0.01)
 
       print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
       doParallel::registerDoParallel(n.cores)
       metrics_list <- foreach::foreach(
-        i = c(0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4),
+        i = res,
         .combine = 'c',
         .packages = c("Seurat", "bluster")
       ) %dopar% {
         tmp <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = i, method = "Louvain", log_flag = log_flag)
-        dims <- 1:30
+        dims <- 1:100
         clusters <- tmp$seurat_clusters
         if ('lsi' %in% SeuratObject::Reductions(sc_obj)) {
           sil.out <- bluster::approxSilhouette(Seurat::Embeddings(tmp@reductions$lsi)[, dims], clusters)
@@ -61,7 +63,7 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
       }
 
       max.res <- as.numeric(as.character(names(which.max(metrics_list))))
-      print_SPEEDI(paste0("Resolution = ", max.res), log_flag = log_flag)
+      print_SPEEDI(paste0("Ideal Resolution = ", max.res), log_flag = log_flag)
 
       tmp <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = max.res, method = "Louvain", log_flag = log_flag)
 
@@ -80,6 +82,10 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
         res <- lisi::compute_lisi(X.sub, meta_data.sub, label_colnames = "batch")
         rownames(res) <- cells
         colnames(res) <- "score"
+
+        res$score <- res$score + apply(X.sub, 1, dist)
+        res$score <- res$score + max(abs(res$score)) + 0.01
+
         res$batch <- meta_data.sub$batch
         agg.res <- stats::aggregate(.~batch,data=res,mean)
         agg.res$cluster <- cluster
@@ -204,73 +210,34 @@ IntegrateByBatch_RNA <- function(sc_obj, exit_with_code = FALSE, log_flag = FALS
     {
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 6: Integrating samples based on inferred groups (RNA)", log_flag)
-      sc_obj_list <- Seurat::SplitObject(sc_obj, split.by = "batch")
       # If we only have one batch, we don't need to integrate by batch, so we exit the function
-      if(length(sc_obj_list) == 1) {
+      if(length(unique(sc_obj$batch) == 1)) {
         print_SPEEDI("Only one batch was found, so we don't need to integrate batches. Exiting IntegrateByBatch!", log_flag)
         return(sc_obj)
       }
-      # Set up reading of data so it's parallel (max cores == number of samples)
-      if (Sys.getenv("SLURM_NTASKS_PER_NODE") == "") {
-        n.cores <- as.numeric(parallel::detectCores())
-      } else {
-        n.cores <- as.numeric(Sys.getenv("SLURM_NTASKS_PER_NODE"))
-      }
-
-      if (n.cores > length(sc_obj_list)) {
-        n.cores <- length(sc_obj_list)
-      }
-
-      print_SPEEDI(paste0("Number of cores: ", n.cores), log_flag)
-
-      doParallel::registerDoParallel(n.cores)
-      print_SPEEDI("Beginning parallel processing of samples", log_flag)
-      # Dummy declaration to avoid check() complaining
-      i <- 0
-      r <- foreach::foreach(
-        i = 1:length(sc_obj_list),
-        .combine = 'c',
-        .packages = c("Seurat", "base")
-      ) %dopar% {
-        # Normalize counts within batch
-        tmp <- Seurat::SCTransform(object = sc_obj_list[[i]],
-                                   vst.flavor = "v2",
-                                   vars.to.regress = c("percent.mt",
-                                                       "percent.rps",
-                                                       "percent.rpl",
-                                                       "percent.hb",
-                                                       "CC.Difference"),
-                                   do.scale = TRUE,
-                                   do.center = TRUE,
-                                   return.only.var.genes = TRUE,
-                                   seed.use = get_speedi_seed(),
-                                   verbose = TRUE)
-        tmp <- Seurat::RunPCA(tmp, npcs = 30, approx = T,  seed.use = get_speedi_seed(), verbose = T)
-        return(tmp)
-      }
-      print_SPEEDI(paste0(length(r), " samples transformed."), log_flag)
-      print_SPEEDI("Parallel processing complete", log_flag)
-
-
-      print_SPEEDI("Selecting integration features", log_flag)
-      features <- Seurat::SelectIntegrationFeatures(object.list = r, nfeatures = 3000)
-      r <- Seurat::PrepSCTIntegration(object.list = r, anchor.features = features)
-
-      print_SPEEDI("Finding integration anchors", log_flag)
-      anchors <- Seurat::FindIntegrationAnchors(object.list = r,
-                                                normalization.method = "SCT",
-                                                anchor.features = features,
-                                                reduction = "rpca",
-                                                k.anchor = 10)
-
-      print_SPEEDI("Beginning integration", log_flag)
-      integrated_obj <- Seurat::IntegrateData(anchorset = anchors,
-                                              normalization.method = "SCT")
-      Seurat::DefaultAssay(integrated_obj) <- "integrated"
-
-      rm(sc_obj_list)
-      rm(features)
-      rm(anchors)
+      DefaultAssay(sc_obj) <- "RNA"
+      sc_obj <- JoinLayers(sc_obj)
+      sc_obj[["RNA"]] <- split(sc_obj[["RNA"]], f = sc_obj$batch)
+      regress_vars <- c("percent.mt", "percent.rps", "percent.rpl", "percent.hb", "CC.Difference")
+      regress_vars <- regress_vars[which(regress_vars %in% colnames(sc_obj_list[[i]][[]]))]
+      if (length(regress_vars) == 0) { regress_vars <- NULL }
+      sc_obj <- SCTransform(object = sc_obj,
+                                      vst.flavor = "v2",
+                                      vars.to.regress = regress_vars,
+                                      do.scale = TRUE,
+                                      do.center = TRUE,
+                                      return.only.var.genes = TRUE,
+                                      seed.use = get_speedi_seed(),
+                                      verbose = TRUE)
+      sc_obj <- RunPCA(sc_obj, npcs = 100, approx = T, verbose = T, seed.use = get_speedi_seed())
+      sc_obj <- IntegrateLayers(
+        object = sc_obj, method = RPCAIntegration,
+        orig.reduction = "pca", new.reduction = "integrated.rpca",
+        normalization.method = "SCT",
+        dims.to.integrate = 100,
+        k.weight = 90,
+        verbose = TRUE
+      )
 
       print_SPEEDI("Finished integration", log_flag)
       print_SPEEDI("Step 6: Complete", log_flag)
@@ -450,22 +417,19 @@ VisualizeIntegration <- function(sc_obj, output_dir = getwd(), resolution = 2, e
     {
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Step 7: Final processing of integrated data (RNA)", log_flag)
-      if(length(unique(sc_obj$batch)) != 1) {
-        print_SPEEDI("Scaling integrated data", log_flag)
-        sc_obj <- Seurat::ScaleData(sc_obj, verbose = T)
-        print_SPEEDI("Running PCA and UMAP on integrated data", log_flag)
-        sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, seed.use = get_speedi_seed(), verbose = T)
-        sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, seed.use = get_speedi_seed(), return.model = T)
-      }
       print_SPEEDI("Preparing integrated data for FindMarkers", log_flag)
       sc_obj <- Seurat::PrepSCTFindMarkers(sc_obj)
       print_SPEEDI("Finding clusters and printing UMAPs of integrated data", log_flag)
-      if(is.null(sc_obj@graphs$integrated_snn) & is.null(sc_obj@graphs$SCT_nn)) {
-        sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "pca", dims = 1:30)
+      if(length(unique(sc_obj$batch)) != 1) {
+        reduction <- "integrated.rpca"
+        umap_reduction_name <- "umap.rpca"
       } else {
-        print_SPEEDI("Neighbors exist. Skipping constructing neighborhood graph...", log_flag)
+        reduction <- "pca"
+        umap_reduction_name <- "umap"
       }
-      sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = resolution, method = "Leiden", log_flag = log_flag)
+      sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = reduction, dims = 1:100)
+      sc_obj <- find_clusters_SPEEDI(sc_obj = sc_obj, resolution = resolution, method = "Louvain", log_flag = log_flag)
+      sc_obj <- Seurat::RunUMAP(sc_obj, reduction = reduction, dims = 1:100, seed.use = get_speedi_seed(), return.model = T, reduction.name = umap_reduction_name)
       sample_count <- length(unique(sc_obj$sample))
       cell_count <- length(sc_obj$cell_name)
       # Plot by cluster

@@ -123,7 +123,7 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
         # Automatically detect upper bound for percent.mt using kneedle
         if (max(objects[[i]]$percent.mt) > 0) {
           if (max(objects[[i]]$percent.mt) < 5) {
-            max_mt <- stats::quantile(objects[[i]]$percent.mt, .99)
+            max_mt <- max(objects[[i]]$percent.mt)
           } else {
             max_mt <- kneedle::kneedle(graphics::hist(objects[[i]]$percent.mt, breaks=max(10, 0.5 * max(objects[[i]]$percent.mt)), plot=F)$breaks[-1],
                                        graphics::hist(objects[[i]]$percent.mt, breaks=max(10, 0.5 * max(objects[[i]]$percent.mt)), plot=F)$counts)[1]
@@ -133,19 +133,26 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
         # Subset current sample based on filtering criteria
         max_hb <- stats::quantile(objects[[i]]$percent.hb, .99)
         if (max_hb > 10) { max_hb <- 10 }
+        if (max_hb < 2) { max_hb <- max(objects[[i]]$percent.hb) }
+
+        max_rps <- stats::quantile(objects[[i]]$percent.rps, .99)
+        if (max_rps < 2) { max_rps <- max(objects[[i]]$percent.rps) }
+
+        max_rpl <- stats::quantile(objects[[i]]$percent.rpl, .99)
+        if (max_rpl < 2) { max_rpl <- max(objects[[i]]$percent.rpl) }
 
         lower_bound_filtered_nFeature_cells <- length(objects[[i]]$nFeature_RNA[objects[[i]]$nFeature_RNA < lower_nF])
         upper_bound_filtered_nFeature_cells <- length(objects[[i]]$nFeature_RNA[objects[[i]]$nFeature_RNA >= stats::quantile(objects[[i]]$nFeature_RNA, .99)])
         upper_bound_filtered_percent.mt_cells <- length(objects[[i]]$percent.mt[objects[[i]]$percent.mt > max_mt])
-        upper_bound_filtered_percent.rps_cells <- length(objects[[i]]$percent.rps[objects[[i]]$percent.rps > stats::quantile(objects[[i]]$percent.rps, .99)])
-        upper_bound_filtered_percent.rpl_cells <- length(objects[[i]]$percent.rpl[objects[[i]]$percent.rpl > stats::quantile(objects[[i]]$percent.rpl, .99)])
+        upper_bound_filtered_percent.rps_cells <- length(objects[[i]]$percent.rps[objects[[i]]$percent.rps > max_rps])
+        upper_bound_filtered_percent.rpl_cells <- length(objects[[i]]$percent.rpl[objects[[i]]$percent.rpl > max_rpl])
         upper_bound_filtered_percent.hb_cells <- length(objects[[i]]$percent.hb[objects[[i]]$percent.hb > max_hb])
         object <- subset(x = objects[[i]],
                          subset = nFeature_RNA >= lower_nF &
                            nFeature_RNA < stats::quantile(objects[[i]]$nFeature_RNA, .99) &
                            percent.mt <= max_mt &
-                           percent.rps <= stats::quantile(objects[[i]]$percent.rps, .99) &
-                           percent.rpl <= stats::quantile(objects[[i]]$percent.rpl, .99) &
+                           percent.rps <= max_rps &
+                           percent.rpl <= max_rpl &
                            percent.hb <= max_hb)
         # Print info about QC thresholds for current sample to console
         # Note that this will not work in certain environments (e.g., RStudio) because of parallel processing
@@ -153,8 +160,8 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
         message(paste0("lower nFeature: ", lower_nF, " (", lower_bound_filtered_nFeature_cells, " cells failed QC)"))
         message(paste0("upper nFeature: ", stats::quantile(objects[[i]]$nFeature_RNA, .99), " (", upper_bound_filtered_nFeature_cells, " cells failed QC)"))
         message(paste0("max mt: ", max_mt, " (", upper_bound_filtered_percent.mt_cells, " cells failed QC)"))
-        message(paste0("max rps: ", stats::quantile(objects[[i]]$percent.rps, .99), " (", upper_bound_filtered_percent.rps_cells, " cells failed QC)"))
-        message(paste0("max rpl: ", stats::quantile(objects[[i]]$percent.rpl, .99), " (", upper_bound_filtered_percent.rpl_cells, " cells failed QC)"))
+        message(paste0("max rps: ", max_rps, " (", upper_bound_filtered_percent.rps_cells, " cells failed QC)"))
+        message(paste0("max rpl: ", max_rpl, " (", upper_bound_filtered_percent.rpl_cells, " cells failed QC)"))
         message(paste0("max hb: ", max_hb, " (", upper_bound_filtered_percent.hb_cells, " cells failed QC)"))
         total_cells_filtered_out <- length(objects[[i]]$cell_name) - length(object$cell_name)
         message(paste0("Total cells filtered out: ", total_cells_filtered_out))
@@ -163,7 +170,7 @@ FilterRawData_RNA <- function(all_sc_exp_matrices, species = "human", record_dou
         if(log_flag) {
           # Save sample parameters to a temporary text file
           current_sample_parameters <- paste0(current_sample_name, ",", lower_nF, ",", stats::quantile(objects[[i]]$nFeature_RNA, .99),
-                                              ",", max_mt, ",", stats::quantile(objects[[i]]$percent.rps, .99), ",", stats::quantile(objects[[i]]$percent.rpl, .99),
+                                              ",", max_mt, ",", max_rps, ",", max_rpl,
                                               ",", max_hb, ",", lower_bound_filtered_nFeature_cells, ",", upper_bound_filtered_nFeature_cells,
                                               ",", upper_bound_filtered_percent.mt_cells, ",", upper_bound_filtered_percent.rps_cells, ",", upper_bound_filtered_percent.rpl_cells,
                                               ",", upper_bound_filtered_percent.hb_cells, ",", total_cells_filtered_out, ",", length(object$cell_name))
@@ -272,15 +279,25 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
       print_SPEEDI("Step 4: Processing raw data (RNA)", log_flag)
       print_SPEEDI(paste0("species is: ", species), log_flag)
       # Load cell cycle genes
-      print_SPEEDI("Loading cell cycle genes and performing cell cycle scoring", log_flag)
       s.genes <- Seurat::cc.genes.updated.2019$s.genes
       g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes
       m.s.genes <-  SPEEDI::cc.gene.updated.mouse$m.s.genes
       m.g2m.genes <-  SPEEDI::cc.gene.updated.mouse$m.g2m.genes
-      # New steps required for Seurat V5
-      sc_obj <- SeuratObject::JoinLayers(sc_obj)
-      sc_obj[["RNA"]]$data <- sc_obj[["RNA"]]$counts
+      # Perform initial SC transform (before cell cycle scoring)
+      print_SPEEDI("Running SCTransform to normalize count data", log_flag)
+      system.time(sc_obj <- Seurat::SCTransform(object = sc_obj,
+                                                vst.flavor = "v2",
+                                                vars.to.regress = c("percent.mt",
+                                                                    "percent.rps",
+                                                                    "percent.rpl",
+                                                                    "percent.hb"),
+                                                do.scale = TRUE,
+                                                do.center = TRUE,
+                                                return.only.var.genes = TRUE,
+                                                seed.use = get_speedi_seed(),
+                                                verbose = TRUE))
       # Perform cell cycle scoring
+      print_SPEEDI("Loading cell cycle genes and performing cell cycle scoring", log_flag)
       if(species == "human") {
         sc_obj <- Seurat::CellCycleScoring(object = sc_obj, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
       } else {
@@ -288,7 +305,7 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
       }
       sc_obj$CC.Difference <- sc_obj$S.Score - sc_obj$G2M.Score
       # Normalize count data using SCTransform
-      print_SPEEDI("Running SCTransform to normalize count data", log_flag)
+      print_SPEEDI("Running SCTransform to normalize count data (after performing cell cycle scoring)", log_flag)
       system.time(sc_obj <- Seurat::SCTransform(object = sc_obj,
                                                 vst.flavor = "v2",
                                                 vars.to.regress = c("percent.mt",
@@ -303,8 +320,8 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
                                                 verbose = TRUE))
       # Run PCA and UMAP to visualize data (prior to batch correction)
       print_SPEEDI("Running PCA and UMAP on normalized data", log_flag)
-      sc_obj <- Seurat::RunPCA(sc_obj, npcs = 30, approx = T, seed.use = get_speedi_seed(), verbose = T)
-      sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:30, seed.use = get_speedi_seed())
+      sc_obj <- Seurat::RunPCA(sc_obj, npcs = 100, approx = T, seed.use = get_speedi_seed(), verbose = T)
+      sc_obj <- Seurat::RunUMAP(sc_obj, reduction = "pca", dims = 1:100, seed.use = get_speedi_seed())
       sample_count <- length(unique(sc_obj$sample))
       cell_count <- length(sc_obj$cell_name)
       current_title <- paste0("RNA Data Before Integration\n(By Sample)\n(", sample_count, " Samples, ", cell_count, " Cells)")

@@ -215,13 +215,18 @@ print_UMAP_RNA <- function(sc_obj, file_name, group_by_category = NULL, output_d
   } else {
     current_title <- title
   }
+  if("batch" %in% colnames(sc_obj[[]]) && length(unique(sc_obj$batch)) != 1) {
+    umap_reduction_name <- "umap.rpca"
+  } else {
+    umap_reduction_name <- "umap"
+  }
   if(!is.null(group_by_category)) {
-    p <- Seurat::DimPlot(sc_obj, reduction = "umap", group.by = group_by_category, label = TRUE,
+    p <- Seurat::DimPlot(sc_obj, reduction = umap_reduction_name, group.by = group_by_category, label = TRUE,
                     label.size = 3, repel = TRUE, raster = FALSE) +
       ggplot2::labs(title = current_title) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
   } else {
-    p <- Seurat::DimPlot(sc_obj, reduction = "umap", label = TRUE,
+    p <- Seurat::DimPlot(sc_obj, reduction = umap_reduction_name, label = TRUE,
                     label.size = 3, repel = TRUE, raster = FALSE) +
       ggplot2::labs(title = current_title) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
