@@ -218,12 +218,9 @@ IntegrateByBatch_RNA <- function(sc_obj, exit_with_code = FALSE, log_flag = FALS
       DefaultAssay(sc_obj) <- "RNA"
       sc_obj <- JoinLayers(sc_obj)
       sc_obj[["RNA"]] <- split(sc_obj[["RNA"]], f = sc_obj$batch)
-      regress_vars <- c("percent.mt", "percent.rps", "percent.rpl", "percent.hb", "CC.Difference")
-      regress_vars <- regress_vars[which(regress_vars %in% colnames(sc_obj_list[[i]][[]]))]
-      if (length(regress_vars) == 0) { regress_vars <- NULL }
       sc_obj <- SCTransform(object = sc_obj,
                                       vst.flavor = "v2",
-                                      vars.to.regress = regress_vars,
+                                      vars.to.regress = c("percent.mt", "percent.rps", "percent.rpl", "percent.hb", "CC.Difference"),
                                       do.scale = TRUE,
                                       do.center = TRUE,
                                       return.only.var.genes = TRUE,
