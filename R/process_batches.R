@@ -17,7 +17,7 @@ InferBatches <- function(sc_obj, exit_with_code = FALSE, log_flag = FALSE) {
       # Find clusters in data (prior to batch correction)
       if ('lsi' %in% SeuratObject::Reductions(sc_obj)) {
         if (is.null(sc_obj@graphs$tileMatrix_snn)) {
-          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:100)
+          sc_obj <- Seurat::FindNeighbors(object = sc_obj, reduction = "lsi", dims = 1:30)
         } else {
           print_SPEEDI("Neighbors exist. Skipping construction of neighborhood graph...", log_flag)
         }
