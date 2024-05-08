@@ -304,6 +304,9 @@ InitialProcessing_RNA <- function(sc_obj, species = "human", output_dir = getwd(
         sc_obj <- Seurat::CellCycleScoring(object = sc_obj, s.features = m.s.genes, g2m.features = m.g2m.genes, set.ident = TRUE)
       }
       sc_obj$CC.Difference <- sc_obj$S.Score - sc_obj$G2M.Score
+      # Remove old SCT (just in case)
+      DefaultAssay(sc_obj) <- "RNA"
+      sc_obj[["SCT"]] <- NULL
       # Normalize count data using SCTransform
       print_SPEEDI("Running SCTransform to normalize count data (after performing cell cycle scoring)", log_flag)
       system.time(sc_obj <- Seurat::SCTransform(object = sc_obj,
