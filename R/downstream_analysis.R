@@ -154,7 +154,6 @@ RunDE_RNA <- function(sc_obj, metadata_df, output_dir = getwd(), log_flag = FALS
       }
     }
   }
-  sc_obj <- SetDefaultAssay(sc_obj)
   print_SPEEDI("Differential expression analysis complete", log_flag)
   gc()
   return(de_results)
