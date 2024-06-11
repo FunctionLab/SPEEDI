@@ -151,12 +151,16 @@ Read_RNA <- function(input_dir = getwd(), sample_id_list = NULL, sample_file_pat
           prefix <- paste0(sample_id_list[[i]], "#")
         }
         colnames(sc_exp_matrix) <- paste0(prefix, colnames(sc_exp_matrix))
+        print_SPEEDI(paste0("Total number of transcripts in sample ", data_files[[i]], " is: ", nrow(sc_exp_matrix)), log_flag)
         return(sc_exp_matrix)
       }
       # Only keep transcripts that are common across all samples
+      print_SPEEDI("Keeping transcripts that are common across all samples", log_flag)
       transcripts_list <- lapply(all_sc_exp_matrices, rownames)
       common_transcripts <- Reduce(intersect, transcripts_list)
       all_sc_exp_matrices <- lapply(all_sc_exp_matrices, function(df) df[common_transcripts, , drop = FALSE])
+      all_sc_exp_matrices <- do.call(cbind, all_sc_exp_matrices)
+
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Parallel processing complete", log_flag)
       print_SPEEDI(paste0("Raw data has ", dim(all_sc_exp_matrices)[2], " barcodes and ", dim(all_sc_exp_matrices)[1], " transcripts."), log_flag)
