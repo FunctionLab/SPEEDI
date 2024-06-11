@@ -126,9 +126,9 @@ Read_RNA <- function(input_dir = getwd(), sample_id_list = NULL, sample_file_pat
       print_SPEEDI("Beginning parallel processing of samples", log_flag)
       # Dummy declaration to avoid check() complaining
       i <- 0
+      # Read in files
       all_sc_exp_matrices <- foreach::foreach(
         i = 1:length(data_files),
-        .combine = 'cbind',
         .packages = c("Seurat", "base")
       ) %dopar% {
         # Read in data for current sample
@@ -153,6 +153,10 @@ Read_RNA <- function(input_dir = getwd(), sample_id_list = NULL, sample_file_pat
         colnames(sc_exp_matrix) <- paste0(prefix, colnames(sc_exp_matrix))
         return(sc_exp_matrix)
       }
+      # Only keep transcripts that are common across all samples
+      transcripts_list <- lapply(all_sc_exp_matrices, rownames)
+      common_transcripts <- Reduce(intersect, transcripts_list)
+      all_sc_exp_matrices <- lapply(all_sc_exp_matrices, function(df) df[common_transcripts, , drop = FALSE])
       print_SPEEDI("\n", log_flag, silence_time = TRUE)
       print_SPEEDI("Parallel processing complete", log_flag)
       print_SPEEDI(paste0("Raw data has ", dim(all_sc_exp_matrices)[2], " barcodes and ", dim(all_sc_exp_matrices)[1], " transcripts."), log_flag)
