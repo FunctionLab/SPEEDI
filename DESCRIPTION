@@ -59,14 +59,14 @@ Depends:
     ArchR
 Remotes: 
     github::GreenleafLab/ArchR,
-    github::satijalab/azimuth,
     github::immunogenomics/harmony,
     github::bwlewis/irlba,
     github::etam4260/kneedle,
     github::neurorestore/Libra,
     github::immunogenomics/lisi,
-    github::satijalab/seurat-data,
     github::mojaveazure/seurat-disk
+    github::satijalab/seurat-data,
+    github::satijalab/azimuth,
 Suggests: 
     BiocStyle,
     knitr,
