@@ -64,7 +64,7 @@ Remotes:
     github::etam4260/kneedle,
     github::neurorestore/Libra,
     github::immunogenomics/lisi,
-    github::mojaveazure/seurat-disk
+    github::mojaveazure/seurat-disk,
     github::satijalab/seurat-data,
     github::satijalab/azimuth,
 Suggests: 
