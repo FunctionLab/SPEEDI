@@ -32,7 +32,9 @@ All R-related dependencies should be installed automatically. Note that [RTools]
 
 ## Citing SPEEDI
 
-The SPEEDI manuscript is currently under review.
+The SPEEDI paper was published in Cell Systems on October 16, 2024. 
+
+**Citation**: Wang Y, Thistlethwaite W, Tadych A, Ruf-Zamojski F, Bernard DJ, Cappuccio A, Zaslavsky E, Chen X, Sealfon SC, Troyanskaya OG. Automated single-cell omics end-to-end framework with data-driven batch inference. Cell Systems. 2024 Oct 16;15(10):982-990.e5.
 
 ## Need Help?
 
