@@ -12,9 +12,9 @@ the$gene_check_url <- 'https://hb.flatironinstitute.org/api/genes/search/multi?'
 the$fmd_submission_url <- 'https://hb.flatironinstitute.org/api/integrations/community/?integration='
 
 # List of possible references
-the$references <- c("adipose", "bonemarrow", "fetus",
-                               "heart", "humancortex", "kidney",
-                               "lung", "pancreas", "pbmc", "pbmc_full", "tonsil", "mousecortex", "custom", "none")
+the$references <- c("adipose", "bone_marrow", "fetus",
+                               "heart", "cortex", "kidney",
+                               "lung", "pancreas", "pbmc", "pbmc_full", "tonsil", "custom", "none")
 
 # List of Azimuth references
 the$azimuth_references <- c("adiposeref", "bonemarrowref", "fetusref",
